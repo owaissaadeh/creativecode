@@ -155,7 +155,7 @@ export default function SalesClients() {
                         <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{client.phone}</span>
                         <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{client.email}</span>
                         <span className="flex items-center gap-1 font-medium text-primary">
-                          <DollarSign className="w-3 h-3" />{Number(client.dealValue).toLocaleString()} ر.س
+                          <DollarSign className="w-3 h-3" />{Number(client.dealValue).toLocaleString()} د.أ
                         </span>
                       </div>
                       {client.nextMeetingDate && (

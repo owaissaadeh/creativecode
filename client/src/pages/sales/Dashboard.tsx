@@ -38,7 +38,7 @@ export default function SalesDashboard() {
     { title: "صفقات مُغلقة", value: stats?.wonClients || 0, icon: TrendingUp, color: "text-orange-600 bg-orange-500/10" },
     {
       title: "عمولاتي",
-      value: stats?.totalCommissions ? `${Number(stats.totalCommissions).toLocaleString()} ر.س` : "0 ر.س",
+      value: stats?.totalCommissions ? `${Number(stats.totalCommissions).toLocaleString()} د.أ` : "0 د.أ",
       icon: DollarSign,
       color: "text-primary bg-primary/10",
     },

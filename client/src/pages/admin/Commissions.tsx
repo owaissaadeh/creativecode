@@ -38,7 +38,7 @@ export default function AdminCommissions() {
             <div>
               <p className="text-sm text-muted-foreground">إجمالي العمولات</p>
               {isLoading ? <Skeleton className="h-8 w-28 mt-2" /> : (
-                <p className="text-2xl font-bold mt-1 text-primary">{total.toLocaleString()} ر.س</p>
+                <p className="text-2xl font-bold mt-1 text-primary">{total.toLocaleString()} د.أ</p>
               )}
             </div>
             <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -51,7 +51,7 @@ export default function AdminCommissions() {
             <div>
               <p className="text-sm text-muted-foreground">إجمالي قيمة الصفقات</p>
               {isLoading ? <Skeleton className="h-8 w-28 mt-2" /> : (
-                <p className="text-2xl font-bold mt-1">{totalDeal.toLocaleString()} ر.س</p>
+                <p className="text-2xl font-bold mt-1">{totalDeal.toLocaleString()} د.أ</p>
               )}
             </div>
             <div className="w-11 h-11 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
@@ -99,7 +99,7 @@ export default function AdminCommissions() {
                           <p className="text-xs text-muted-foreground">{s.count} صفقة</p>
                         </div>
                       </div>
-                      <p className="font-bold text-primary">{s.amount.toLocaleString()} ر.س</p>
+                      <p className="font-bold text-primary">{s.amount.toLocaleString()} د.أ</p>
                     </div>
                   ))}
               </div>
@@ -125,7 +125,7 @@ export default function AdminCommissions() {
                       <p className="text-xs text-muted-foreground">{c.salesName} · {c.commissionRate}%</p>
                     </div>
                     <div className="text-left flex-shrink-0">
-                      <p className="text-sm font-bold text-green-600">+{Number(c.commissionAmount).toLocaleString()} ر.س</p>
+                      <p className="text-sm font-bold text-green-600">+{Number(c.commissionAmount).toLocaleString()} د.أ</p>
                       <p className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString("ar-SA")}</p>
                     </div>
                   </div>

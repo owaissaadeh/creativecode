@@ -167,10 +167,16 @@ export default function Landing() {
       <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-              <Code2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg">{siteName}</span>
+            {config.logo_url ? (
+              <img src={config.logo_url} alt={siteName} className="h-9 w-auto object-contain max-w-[160px]" />
+            ) : (
+              <>
+                <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+                  <Code2 className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="font-bold text-lg">{siteName}</span>
+              </>
+            )}
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#services" className="hover:text-foreground transition-colors">خدماتنا</a>
@@ -235,9 +241,13 @@ export default function Landing() {
             <div className="relative w-full max-w-md">
               <div className="rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                    <Code2 className="w-5 h-5 text-primary-foreground" />
-                  </div>
+                  {config.logo_url ? (
+                    <img src={config.logo_url} alt={siteName} className="h-10 w-auto object-contain max-w-[120px]" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                      <Code2 className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                  )}
                   <div>
                     <div className="font-bold text-sm">{siteName}</div>
                     <div className="text-xs text-muted-foreground">حلول تقنية متكاملة</div>
@@ -604,10 +614,16 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-                <Code2 className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-bold">{siteName}</span>
+              {config.logo_url ? (
+                <img src={config.logo_url} alt={siteName} className="h-7 w-auto object-contain max-w-[120px]" />
+              ) : (
+                <>
+                  <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+                    <Code2 className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                  <span className="font-bold">{siteName}</span>
+                </>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               © 2026 {siteName}. جميع الحقوق محفوظة.

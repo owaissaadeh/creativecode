@@ -31,7 +31,7 @@ export default function SalesCommissions() {
             <div>
               <p className="text-sm text-muted-foreground">إجمالي عمولاتي</p>
               {isLoading ? <Skeleton className="h-8 w-28 mt-2" /> : (
-                <p className="text-2xl font-bold mt-1 text-primary">{total.toLocaleString()} ر.س</p>
+                <p className="text-2xl font-bold mt-1 text-primary">{total.toLocaleString()} د.أ</p>
               )}
             </div>
             <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -44,7 +44,7 @@ export default function SalesCommissions() {
             <div>
               <p className="text-sm text-muted-foreground">إجمالي قيمة صفقاتي</p>
               {isLoading ? <Skeleton className="h-8 w-28 mt-2" /> : (
-                <p className="text-2xl font-bold mt-1">{totalDeal.toLocaleString()} ر.س</p>
+                <p className="text-2xl font-bold mt-1">{totalDeal.toLocaleString()} د.أ</p>
               )}
             </div>
             <div className="w-11 h-11 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
@@ -89,12 +89,12 @@ export default function SalesCommissions() {
                     <div>
                       <p className="font-medium text-sm">{c.clientName || "عميل"}</p>
                       <p className="text-xs text-muted-foreground">
-                        قيمة الصفقة: {Number(c.dealValue).toLocaleString()} ر.س · نسبة {c.commissionRate}%
+                        قيمة الصفقة: {Number(c.dealValue).toLocaleString()} د.أ · نسبة {c.commissionRate}%
                       </p>
                     </div>
                   </div>
                   <div className="text-left flex-shrink-0">
-                    <p className="font-bold text-green-600">+{Number(c.commissionAmount).toLocaleString()} ر.س</p>
+                    <p className="font-bold text-green-600">+{Number(c.commissionAmount).toLocaleString()} د.أ</p>
                     <p className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString("ar-SA")}</p>
                   </div>
                 </div>

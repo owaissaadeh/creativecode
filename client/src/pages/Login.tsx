@@ -41,10 +41,16 @@ export default function Login() {
           <div className="absolute bottom-20 left-20 w-96 h-96 rounded-full bg-white/20 blur-3xl" />
         </div>
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-            <Code2 className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-white font-bold text-xl">{siteName}</span>
+          {siteConfig.logo_url ? (
+            <img src={siteConfig.logo_url} alt={siteName} className="h-10 w-auto object-contain max-w-[160px] brightness-0 invert" />
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <Code2 className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-white font-bold text-xl">{siteName}</span>
+            </>
+          )}
         </div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold text-white leading-tight">
@@ -78,10 +84,16 @@ export default function Login() {
           <div className="text-center space-y-2">
             <div className="flex lg:hidden justify-center mb-6">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-                  <Code2 className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <span className="font-bold text-xl">{siteName}</span>
+                {siteConfig.logo_url ? (
+                  <img src={siteConfig.logo_url} alt={siteName} className="h-9 w-auto object-contain max-w-[160px]" />
+                ) : (
+                  <>
+                    <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+                      <Code2 className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <span className="font-bold text-xl">{siteName}</span>
+                  </>
+                )}
               </div>
             </div>
             <h2 className="text-3xl font-bold">مرحباً بعودتك</h2>

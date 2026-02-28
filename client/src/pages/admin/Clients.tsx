@@ -122,7 +122,7 @@ export default function AdminClients() {
                         <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{client.phone}</span>
                         <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{client.email}</span>
                         <span className="flex items-center gap-1 font-medium text-primary">
-                          <DollarSign className="w-3 h-3" />{Number(client.dealValue).toLocaleString()} ر.س
+                          <DollarSign className="w-3 h-3" />{Number(client.dealValue).toLocaleString()} د.أ
                         </span>
                       </div>
                       {client.notes?.length > 0 && (
@@ -162,7 +162,7 @@ export default function AdminClients() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>قيمة الصفقة (ر.س)</Label>
+              <Label>قيمة الصفقة (د.أ)</Label>
               <Input type="number" value={editForm.dealValue} onChange={(e) => setEditForm({ ...editForm, dealValue: e.target.value })} />
             </div>
             <div className="space-y-2">

@@ -138,7 +138,9 @@ export class DatabaseStorage implements IStorage {
         .where(and(eq(pageItems.itemType, itemType as any), eq(pageItems.isActive, true)))
         .orderBy(pageItems.orderIndex);
     }
-    return db.select().from(pageItems).orderBy(pageItems.itemType, pageItems.orderIndex);
+    return db.select().from(pageItems)
+      .where(sql`item_type != 'config'`)
+      .orderBy(pageItems.itemType, pageItems.orderIndex);
   }
 
   async getPageItem(id: string) {
@@ -163,7 +165,7 @@ export class DatabaseStorage implements IStorage {
 
   async getSiteConfig(): Promise<{ logo_text: string; favicon_url: string }> {
     const results = await db.execute(sql`SELECT description FROM page_items WHERE item_type = 'config' LIMIT 1`);
-    const defaults = { logo_text: "Creative Code", favicon_url: "" };
+    const defaults = { logo_text: "Creative Code", logo_url: "", favicon_url: "" };
     if (!results.rows[0]) return defaults;
     try {
       const parsed = JSON.parse((results.rows[0] as any).description || "{}");

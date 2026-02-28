@@ -24,13 +24,13 @@ export default function AdminDashboard() {
     { title: "موظفو المبيعات", value: stats?.totalSalesUsers || 0, icon: Users, color: "text-purple-600 bg-purple-500/10" },
     {
       title: "إجمالي المبيعات",
-      value: stats?.totalSales ? `${Number(stats.totalSales).toLocaleString()} ر.س` : "0 ر.س",
+      value: stats?.totalSales ? `${Number(stats.totalSales).toLocaleString()} د.أ` : "0 د.أ",
       icon: DollarSign,
       color: "text-orange-600 bg-orange-500/10"
     },
     {
       title: "إجمالي العمولات",
-      value: stats?.totalCommissions ? `${Number(stats.totalCommissions).toLocaleString()} ر.س` : "0 ر.س",
+      value: stats?.totalCommissions ? `${Number(stats.totalCommissions).toLocaleString()} د.أ` : "0 د.أ",
       icon: TrendingUp,
       color: "text-primary bg-primary/10"
     },
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="font-semibold">{stats.bestSales.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {Number(stats.bestSales.total).toLocaleString()} ر.س إجمالي المبيعات
+                    {Number(stats.bestSales.total).toLocaleString()} د.أ إجمالي المبيعات
                   </p>
                 </div>
               </div>

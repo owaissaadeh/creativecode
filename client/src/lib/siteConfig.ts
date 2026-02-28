@@ -3,11 +3,13 @@ import { useEffect } from "react";
 
 export type SiteConfig = {
   logo_text: string;
+  logo_url: string;
   favicon_url: string;
 };
 
 const DEFAULTS: SiteConfig = {
   logo_text: "Creative Code",
+  logo_url: "",
   favicon_url: "",
 };
 

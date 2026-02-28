@@ -1,9 +1,32 @@
+import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const uploadsDir = path.resolve("uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [".png", ".jpg", ".jpeg", ".ico", ".svg", ".webp", ".gif"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, allowed.includes(ext));
+  },
+});
 
 const JWT_SECRET = process.env.SESSION_SECRET || "crm-secret-key-2026";
 
@@ -44,6 +67,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (err) {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
+  });
+
+  // Static: Serve uploaded images
+  app.use("/uploads", express.static(uploadsDir));
+
+  // Admin: Upload image (logo or favicon)
+  app.post("/api/admin/upload", authMiddleware, adminOnly, upload.single("file"), (req: AuthRequest, res: Response) => {
+    if (!req.file) return res.status(400).json({ message: "لم يتم اختيار ملف أو نوع الملف غير مدعوم" });
+    res.json({ url: `/uploads/${req.file.filename}` });
   });
 
   // Public: Site Config

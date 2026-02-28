@@ -66,11 +66,15 @@ export default function Layout({ children }: LayoutProps) {
           <Sidebar side="right">
             <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-                  <Code2 className="w-5 h-5 text-primary-foreground" />
-                </div>
+                {siteConfig.logo_url ? (
+                  <img src={siteConfig.logo_url} alt={siteName} className="h-8 w-auto object-contain max-w-[120px] flex-shrink-0" />
+                ) : (
+                  <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+                    <Code2 className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                )}
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-sm truncate">{siteName}</span>
+                  {!siteConfig.logo_url && <span className="font-bold text-sm truncate">{siteName}</span>}
                   <span className="text-xs text-muted-foreground truncate">
                     {isAdmin() ? "لوحة المدير" : "لوحة المبيعات"}
                   </span>

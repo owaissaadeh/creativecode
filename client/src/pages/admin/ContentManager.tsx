@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,7 @@ import {
   AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Layers, FolderKanban, Settings, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Layers, FolderKanban, Settings, Save, Upload, ImageIcon } from "lucide-react";
 import { useSiteConfig } from "@/lib/siteConfig";
 import type { SiteConfig } from "@/lib/siteConfig";
 import type { PageItem } from "@shared/schema";
@@ -293,17 +293,108 @@ function ItemsTab({ itemType }: { itemType: "service" | "project" }) {
   );
 }
 
+function uploadImage(file: File): Promise<{ url: string }> {
+  const token = (() => {
+    try { const s = localStorage.getItem("crm-auth"); return s ? JSON.parse(s)?.state?.token : null; } catch { return null; }
+  })();
+  const fd = new FormData();
+  fd.append("file", file);
+  return fetch("/api/admin/upload", {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  }).then((r) => {
+    if (!r.ok) throw new Error("فشل الرفع");
+    return r.json();
+  });
+}
+
+function ImageUploadField({
+  label, hint, value, onUploaded, testId, accept = "image/*",
+}: {
+  label: string; hint: string; value: string; onUploaded: (url: string) => void; testId: string; accept?: string;
+}) {
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await uploadImage(file);
+      onUploaded(url);
+      toast({ title: "تم رفع الصورة" });
+    } catch {
+      toast({ title: "خطأ في رفع الصورة", variant: "destructive" });
+    }
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return (
+    <div className="space-y-3">
+      <Label>{label}</Label>
+      <div className="flex items-center gap-4">
+        <div className="w-20 h-16 rounded-lg border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden flex-shrink-0">
+          {value ? (
+            <img src={value} alt="preview" className="w-full h-full object-contain p-1" data-testid={`${testId}-preview`} />
+          ) : (
+            <ImageIcon className="w-6 h-6 text-muted-foreground" />
+          )}
+        </div>
+        <div className="space-y-2 flex-1">
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            data-testid={`${testId}-input`}
+            onChange={handleFile}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 w-full"
+            disabled={uploading}
+            data-testid={`${testId}-btn`}
+            onClick={() => inputRef.current?.click()}
+          >
+            <Upload className="w-4 h-4" />
+            {uploading ? "جارٍ الرفع..." : "رفع صورة"}
+          </Button>
+          {value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full text-destructive hover:text-destructive text-xs"
+              onClick={() => onUploaded("")}
+            >
+              حذف الصورة
+            </Button>
+          )}
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
+
 function SettingsTab() {
   const { toast } = useToast();
   const siteConfig = useSiteConfig();
   const [form, setForm] = useState<SiteConfig>({
     logo_text: siteConfig.logo_text,
+    logo_url: siteConfig.logo_url,
     favicon_url: siteConfig.favicon_url,
   });
   const [synced, setSynced] = useState(false);
 
-  if (!synced && (siteConfig.logo_text !== "Creative Code" || siteConfig.favicon_url !== "")) {
-    setForm({ logo_text: siteConfig.logo_text, favicon_url: siteConfig.favicon_url });
+  if (!synced && (siteConfig.logo_url || siteConfig.favicon_url || siteConfig.logo_text !== "Creative Code")) {
+    setForm({ logo_text: siteConfig.logo_text, logo_url: siteConfig.logo_url, favicon_url: siteConfig.favicon_url });
     setSynced(true);
   }
 
@@ -316,16 +407,31 @@ function SettingsTab() {
     onError: () => toast({ title: "خطأ في الحفظ", variant: "destructive" }),
   });
 
+  function handleImageUploaded(field: "logo_url" | "favicon_url", url: string) {
+    const updated = { ...form, [field]: url };
+    setForm(updated);
+    saveMutation.mutate(updated);
+  }
+
   return (
     <div className="max-w-lg space-y-6">
-      <div className="rounded-xl border border-border p-6 space-y-5 bg-card">
+      <div className="rounded-xl border border-border p-6 space-y-6 bg-card">
         <h2 className="font-semibold text-base flex items-center gap-2">
           <Settings className="w-4 h-4 text-primary" />
           إعدادات الهوية البصرية
         </h2>
 
+        <ImageUploadField
+          label="صورة اللوغو"
+          hint="تظهر في شريط التنقل وصفحة تسجيل الدخول. يُفضَّل PNG أو SVG بخلفية شفافة."
+          value={form.logo_url}
+          onUploaded={(url) => handleImageUploaded("logo_url", url)}
+          testId="logo-upload"
+          accept="image/png,image/svg+xml,image/jpeg,image/webp,image/gif"
+        />
+
         <div className="space-y-2">
-          <Label htmlFor="logo_text" data-testid="label-logo-text">اسم الشركة (اللوغو)</Label>
+          <Label htmlFor="logo_text" data-testid="label-logo-text">اسم الشركة (نص بديل)</Label>
           <Input
             id="logo_text"
             data-testid="input-logo-text"
@@ -333,21 +439,17 @@ function SettingsTab() {
             onChange={(e) => setForm({ ...form, logo_text: e.target.value })}
             placeholder="Creative Code"
           />
-          <p className="text-xs text-muted-foreground">يظهر في الشريط العلوي للموقع وصفحة تسجيل الدخول</p>
+          <p className="text-xs text-muted-foreground">يُستخدم عند عدم وجود صورة للوغو، ويظهر في عنوان المتصفح</p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="favicon_url" data-testid="label-favicon-url">رابط الفافيكون (Favicon URL)</Label>
-          <Input
-            id="favicon_url"
-            data-testid="input-favicon-url"
-            value={form.favicon_url}
-            onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
-            placeholder="https://example.com/favicon.ico"
-            dir="ltr"
-          />
-          <p className="text-xs text-muted-foreground">أيقونة الموقع في تبويب المتصفح (اتركه فارغاً للافتراضي)</p>
-        </div>
+        <ImageUploadField
+          label="صورة الفافيكون"
+          hint="أيقونة الموقع في تبويب المتصفح. يُفضَّل ICO أو PNG بحجم 32×32 أو 64×64."
+          value={form.favicon_url}
+          onUploaded={(url) => handleImageUploaded("favicon_url", url)}
+          testId="favicon-upload"
+          accept="image/x-icon,image/png,image/svg+xml,image/jpeg"
+        />
 
         <Button
           data-testid="button-save-settings"

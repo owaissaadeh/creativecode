@@ -32,13 +32,13 @@ export default function AdminReports() {
   const summaryCards = [
     {
       title: "إجمالي المبيعات",
-      value: data ? `${Number(data.totalSales).toLocaleString()} ر.س` : "0",
+      value: data ? `${Number(data.totalSales).toLocaleString()} د.أ` : "0",
       icon: DollarSign,
       color: "text-primary bg-primary/10",
     },
     {
       title: "إجمالي العمولات",
-      value: data ? `${Number(data.totalCommissions).toLocaleString()} ر.س` : "0",
+      value: data ? `${Number(data.totalCommissions).toLocaleString()} د.أ` : "0",
       icon: TrendingUp,
       color: "text-green-600 bg-green-500/10",
     },
@@ -95,7 +95,7 @@ export default function AdminReports() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v: number) => [`${v.toLocaleString()} ر.س`, "المبيعات"]} />
+                  <Tooltip formatter={(v: number) => [`${v.toLocaleString()} د.أ`, "المبيعات"]} />
                   <Bar dataKey="total" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
