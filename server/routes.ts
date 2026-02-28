@@ -183,10 +183,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/admin/users/:id", authMiddleware, adminOnly, async (req, res) => {
     try {
-      const { commissionRate } = req.body;
-      const user = await storage.updateUser(req.params.id, { commissionRate });
+      const { role, commissionRate } = req.body;
+      const user = await storage.updateUser(req.params.id, { role, commissionRate });
       res.json({ ...user, password: undefined });
     } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const user = await storage.getUserById(req.params.id);
+      if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
+      if (user.email === "admin@creativecode-jo.com") {
+        return res.status(403).json({ message: "لا يمكن حذف الأدمن الرئيسي" });
+      }
+      const { db } = await import("./db");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      await db.delete(users).where(eq(users.id, req.params.id));
+      res.json({ message: "تم حذف المستخدم بنجاح" });
+    } catch (err) {
+      console.error(err);
       res.status(500).json({ message: "خطأ في الخادم" });
     }
   });

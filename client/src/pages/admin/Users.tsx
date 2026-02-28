@@ -10,14 +10,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Edit, Users as UsersIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, Edit, Trash2, Users as UsersIcon } from "lucide-react";
 import type { User } from "@shared/schema";
 
 export default function AdminUsers() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", password: "", commissionRate: "10" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "sales", commissionRate: "10" });
 
   const { data: users = [], isLoading } = useQuery<User[]>({ queryKey: ["/api/admin/users"] });
 
@@ -33,23 +35,32 @@ export default function AdminUsers() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: string; commissionRate: string }) =>
-      apiRequest("PATCH", `/api/admin/users/${data.id}`, { commissionRate: data.commissionRate }),
+    mutationFn: (data: { id: string; role: string; commissionRate: string }) =>
+      apiRequest("PATCH", `/api/admin/users/${data.id}`, { role: data.role, commissionRate: data.commissionRate }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setDialogOpen(false);
       setEditUser(null);
-      toast({ title: "تم تحديث نسبة العمولة" });
+      toast({ title: "تم تحديث بيانات المستخدم" });
     },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
 
-  const resetForm = () => setForm({ name: "", email: "", password: "", commissionRate: "10" });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/users/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "تم حذف المستخدم بنجاح" });
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
+  const resetForm = () => setForm({ name: "", email: "", password: "", role: "sales", commissionRate: "10" });
 
   const handleOpen = (user?: User) => {
     if (user) {
       setEditUser(user);
-      setForm({ name: user.name, email: user.email, password: "", commissionRate: String(user.commissionRate) });
+      setForm({ name: user.name, email: user.email, password: "", role: user.role, commissionRate: String(user.commissionRate) });
     } else {
       setEditUser(null);
       resetForm();
@@ -60,7 +71,7 @@ export default function AdminUsers() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editUser) {
-      updateMutation.mutate({ id: editUser.id, commissionRate: form.commissionRate });
+      updateMutation.mutate({ id: editUser.id, role: form.role, commissionRate: form.commissionRate });
     } else {
       if (!form.name || !form.email || !form.password) {
         toast({ title: "يرجى ملء جميع الحقول", variant: "destructive" });
@@ -70,7 +81,13 @@ export default function AdminUsers() {
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  const roleLabels: Record<string, string> = {
+    admin: "مدير",
+    sales: "مبيعات",
+    finance: "مالية",
+  };
 
   return (
     <div className="space-y-6">
@@ -115,26 +132,47 @@ export default function AdminUsers() {
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </div>
-                  <Badge className={user.role === "admin" ? "bg-primary/10 text-primary" : "bg-green-500/10 text-green-600"}>
-                    {user.role === "admin" ? "مدير" : "مبيعات"}
+                  <Badge className={user.role === "admin" ? "bg-primary/10 text-primary" : user.role === "finance" ? "bg-blue-500/10 text-blue-600" : "bg-green-500/10 text-green-600"}>
+                    {roleLabels[user.role] || user.role}
                   </Badge>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">نسبة العمولة</span>
                   <span className="font-bold text-primary">{user.commissionRate}%</span>
                 </div>
-                {user.role === "sales" && (
+                <div className="flex gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2"
+                    className="flex-1 gap-2"
                     onClick={() => handleOpen(user)}
                     data-testid={`button-edit-user-${user.id}`}
                   >
                     <Edit className="w-4 h-4" />
-                    تعديل العمولة
+                    تعديل
                   </Button>
-                )}
+                  {user.email !== "admin@creativecode-jo.com" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive gap-2">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent dir="rtl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            سيتم حذف المستخدم "{user.name}" نهائياً. لا يمكن التراجع عن هذا الإجراء.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-row-reverse gap-2">
+                          <AlertDialogAction onClick={() => deleteMutation.mutate(user.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -144,14 +182,14 @@ export default function AdminUsers() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent dir="rtl" className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editUser ? "تعديل نسبة العمولة" : "إضافة موظف مبيعات"}</DialogTitle>
+            <DialogTitle>{editUser ? "تعديل بيانات المستخدم" : "إضافة مستخدم جديد"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             {!editUser && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="u-name">الاسم</Label>
-                  <Input id="u-name" data-testid="input-user-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="اسم الموظف" />
+                  <Input id="u-name" data-testid="input-user-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="اسم المستخدم" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="u-email">البريد الإلكتروني</Label>
@@ -163,6 +201,19 @@ export default function AdminUsers() {
                 </div>
               </>
             )}
+            <div className="space-y-2">
+              <Label>الصلاحية</Label>
+              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">مدير</SelectItem>
+                  <SelectItem value="sales">مبيعات</SelectItem>
+                  <SelectItem value="finance">مالية</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="u-commission">نسبة العمولة (%)</Label>
               <Input id="u-commission" type="number" min="0" max="100" data-testid="input-user-commission" value={form.commissionRate} onChange={(e) => setForm({ ...form, commissionRate: e.target.value })} />

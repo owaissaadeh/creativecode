@@ -7,7 +7,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role", { enum: ["admin", "sales"] }).notNull().default("sales"),
+  role: text("role", { enum: ["admin", "sales", "finance"] }).notNull().default("sales"),
   commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull().default("10"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
