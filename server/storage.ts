@@ -1,10 +1,11 @@
 import { db } from "./db";
-import { users, leads, clients, commissions } from "@shared/schema";
+import { users, leads, clients, commissions, pageItems, consultations } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type {
   User, InsertUser, Lead, InsertLead,
-  Client, InsertClient, Commission, InsertCommission
+  Client, InsertClient, Commission, InsertCommission,
+  PageItem, InsertPageItem, Consultation, InsertConsultation
 } from "@shared/schema";
 
 export interface IStorage {
@@ -28,6 +29,16 @@ export interface IStorage {
   getAllCommissions(): Promise<Commission[]>;
   getCommissionsBySales(salesId: string): Promise<Commission[]>;
   createCommission(data: InsertCommission & { id?: string }): Promise<Commission>;
+
+  getPageItems(itemType?: string): Promise<PageItem[]>;
+  getPageItem(id: string): Promise<PageItem | undefined>;
+  createPageItem(data: InsertPageItem & { id?: string }): Promise<PageItem>;
+  updatePageItem(id: string, data: Partial<PageItem>): Promise<PageItem>;
+  deletePageItem(id: string): Promise<void>;
+
+  getAllConsultations(): Promise<Consultation[]>;
+  createConsultation(data: InsertConsultation & { id?: string }): Promise<Consultation>;
+  updateConsultation(id: string, data: Partial<Consultation>): Promise<Consultation>;
 
   getAdminStats(): Promise<unknown>;
   getSalesStats(salesId: string): Promise<unknown>;
@@ -119,17 +130,63 @@ export class DatabaseStorage implements IStorage {
     return commission;
   }
 
+  async getPageItems(itemType?: string) {
+    if (itemType) {
+      return db.select().from(pageItems)
+        .where(and(eq(pageItems.itemType, itemType as any), eq(pageItems.isActive, true)))
+        .orderBy(pageItems.orderIndex);
+    }
+    return db.select().from(pageItems).orderBy(pageItems.itemType, pageItems.orderIndex);
+  }
+
+  async getPageItem(id: string) {
+    const [item] = await db.select().from(pageItems).where(eq(pageItems.id, id));
+    return item;
+  }
+
+  async createPageItem(data: InsertPageItem & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [item] = await db.insert(pageItems).values({ ...data, id }).returning();
+    return item;
+  }
+
+  async updatePageItem(id: string, data: Partial<PageItem>) {
+    const [item] = await db.update(pageItems).set(data).where(eq(pageItems.id, id)).returning();
+    return item;
+  }
+
+  async deletePageItem(id: string) {
+    await db.delete(pageItems).where(eq(pageItems.id, id));
+  }
+
+  async getAllConsultations() {
+    return db.select().from(consultations).orderBy(desc(consultations.createdAt));
+  }
+
+  async createConsultation(data: InsertConsultation & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [consultation] = await db.insert(consultations).values({ ...data, id }).returning();
+    return consultation;
+  }
+
+  async updateConsultation(id: string, data: Partial<Consultation>) {
+    const [consultation] = await db.update(consultations).set(data).where(eq(consultations.id, id)).returning();
+    return consultation;
+  }
+
   async getAdminStats() {
     const allLeads = await this.getAllLeads();
     const allClients = await this.getAllClients();
     const allCommissions = await this.getAllCommissions();
     const allUsers = await this.getAllUsers();
+    const allConsultations = await this.getAllConsultations();
 
     const salesUsers = allUsers.filter((u) => u.role === "sales");
     const wonClients = allClients.filter((c) => c.status === "Won");
     const totalSales = wonClients.reduce((s, c) => s + Number(c.dealValue), 0);
     const totalCommissions = allCommissions.reduce((s, c) => s + Number(c.commissionAmount), 0);
     const closingRate = allClients.length > 0 ? Math.round((wonClients.length / allClients.length) * 100) : 0;
+    const pendingConsultations = allConsultations.filter((c) => c.status === "pending").length;
 
     const salesTotals = salesUsers.map((u) => ({
       name: u.name,
@@ -148,6 +205,8 @@ export class DatabaseStorage implements IStorage {
       closingRate,
       bestSales,
       recentLeads: allLeads.slice(0, 5),
+      pendingConsultations,
+      totalConsultations: allConsultations.length,
     };
   }
 

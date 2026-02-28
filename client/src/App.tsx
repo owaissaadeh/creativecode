@@ -13,6 +13,8 @@ import AdminLeads from "@/pages/admin/Leads";
 import AdminClients from "@/pages/admin/Clients";
 import AdminCommissions from "@/pages/admin/Commissions";
 import AdminReports from "@/pages/admin/Reports";
+import ContentManager from "@/pages/admin/ContentManager";
+import Consultations from "@/pages/admin/Consultations";
 import SalesDashboard from "@/pages/sales/Dashboard";
 import SalesLeads from "@/pages/sales/Leads";
 import SalesClients from "@/pages/sales/Clients";
@@ -58,6 +60,12 @@ function Router() {
       </Route>
       <Route path="/admin/reports">
         <ProtectedRoute component={AdminReports} adminOnly />
+      </Route>
+      <Route path="/admin/content">
+        <ProtectedRoute component={ContentManager} adminOnly />
+      </Route>
+      <Route path="/admin/consultations">
+        <ProtectedRoute component={Consultations} adminOnly />
       </Route>
 
       {/* Sales Routes */}

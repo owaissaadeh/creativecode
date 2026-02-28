@@ -46,6 +46,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Public: Page Content
+  app.get("/api/content/items", async (req, res) => {
+    try {
+      const { type } = req.query;
+      const items = await storage.getPageItems(type as string | undefined);
+      res.json(items);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Public: Consultation booking
+  app.post("/api/consultations/public", async (req, res) => {
+    try {
+      const { name, phone, email, companyName, serviceType, consultationDate, consultationTime, message } = req.body;
+      if (!name || !phone || !email || !serviceType || !consultationDate || !consultationTime) {
+        return res.status(400).json({ message: "يرجى تعبئة جميع الحقول المطلوبة" });
+      }
+      const consultation = await storage.createConsultation({
+        name, phone, email, companyName, serviceType, consultationDate, consultationTime, message, status: "pending"
+      });
+      if (typeof (global as any).fbq === "function") {
+        (global as any).fbq("track", "Schedule");
+      }
+      res.json(consultation);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   // Facebook Webhook
   app.get("/api/webhooks/facebook", (req, res) => {
     const verify_token = process.env.FB_VERIFY_TOKEN || "nexacrm_verify";
@@ -272,6 +302,66 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         notes: [],
       });
       res.json(client);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Admin: Content Items (CMS)
+  app.get("/api/admin/content/items", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { type } = req.query;
+      const items = await storage.getPageItems(type as string | undefined);
+      res.json(items);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post("/api/admin/content/items", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { itemType, title, subtitle, description, icon, tags, orderIndex, isActive } = req.body;
+      if (!itemType || !title) return res.status(400).json({ message: "النوع والعنوان مطلوبان" });
+      const item = await storage.createPageItem({ itemType, title, subtitle, description, icon, tags: tags || [], orderIndex: orderIndex || 0, isActive: isActive !== false });
+      res.json(item);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.patch("/api/admin/content/items/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const item = await storage.updatePageItem(req.params.id, req.body);
+      res.json(item);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.delete("/api/admin/content/items/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      await storage.deletePageItem(req.params.id);
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Admin: Consultations
+  app.get("/api/admin/consultations", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const all = await storage.getAllConsultations();
+      res.json(all);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.patch("/api/admin/consultations/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { status, adminNotes } = req.body;
+      const consultation = await storage.updateConsultation(req.params.id, { status, adminNotes });
+      res.json(consultation);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }

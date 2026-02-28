@@ -1,16 +1,17 @@
-# NexaCRM - نظام CRM متكامل
+# Creative Code — نظام إدارة متكامل
 
 ## نظرة عامة
-نظام إدارة علاقات عملاء (CRM) متكامل مع Landing Page احترافية. مبني بـ React + TypeScript في الواجهة الأمامية و Express + PostgreSQL في الخلفية.
+Landing Page لشركة Creative Code التقنية مع نظام CRM متكامل للإدارة الداخلية. مبني بـ React + TypeScript + Express + PostgreSQL.
 
 ## الميزات
-- **Landing Page** احترافية بـ Hero Section، خدمات، مشاريع، وCTA
-- **نموذج Lead** مع حفظ البيانات في قاعدة البيانات وتتبع UTM
+- **Landing Page** لشركة Creative Code (تقنية) — RTL عربي كامل
+- **نظام حجز الاستشارات**: فورم جذاب مع تقويم مخصص + اختيار وقت (9:00-17:00)
+- **CMS داخلي**: إدارة الخدمات والمشاريع من لوحة الأدمن (إضافة/تعديل/حذف/تفعيل)
 - **Meta Pixel** جاهز (تعديل PIXEL_ID في index.html)
-- **Facebook Webhook** endpoint جاهز لربط Meta لاحقاً
+- **Facebook Webhook** endpoint جاهز
 - **نظام المصادقة** بـ JWT مع صلاحيات (admin/sales)
-- **لوحة Admin**: إدارة المستخدمين، الـ Leads، العملاء، العمولات، التقارير
-- **لوحة Sales**: الـ Leads المعينة، إدارة العملاء، متابعة العمولات
+- **لوحة Admin**: مستخدمون، Leads، عملاء، عمولات، تقارير، إدارة محتوى، استشارات
+- **لوحة Sales**: Leads المعينة، عملاء، عمولات
 - **نظام العمولات** التلقائي عند إغلاق صفقة (Won)
 
 ## بيانات الدخول التجريبية
@@ -22,48 +23,56 @@
 ```
 client/src/
   pages/
-    Landing.tsx       - الصفحة الرئيسية العامة
-    Login.tsx         - صفحة تسجيل الدخول
+    Landing.tsx            - الصفحة الرئيسية (Creative Code + فورم الاستشارات)
+    Login.tsx              - صفحة تسجيل الدخول
     admin/
-      Dashboard.tsx   - لوحة تحكم المدير
-      Users.tsx       - إدارة المستخدمين
-      Leads.tsx       - إدارة العملاء المحتملين
-      Clients.tsx     - إدارة العملاء
-      Commissions.tsx - إدارة العمولات
-      Reports.tsx     - التقارير والإحصائيات
+      Dashboard.tsx        - لوحة تحكم المدير
+      Users.tsx            - إدارة المستخدمين
+      Leads.tsx            - إدارة العملاء المحتملين
+      Clients.tsx          - إدارة العملاء
+      Commissions.tsx      - العمولات
+      Reports.tsx          - التقارير
+      ContentManager.tsx   - إدارة محتوى الموقع (خدمات + مشاريع)
+      Consultations.tsx    - إدارة الاستشارات المحجوزة
     sales/
-      Dashboard.tsx   - لوحة تحكم المبيعات
-      Leads.tsx       - عملائي المحتملون
-      Clients.tsx     - عملائي
-      Commissions.tsx - عمولاتي
-  components/
-    Layout.tsx        - القالب الرئيسي مع Sidebar
-  lib/
-    auth.ts           - Zustand store للمصادقة
-    queryClient.ts    - TanStack Query setup
+      Dashboard.tsx        - لوحة تحكم المبيعات
+      Leads.tsx            - عملائي المحتملون
+      Clients.tsx          - عملائي
+      Commissions.tsx      - عمولاتي
 
 server/
-  index.ts            - نقطة البداية مع migrate + seed
-  routes.ts           - جميع API endpoints
-  storage.ts          - طبقة قاعدة البيانات
-  db.ts               - Drizzle + PostgreSQL connection
-  migrate.ts          - إنشاء الجداول
-  seed.ts             - بيانات تجريبية
+  routes.ts    - كل الـ API endpoints
+  storage.ts   - Database CRUD operations
+  migrate.ts   - إنشاء الجداول + بذر البيانات الأولية
 
 shared/
-  schema.ts           - Drizzle schema + Zod types
+  schema.ts    - Database schema + types (Drizzle ORM)
 ```
 
+## جداول قاعدة البيانات
+- `users` — المستخدمون (admin/sales)
+- `leads` — العملاء المحتملون من الـ Landing
+- `clients` — العملاء الفعليون في البايبلاين
+- `commissions` — العمولات التلقائية
+- `page_items` — خدمات ومشاريع Landing Page (CMS)
+- `consultations` — حجوزات الاستشارات مع تاريخ ووقت
+
+## API Endpoints
+### Public
+- `GET /api/content/items` — خدمات ومشاريع الموقع
+- `POST /api/consultations/public` — حجز استشارة جديد
+- `POST /api/leads/public` — تسجيل عميل محتمل
+
+### Admin (JWT required)
+- `/api/admin/content/items` — CRUD للخدمات والمشاريع
+- `/api/admin/consultations` — عرض وتحديث الحجوزات
+- `/api/admin/stats|users|leads|clients|commissions|reports`
+
+### Sales (JWT required)
+- `/api/sales/stats|leads|clients|commissions`
+
 ## التقنيات
-- Frontend: React, TypeScript, TanStack Query, Zustand, Tailwind CSS, shadcn/ui
-- Backend: Express.js, TypeScript, JWT, bcryptjs
-- Database: PostgreSQL, Drizzle ORM
-- Auth: JWT Bearer Tokens (لا session cookies)
-
-## إعداد Meta Pixel
-في `client/index.html`، استبدل `__META_PIXEL_ID__` بـ Pixel ID الخاص بك.
-
-## متغيرات البيئة
-- `DATABASE_URL` - رابط قاعدة البيانات
-- `SESSION_SECRET` - مفتاح JWT
-- `FB_VERIFY_TOKEN` - للـ Facebook Webhook verification
+- Frontend: React, TypeScript, Vite, TanStack Query, Zustand, shadcn/ui, Tailwind
+- Backend: Express.js, Drizzle ORM, PostgreSQL
+- Auth: JWT Bearer tokens (localStorage key: `crm-auth`)
+- RTL: كامل الموقع بالعربية من اليمين لليسار

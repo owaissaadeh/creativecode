@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/lib/auth";
-import { TrendingUp, Mail, Lock } from "lucide-react";
+import { Code2, Mail, Lock } from "lucide-react";
 import type { AuthUser } from "@/lib/auth";
 
 export default function Login() {
@@ -39,23 +39,23 @@ export default function Login() {
         </div>
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-white" />
+            <Code2 className="w-6 h-6 text-white" />
           </div>
-          <span className="text-white font-bold text-xl">NexaCRM</span>
+          <span className="text-white font-bold text-xl">Creative Code</span>
         </div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold text-white leading-tight">
-            منصتك الذكية لإدارة المبيعات
+            نحول أفكارك إلى واقع رقمي
           </h1>
           <p className="text-white/80 text-lg">
-            تتبع العملاء، أدر صفقاتك، وراقب عمولات فريقك من مكان واحد
+            فريق متخصص في تطوير التطبيقات، الذكاء الاصطناعي، وحلول الأعمال الرقمية
           </p>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: "عميل نشط", value: "+500" },
-              { label: "صفقة منجزة", value: "+5M" },
-              { label: "نسبة الرضا", value: "98%" },
-              { label: "دولة", value: "12" },
+              { label: "مشروع مكتمل", value: "+50" },
+              { label: "عميل سعيد", value: "+30" },
+              { label: "سنوات خبرة", value: "+5" },
+              { label: "دولة", value: "10+" },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl bg-white/10 p-4">
                 <div className="text-2xl font-bold text-white">{stat.value}</div>
@@ -65,7 +65,7 @@ export default function Login() {
           </div>
         </div>
         <div className="relative z-10 text-white/60 text-sm">
-          © 2026 NexaCRM. جميع الحقوق محفوظة.
+          © 2026 Creative Code. جميع الحقوق محفوظة.
         </div>
       </div>
 
@@ -76,13 +76,13 @@ export default function Login() {
             <div className="flex lg:hidden justify-center mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-primary-foreground" />
+                  <Code2 className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-xl">NexaCRM</span>
+                <span className="font-bold text-xl">Creative Code</span>
               </div>
             </div>
             <h2 className="text-3xl font-bold">مرحباً بعودتك</h2>
-            <p className="text-muted-foreground">أدخل بيانات الدخول للوصول إلى لوحة التحكم</p>
+            <p className="text-muted-foreground">بوابة الوصول للوحة إدارة Creative Code</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -129,7 +129,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="rounded-xl border border-card-border bg-card p-4 text-sm text-muted-foreground space-y-1">
+          <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">بيانات تجريبية:</p>
             <p>المدير: admin@nexacrm.com / admin123</p>
             <p>المبيعات: sales@nexacrm.com / sales123</p>

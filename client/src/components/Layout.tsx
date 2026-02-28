@@ -1,5 +1,6 @@
 import { useLocation, Link } from "wouter";
 import { useAuthStore } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -8,7 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Users, UserCheck, TrendingUp, DollarSign,
-  LogOut, Settings, Target
+  LogOut, Target, Code2, Layers, CalendarCheck
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -18,6 +19,11 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout, isAdmin } = useAuthStore();
   const [location] = useLocation();
 
+  const { data: stats } = useQuery<{ pendingConsultations?: number }>({
+    queryKey: ["/api/admin/stats"],
+    enabled: isAdmin(),
+  });
+
   const adminNav = [
     { title: "لوحة التحكم", href: "/admin", icon: LayoutDashboard },
     { title: "المستخدمين", href: "/admin/users", icon: Users },
@@ -25,6 +31,13 @@ export default function Layout({ children }: LayoutProps) {
     { title: "العملاء", href: "/admin/clients", icon: UserCheck },
     { title: "العمولات", href: "/admin/commissions", icon: DollarSign },
     { title: "التقارير", href: "/admin/reports", icon: TrendingUp },
+    { title: "إدارة المحتوى", href: "/admin/content", icon: Layers },
+    {
+      title: "الاستشارات",
+      href: "/admin/consultations",
+      icon: CalendarCheck,
+      badge: stats?.pendingConsultations && stats.pendingConsultations > 0 ? stats.pendingConsultations : undefined
+    },
   ];
 
   const salesNav = [
@@ -41,6 +54,8 @@ export default function Layout({ children }: LayoutProps) {
     "--sidebar-width-icon": "3.5rem",
   };
 
+  const currentTitle = navItems.find((n) => n.href === location)?.title || "Creative Code";
+
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <SidebarProvider style={style as React.CSSProperties}>
@@ -49,10 +64,10 @@ export default function Layout({ children }: LayoutProps) {
             <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-5 h-5 text-primary-foreground" />
+                  <Code2 className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-sm truncate">NexaCRM</span>
+                  <span className="font-bold text-sm truncate">Creative Code</span>
                   <span className="text-xs text-muted-foreground truncate">
                     {isAdmin() ? "لوحة المدير" : "لوحة المبيعات"}
                   </span>
@@ -71,9 +86,14 @@ export default function Layout({ children }: LayoutProps) {
                           isActive={location === item.href}
                           data-testid={`nav-${item.href.replace(/\//g, "-")}`}
                         >
-                          <Link href={item.href}>
-                            <item.icon className="w-4 h-4" />
-                            <span>{item.title}</span>
+                          <Link href={item.href} className="flex items-center gap-2 w-full">
+                            <item.icon className="w-4 h-4 shrink-0" />
+                            <span className="flex-1">{item.title}</span>
+                            {"badge" in item && item.badge ? (
+                              <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                                {item.badge}
+                              </span>
+                            ) : null}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -111,9 +131,7 @@ export default function Layout({ children }: LayoutProps) {
             <header className="flex items-center gap-3 border-b border-border px-4 py-3 sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
               <div className="h-5 w-px bg-border" />
-              <h1 className="text-sm font-medium text-muted-foreground">
-                {navItems.find((n) => n.href === location)?.title || "NexaCRM"}
-              </h1>
+              <h1 className="text-sm font-medium text-muted-foreground">{currentTitle}</h1>
             </header>
             <main className="flex-1 overflow-auto p-6">
               {children}

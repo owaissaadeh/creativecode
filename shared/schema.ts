@@ -55,10 +55,40 @@ export const commissions = pgTable("commissions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const pageItems = pgTable("page_items", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  itemType: text("item_type", { enum: ["service", "project"] }).notNull(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  icon: text("icon"),
+  tags: text("tags").array().notNull().default([]),
+  orderIndex: integer("order_index").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const consultations = pgTable("consultations", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  companyName: text("company_name"),
+  serviceType: text("service_type").notNull(),
+  consultationDate: text("consultation_date").notNull(),
+  consultationTime: text("consultation_time").notNull(),
+  message: text("message"),
+  status: text("status", { enum: ["pending", "confirmed", "done", "cancelled"] }).notNull().default("pending"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, createdAt: true });
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true });
 export const insertCommissionSchema = createInsertSchema(commissions).omit({ id: true, createdAt: true });
+export const insertPageItemSchema = createInsertSchema(pageItems).omit({ id: true, createdAt: true });
+export const insertConsultationSchema = createInsertSchema(consultations).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -68,6 +98,10 @@ export type InsertClient = z.infer<typeof insertClientSchema>;
 export type Client = typeof clients.$inferSelect;
 export type InsertCommission = z.infer<typeof insertCommissionSchema>;
 export type Commission = typeof commissions.$inferSelect;
+export type InsertPageItem = z.infer<typeof insertPageItemSchema>;
+export type PageItem = typeof pageItems.$inferSelect;
+export type InsertConsultation = z.infer<typeof insertConsultationSchema>;
+export type Consultation = typeof consultations.$inferSelect;
 
 export const loginSchema = z.object({
   email: z.string().email(),
