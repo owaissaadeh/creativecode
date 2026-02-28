@@ -1,0 +1,129 @@
+عدّل المشروع الحالي ليصبح موقع شركة تقنية متكامل باسم "Creative Code"
+باللغة العربية RTL
+مع لوحة تحكم Admin كاملة
+ونظام Leads
+وتصميم Responsive حقيقي (Desktop + Mobile)
+ونظام تحكم كامل بالمحتوى من الداشبورد
+
+⚠️ لا تنشئ مشروع جديد
+⚠️ لا تعيد بناء كل الملفات
+⚠️ عدّل فقط ما هو ضروري
+⚠️ لا تستخدم React
+⚠️ لا تستخدم TypeScript
+⚠️ لا تستخدم مكتبات ثقيلة
+⚠️ لا تكتب شروحات
+⚠️ لا تضف ميزات ذكاء اصطناعي تفاعلية
+⚠️ لا تنشئ Agents
+
+التقنيات:
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+- EJS
+- Bootstrap 5
+- bcrypt
+- JWT
+
+==================================================
+التصميم
+
+- اللون الرئيسي: #0f74dc
+- اللون الثانوي: #414141
+- RTL كامل
+- خط عربي أنيق
+- تصميم عصري بسيط
+- Mobile First
+
+Responsive Rules:
+- أقل من 768px → Mobile Layout + MobileHeader + MobileNav سفلي
+- أكبر من 992px → DesktopHeader + Navbar أفقي + Footer كامل
+- استخدم Bootstrap breakpoints فقط
+- لا تعتمد على device detection
+
+==================================================
+نظام إدارة المحتوى الكامل
+
+أنشئ نظام CMS داخلي باستخدام Model واحد موحد:
+
+PageSection Model:
+
+- page (home/services/ai/projects/blog/contact/consultation)
+- section_key (hero/about/services_preview/ai_section/projects_preview/clients/cta/footer/etc)
+- title
+- subtitle
+- content
+- image_url
+- button_text
+- button_link
+- order
+- is_active
+
+كل صفحة عامة يجب أن:
+- تجلب محتواها من PageSection
+- ترتب الأقسام حسب order
+- تعرض فقط is_active = true
+
+لا تكتب أي نص ثابت داخل EJS
+كل النصوص يجب أن تكون ديناميكية من قاعدة البيانات
+
+==================================================
+الصفحات العامة
+
+1) Home
+كل أقسامها ديناميكية من PageSection
+
+2) Services
+محتوى الصفحة + الهيرو ديناميكي
+
+3) AIServices
+تعريف فقط
+المحتوى بالكامل ديناميكي
+
+4) Projects
+الهيرو ديناميكي
+المشاريع من Project model
+
+5) Blog
+الهيرو ديناميكي
+
+6) BlogPost
+المحتوى من BlogPost model
+
+7) BookConsultation
+الهيرو ديناميكي
+
+==================================================
+لوحة التحكم Admin
+
+كل صفحات الأدمن تستخدم AdminLayout
+
+أضف صفحة جديدة مهمة:
+
+AdminPageSections
+
+المميزات:
+
+- اختيار الصفحة من Dropdown
+- عرض جميع أقسامها
+- تعديل:
+    - العنوان
+    - النص
+    - الصورة
+    - الزر
+- تعديل order
+- تفعيل / تعطيل القسم
+- إضافة قسم جديد لأي صفحة
+- حذف قسم
+
+==================================================
+باقي صفحات الأدمن تبقى كما هي:
+
+AdminDashboard
+AdminServices
+AdminProjects
+AdminClients
+AdminBlog
+AdminConsultations
+AdminLeads
+AdminUTM

@@ -1,0 +1,62 @@
+هاد البرومبت الكامل اللي تقوله للـ AI:
+
+📋 البرومبت
+ابني لي موقع ويب كامل لشركة تقنية باسم "Creative Code" 
+بالعربي RTL مع لوحة تحكم Admin كاملة.
+
+=== التصميم ===
+- اللون الرئيسي: #0f74dc (أزرق)
+- اللون الثانوي: #414141 (رمادي داكن)
+- خط عربي أنيق، تصميم عصري
+
+=== الصفحات العامة ===
+1. Home - صفحة رئيسية فيها: Hero, ServicesPreview, AISection, ProjectsPreview, ClientsSection, CTASection, Footer
+2. Services - عرض خدمات الشركة
+3. AIServices - صفحة ذكاء اصطناعي مع شات تفاعلي
+4. Projects - معرض أعمال مع فلترة بالتصنيف
+5. Blog - مدونة
+6. BlogPost - صفحة مقال كامل
+7. BookConsultation - نموذج حجز استشارة متعدد الخطوات
+
+=== لوحة التحكم (Admin) ===
+كل صفحات الأدمن تبدأ بـ AdminLayout فيه Sidebar عربي.
+الصفحات:
+1. AdminDashboard - إحصائيات عامة
+2. AdminServices - CRUD + Drag & Drop لترتيب الخدمات
+3. AdminProjects - CRUD + رفع صور متعددة (Gallery) + Drag & Drop
+4. AdminClients - CRUD + Drag & Drop
+5. AdminBlog - إدارة المقالات مع محرر نصوص
+6. AdminConsultations - إدارة الحجوزات مع تغيير الحالة
+7. AdminLeads - عرض العملاء المحتملين
+8. AdminUTM - تحليل مصادر الزوار برسوم بيانية (recharts)
+
+=== قاعدة البيانات (Entities) ===
+- Service: title, description, full_description, icon, image_url, category(ai/development/automation/consulting), is_featured, order
+- Project: title, description, image_url, gallery(array), client_name, category(web/mobile/ai/automation/system), technologies(array), project_url, is_featured, order
+- Client: name, logo_url, testimonial, position, is_featured, order
+- BlogPost: title, slug, excerpt, content, cover_image, category(ai/technology/business/tips/news), tags(array), is_published, views
+- Consultation: name, email, phone, company, service_interest, message, date, time_slot, duration(30/60), status(pending/confirmed/completed/cancelled), utm_source, utm_medium, utm_campaign, utm_content, utm_term
+- Lead: email, name, phone, company, page_visited, utm_source, utm_medium, utm_campaign, utm_content, utm_term, user_agent, referrer, converted
+- TimeSlot: date, time, is_available, booked_by
+- SiteContent: key, title, content, image_url, section(hero/about/services/ai/contact/footer)
+
+=== مساعدون أذكياء (AI Agents) ===
+أنشئ 4 agents:
+1. clinic_assistant - مساعد عيادات طبية
+2. library_assistant - مساعد مكتبة
+3. restaurant_assistant - مساعد مطعم
+4. tech_marketing_assistant - مساعد برمجة وتسويق
+
+في صفحة AIServices اعرض واجهة اختيار بين الـ agents مع شات حقيقي لكل واحد.
+
+=== مميزات إضافية ===
+- UTMTracker component يتتبع utm_source/medium/campaign من URL ويحفظها في sessionStorage
+- MobileHeader ثابت في الأعلى مع تأثير scroll
+- MobileNav شريط تنقل سفلي للموبايل
+- DesktopHeader ثابت للديسكتوب
+- Drag & Drop باستخدام @hello-pangea/dnd
+- رفع صور متعددة للـ Gallery
+- رسوم بيانية في AdminUTM
+- Footer يظهر فقط في الديسكتوب
+- AdminProtection تمنع الوصول لغير الأدمن
+- Layout يتحقق من currentPageName ولو Admin لا يعرض الهيدر والفوتر
