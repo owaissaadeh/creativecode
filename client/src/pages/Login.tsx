@@ -144,11 +144,6 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">بيانات تجريبية:</p>
-            <p>المدير: admin@nexacrm.com / admin123</p>
-            <p>المبيعات: sales@nexacrm.com / sales123</p>
-          </div>
         </div>
       </div>
     </div>

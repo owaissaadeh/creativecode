@@ -15,11 +15,6 @@ Landing Page لشركة Creative Code التقنية مع نظام CRM متكا�
 - **لوحة Sales**: Leads المعينة، عملاء، عمولات
 - **نظام العمولات** التلقائي عند إغلاق صفقة (Won)
 
-## بيانات الدخول التجريبية
-- **المدير**: admin@nexacrm.com / admin123
-- **مبيعات (محمد)**: sales@nexacrm.com / sales123
-- **مبيعات (سارة)**: sara@nexacrm.com / sara123
-
 ## هيكل الملفات
 ```
 client/src/
