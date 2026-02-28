@@ -4,9 +4,10 @@
 Landing Page لشركة Creative Code التقنية مع نظام CRM متكامل للإدارة الداخلية. مبني بـ React + TypeScript + Express + PostgreSQL.
 
 ## الميزات
-- **Landing Page** لشركة Creative Code (تقنية) — RTL عربي كامل
+- **Landing Page** لشركة Creative Code (تقنية) — RTL عربي كامل، خط Cairo
 - **نظام حجز الاستشارات**: فورم جذاب مع تقويم مخصص + اختيار وقت (9:00-17:00)
 - **CMS داخلي**: إدارة الخدمات والمشاريع من لوحة الأدمن (إضافة/تعديل/حذف/تفعيل)
+- **إعدادات الهوية البصرية**: تعديل اسم الشركة (اللوغو) ورابط الفافيكون من تبويب الإعدادات
 - **Meta Pixel** جاهز (تعديل PIXEL_ID في index.html)
 - **Facebook Webhook** endpoint جاهز
 - **نظام المصادقة** بـ JWT مع صلاحيات (admin/sales)

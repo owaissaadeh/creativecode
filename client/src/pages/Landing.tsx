@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSiteConfig } from "@/lib/siteConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -128,6 +129,9 @@ export default function Landing() {
     serviceType: "", consultationDate: "", consultationTime: "", message: ""
   });
 
+  const config = useSiteConfig();
+  const siteName = config.logo_text || "Creative Code";
+
   const { data: items = [] } = useQuery<PageItem[]>({
     queryKey: ["/api/content/items"],
   });
@@ -166,7 +170,7 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
               <Code2 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">Creative Code</span>
+            <span className="font-bold text-lg">{siteName}</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#services" className="hover:text-foreground transition-colors">خدماتنا</a>
@@ -235,7 +239,7 @@ export default function Landing() {
                     <Code2 className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <div className="font-bold text-sm">Creative Code</div>
+                    <div className="font-bold text-sm">{siteName}</div>
                     <div className="text-xs text-muted-foreground">حلول تقنية متكاملة</div>
                   </div>
                 </div>
@@ -603,10 +607,10 @@ export default function Landing() {
               <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
                 <Code2 className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-bold">Creative Code</span>
+              <span className="font-bold">{siteName}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2026 Creative Code. جميع الحقوق محفوظة.
+              © 2026 {siteName}. جميع الحقوق محفوظة.
             </p>
             <div className="flex gap-4 text-sm text-muted-foreground">
               <a href="#services" className="hover:text-foreground transition-colors">الخدمات</a>

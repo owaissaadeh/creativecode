@@ -57,7 +57,7 @@ export const commissions = pgTable("commissions", {
 
 export const pageItems = pgTable("page_items", {
   id: varchar("id", { length: 36 }).primaryKey(),
-  itemType: text("item_type", { enum: ["service", "project"] }).notNull(),
+  itemType: text("item_type", { enum: ["service", "project", "config"] }).notNull(),
   title: text("title").notNull(),
   subtitle: text("subtitle"),
   description: text("description"),

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/lib/auth";
+import { useFaviconSync } from "@/lib/siteConfig";
 import Layout from "@/components/Layout";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -34,6 +35,7 @@ function ProtectedRoute({ component: Component, adminOnly = false }: { component
 
 function Router() {
   const { user } = useAuthStore();
+  useFaviconSync();
 
   return (
     <Switch>

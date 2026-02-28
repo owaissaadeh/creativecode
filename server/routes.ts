@@ -46,6 +46,27 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Public: Site Config
+  app.get("/api/content/config", async (req, res) => {
+    try {
+      const config = await storage.getSiteConfig();
+      res.json(config);
+    } catch {
+      res.json({ logo_text: "Creative Code", favicon_url: "" });
+    }
+  });
+
+  // Admin: Update Site Config
+  app.patch("/api/admin/content/config", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      await storage.setSiteConfig(req.body);
+      const config = await storage.getSiteConfig();
+      res.json(config);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   // Public: Page Content
   app.get("/api/content/items", async (req, res) => {
     try {

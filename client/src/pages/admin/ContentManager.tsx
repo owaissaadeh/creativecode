@@ -16,7 +16,9 @@ import {
   AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Layers, FolderKanban } from "lucide-react";
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Layers, FolderKanban, Settings, Save } from "lucide-react";
+import { useSiteConfig } from "@/lib/siteConfig";
+import type { SiteConfig } from "@/lib/siteConfig";
 import type { PageItem } from "@shared/schema";
 
 type ItemForm = {
@@ -291,6 +293,76 @@ function ItemsTab({ itemType }: { itemType: "service" | "project" }) {
   );
 }
 
+function SettingsTab() {
+  const { toast } = useToast();
+  const siteConfig = useSiteConfig();
+  const [form, setForm] = useState<SiteConfig>({
+    logo_text: siteConfig.logo_text,
+    favicon_url: siteConfig.favicon_url,
+  });
+  const [synced, setSynced] = useState(false);
+
+  if (!synced && (siteConfig.logo_text !== "Creative Code" || siteConfig.favicon_url !== "")) {
+    setForm({ logo_text: siteConfig.logo_text, favicon_url: siteConfig.favicon_url });
+    setSynced(true);
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: (data: Partial<SiteConfig>) => apiRequest("PATCH", "/api/admin/content/config", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/content/config"] });
+      toast({ title: "تم حفظ الإعدادات بنجاح" });
+    },
+    onError: () => toast({ title: "خطأ في الحفظ", variant: "destructive" }),
+  });
+
+  return (
+    <div className="max-w-lg space-y-6">
+      <div className="rounded-xl border border-border p-6 space-y-5 bg-card">
+        <h2 className="font-semibold text-base flex items-center gap-2">
+          <Settings className="w-4 h-4 text-primary" />
+          إعدادات الهوية البصرية
+        </h2>
+
+        <div className="space-y-2">
+          <Label htmlFor="logo_text" data-testid="label-logo-text">اسم الشركة (اللوغو)</Label>
+          <Input
+            id="logo_text"
+            data-testid="input-logo-text"
+            value={form.logo_text}
+            onChange={(e) => setForm({ ...form, logo_text: e.target.value })}
+            placeholder="Creative Code"
+          />
+          <p className="text-xs text-muted-foreground">يظهر في الشريط العلوي للموقع وصفحة تسجيل الدخول</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="favicon_url" data-testid="label-favicon-url">رابط الفافيكون (Favicon URL)</Label>
+          <Input
+            id="favicon_url"
+            data-testid="input-favicon-url"
+            value={form.favicon_url}
+            onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
+            placeholder="https://example.com/favicon.ico"
+            dir="ltr"
+          />
+          <p className="text-xs text-muted-foreground">أيقونة الموقع في تبويب المتصفح (اتركه فارغاً للافتراضي)</p>
+        </div>
+
+        <Button
+          data-testid="button-save-settings"
+          onClick={() => saveMutation.mutate(form)}
+          disabled={saveMutation.isPending}
+          className="gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {saveMutation.isPending ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ContentManager() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6" dir="rtl">
@@ -299,11 +371,11 @@ export default function ContentManager() {
           <Layers className="w-6 h-6 text-primary" />
           إدارة محتوى الموقع
         </h1>
-        <p className="text-muted-foreground mt-1">تحكم بالخدمات والمشاريع التي تظهر في الصفحة الرئيسية</p>
+        <p className="text-muted-foreground mt-1">تحكم بالخدمات والمشاريع والإعدادات العامة للموقع</p>
       </div>
 
       <Tabs defaultValue="services" dir="rtl">
-        <TabsList className="grid grid-cols-2 w-64">
+        <TabsList className="grid grid-cols-3 w-80">
           <TabsTrigger value="services" data-testid="tab-services" className="gap-2">
             <FolderKanban className="w-4 h-4" />
             الخدمات
@@ -311,6 +383,10 @@ export default function ContentManager() {
           <TabsTrigger value="projects" data-testid="tab-projects" className="gap-2">
             <Layers className="w-4 h-4" />
             المشاريع
+          </TabsTrigger>
+          <TabsTrigger value="settings" data-testid="tab-settings" className="gap-2">
+            <Settings className="w-4 h-4" />
+            الإعدادات
           </TabsTrigger>
         </TabsList>
 
@@ -320,6 +396,10 @@ export default function ContentManager() {
 
         <TabsContent value="projects" className="mt-6">
           <ItemsTab itemType="project" />
+        </TabsContent>
+
+        <TabsContent value="settings" className="mt-6">
+          <SettingsTab />
         </TabsContent>
       </Tabs>
     </div>

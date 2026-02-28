@@ -35,6 +35,8 @@ export interface IStorage {
   createPageItem(data: InsertPageItem & { id?: string }): Promise<PageItem>;
   updatePageItem(id: string, data: Partial<PageItem>): Promise<PageItem>;
   deletePageItem(id: string): Promise<void>;
+  getSiteConfig(): Promise<{ logo_text: string; favicon_url: string }>;
+  setSiteConfig(data: { logo_text?: string; favicon_url?: string }): Promise<void>;
 
   getAllConsultations(): Promise<Consultation[]>;
   createConsultation(data: InsertConsultation & { id?: string }): Promise<Consultation>;
@@ -157,6 +159,29 @@ export class DatabaseStorage implements IStorage {
 
   async deletePageItem(id: string) {
     await db.delete(pageItems).where(eq(pageItems.id, id));
+  }
+
+  async getSiteConfig(): Promise<{ logo_text: string; favicon_url: string }> {
+    const results = await db.execute(sql`SELECT description FROM page_items WHERE item_type = 'config' LIMIT 1`);
+    const defaults = { logo_text: "Creative Code", favicon_url: "" };
+    if (!results.rows[0]) return defaults;
+    try {
+      const parsed = JSON.parse((results.rows[0] as any).description || "{}");
+      return { ...defaults, ...parsed };
+    } catch { return defaults; }
+  }
+
+  async setSiteConfig(data: { logo_text?: string; favicon_url?: string }): Promise<void> {
+    const current = await this.getSiteConfig();
+    const merged = { ...current, ...data };
+    const results = await db.execute(sql`SELECT id FROM page_items WHERE item_type = 'config' LIMIT 1`);
+    if (results.rows[0]) {
+      const id = (results.rows[0] as any).id;
+      await db.execute(sql`UPDATE page_items SET description = ${JSON.stringify(merged)} WHERE id = ${id}`);
+    } else {
+      const id = randomUUID();
+      await db.execute(sql`INSERT INTO page_items (id, item_type, title, description, tags, order_index, is_active, created_at) VALUES (${id}, 'config', 'site_config', ${JSON.stringify(merged)}, '{}', 0, true, NOW())`);
+    }
   }
 
   async getAllConsultations() {

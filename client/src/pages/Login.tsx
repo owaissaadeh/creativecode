@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/lib/auth";
+import { useSiteConfig } from "@/lib/siteConfig";
 import { Code2, Mail, Lock } from "lucide-react";
 import type { AuthUser } from "@/lib/auth";
 
@@ -13,6 +14,8 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { setAuth } = useAuthStore();
+  const siteConfig = useSiteConfig();
+  const siteName = siteConfig.logo_text || "Creative Code";
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
 
@@ -41,7 +44,7 @@ export default function Login() {
           <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
             <Code2 className="w-6 h-6 text-white" />
           </div>
-          <span className="text-white font-bold text-xl">Creative Code</span>
+          <span className="text-white font-bold text-xl">{siteName}</span>
         </div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold text-white leading-tight">
@@ -65,7 +68,7 @@ export default function Login() {
           </div>
         </div>
         <div className="relative z-10 text-white/60 text-sm">
-          © 2026 Creative Code. جميع الحقوق محفوظة.
+          © 2026 {siteName}. جميع الحقوق محفوظة.
         </div>
       </div>
 
@@ -78,11 +81,11 @@ export default function Login() {
                 <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
                   <Code2 className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-xl">Creative Code</span>
+                <span className="font-bold text-xl">{siteName}</span>
               </div>
             </div>
             <h2 className="text-3xl font-bold">مرحباً بعودتك</h2>
-            <p className="text-muted-foreground">بوابة الوصول للوحة إدارة Creative Code</p>
+            <p className="text-muted-foreground">بوابة الوصول للوحة إدارة {siteName}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
