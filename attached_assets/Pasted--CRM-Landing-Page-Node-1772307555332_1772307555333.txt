@@ -1,0 +1,186 @@
+أريد بناء نظام CRM متكامل لشركتي + Landing Page احترافية لجلب العملاء.
+
+التقنيات المطلوبة:
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT Authentication
+- EJS + Bootstrap 5
+- bcrypt لتشفير كلمات المرور
+- MVC Structure
+- لا تستخدم React
+- لا تستخدم TypeScript
+- لا تستخدم Docker
+- أنشئ أقل عدد ممكن من الملفات
+- لا تكتب شروحات
+- عدل فقط عند الطلب
+- لا تعيد إنشاء ملفات كاملة بدون سبب
+
+==================================================
+
+1) نظام المستخدمين والصلاحيات
+
+Roles:
+- admin
+- sales
+
+⚠️ مهم:
+- لا يوجد تسجيل عام
+- فقط admin يستطيع إنشاء مستخدمين sales
+- admin يحدد:
+    - الاسم
+    - الإيميل
+    - كلمة المرور
+    - نسبة العمولة commissionRate
+
+User Model:
+- name
+- email
+- password (bcrypt)
+- role
+- commissionRate
+- createdAt
+
+==================================================
+
+2) Landing Page احترافية لجلب Leads
+
+صفحة عامة تحتوي على:
+
+- Hero Section
+- خدمات
+- مشاريع
+- Call To Action واضح
+- نموذج Lead Form
+
+Lead Form يحتوي على:
+- الاسم
+- اسم الشركة
+- رقم الهاتف
+- الإيميل
+- نوع الخدمة
+- الميزانية المتوقعة
+- رسالة
+
+عند الإرسال:
+- يتم حفظ البيانات في MongoDB داخل Lead Model
+- يتم تسجيل تاريخ الإرسال
+- يتم تسجيل مصدر الزيارة (utm_source إن وجد)
+
+==================================================
+
+3) Meta Integration
+
+- أضف Meta Pixel في Landing Page
+- أضف Facebook Conversion Event عند إرسال النموذج:
+    event name: Lead
+- جهز backend endpoint لاستقبال Facebook Webhook لاحقاً
+- اجعل Pixel ID قابل للتعديل من متغير بيئة
+
+==================================================
+
+4) نظام Leads داخل CRM
+
+Lead Model:
+- name
+- companyName
+- phone
+- email
+- serviceType
+- budget
+- message
+- source
+- status (New, Contacted, Converted, Lost)
+- assignedTo (sales user)
+- createdAt
+
+في لوحة admin:
+- عرض جميع Leads
+- إمكانية تعيين Lead لموظف sales
+- إمكانية تحويل Lead إلى Client
+
+==================================================
+
+5) نظام العملاء (بعد التحويل)
+
+Client Model:
+- salesId
+- clientName
+- companyName
+- phone
+- email
+- serviceType
+- dealValue
+- status:
+    - New Lead
+    - Contacted
+    - Meeting Scheduled
+    - Proposal Sent
+    - Negotiation
+    - Won
+    - Lost
+- nextMeetingDate
+- notes (array)
+- createdAt
+
+==================================================
+
+6) نظام العمولات
+
+Commission Model:
+- salesId
+- clientId
+- dealValue
+- commissionRate
+- commissionAmount
+- createdAt
+
+المنطق:
+عند تغيير حالة Client إلى "Won":
+commissionAmount = dealValue * commissionRate / 100
+ثم إنشاء سجل Commission
+
+==================================================
+
+7) Dashboard
+
+Admin Dashboard:
+- إدارة المستخدمين
+- إنشاء مستخدم sales
+- تعديل نسبة العمولة
+- عرض جميع Leads
+- تعيين Leads
+- تحويل Lead إلى Client
+- عرض جميع العملاء
+- تقارير:
+    - إجمالي المبيعات
+    - إجمالي العمولات
+    - أفضل موظف
+    - نسبة الإغلاق
+
+Sales Dashboard:
+- عرض Leads المعينة له
+- تحديث حالة Lead
+- إضافة عميل جديد
+- إدارة العملاء الخاصين به
+- رؤية عمولاته فقط
+- فلترة حسب الحالة
+
+==================================================
+
+8) الأمان
+
+- Middleware للتحقق من JWT
+- Middleware للتحقق من role
+- حماية جميع routes
+- Validation بسيط للمدخلات
+- منع sales من رؤية بيانات غيره
+
+==================================================
+
+ابدأ بالمرحلة الأولى فقط:
+- Server setup
+- Mongo connection
+- User model
+- Auth system
+- Admin create sales user
+- Login system
