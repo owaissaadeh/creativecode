@@ -4,24 +4,24 @@ import { randomUUID } from "crypto";
 
 export async function seedDatabase() {
   try {
-    const existing = await storage.getUserByEmail("admin@creativecode.jo");
+    const existing = await storage.getUserByEmail("admin@nexacrm.com");
     if (existing) return;
 
-    const adminPass = await bcrypt.hash("CCAdmin2026!", 10);
+    const adminPass = await bcrypt.hash("admin123", 10);
     const admin = await storage.createUser({
       id: randomUUID(),
       name: "أحمد المدير",
-      email: "admin@creativecode.jo",
+      email: "admin@nexacrm.com",
       password: adminPass,
       role: "admin",
       commissionRate: "0",
     });
 
-    const salesPass = await bcrypt.hash("CCSales2026!", 10);
+    const salesPass = await bcrypt.hash("sales123", 10);
     const sales1 = await storage.createUser({
       id: randomUUID(),
       name: "محمد العمري",
-      email: "sales@creativecode.jo",
+      email: "sales@nexacrm.com",
       password: salesPass,
       role: "sales",
       commissionRate: "10",
@@ -30,8 +30,8 @@ export async function seedDatabase() {
     const sales2 = await storage.createUser({
       id: randomUUID(),
       name: "سارة الحربي",
-      email: "sara@creativecode.jo",
-      password: await bcrypt.hash("CCSara2026!", 10),
+      email: "sara@nexacrm.com",
+      password: await bcrypt.hash("sara123", 10),
       role: "sales",
       commissionRate: "12",
     });
