@@ -30,7 +30,7 @@ async function uploadToObjectStorage(buffer: Buffer, filename: string, mimetype:
   const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
   const objectName = `public/${filename}`;
   const file = gcsClient.bucket(bucketId).file(objectName);
-  await file.save(buffer, { contentType: mimetype, resumable: false });
+  await file.save(buffer, { contentType: mimetype, resumable: false, validation: false });
   return `/api/files/${filename}`;
 }
 
