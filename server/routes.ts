@@ -102,9 +102,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const [exists] = await file.exists();
       if (!exists) return res.status(404).json({ message: "الملف غير موجود" });
       const [metadata] = await file.getMetadata();
+      const [buffer] = await file.download();
       res.set("Content-Type", metadata.contentType || "application/octet-stream");
+      res.set("Content-Length", String(buffer.length));
       res.set("Cache-Control", "public, max-age=31536000");
-      file.createReadStream().pipe(res);
+      res.end(buffer);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
