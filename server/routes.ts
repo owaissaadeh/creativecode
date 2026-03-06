@@ -7,19 +7,35 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
+import { Storage } from "@google-cloud/storage";
 
-const uploadsDir = path.resolve("uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
+
+const gcsClient = new Storage({
+  credentials: {
+    audience: "replit",
+    subject_token_type: "access_token",
+    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+    type: "external_account",
+    credential_source: {
+      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+      format: { type: "json", subject_token_field_name: "access_token" },
+    },
+    universe_domain: "googleapis.com",
+  },
+  projectId: "",
+} as any);
+
+async function uploadToObjectStorage(buffer: Buffer, filename: string, mimetype: string): Promise<string> {
+  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
+  const objectName = `public/${filename}`;
+  const file = gcsClient.bucket(bucketId).file(objectName);
+  await file.save(buffer, { contentType: mimetype, resumable: false });
+  return `/api/files/${filename}`;
+}
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, uploadsDir),
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = [".png", ".jpg", ".jpeg", ".ico", ".svg", ".webp", ".gif"];
@@ -69,13 +85,43 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Static: Serve uploaded images
-  app.use("/uploads", express.static(uploadsDir));
+  // Legacy: serve locally uploaded files (dev fallback for old URLs)
+  if (process.env.NODE_ENV !== "production") {
+    const { existsSync, mkdirSync } = await import("fs");
+    const uploadsDir = path.resolve("uploads");
+    if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
+    app.use("/uploads", express.static(uploadsDir));
+  }
+
+  // Serve files from object storage
+  app.get("/api/files/:filename", async (req, res) => {
+    try {
+      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
+      const objectName = `public/${req.params.filename}`;
+      const file = gcsClient.bucket(bucketId).file(objectName);
+      const [exists] = await file.exists();
+      if (!exists) return res.status(404).json({ message: "الملف غير موجود" });
+      const [metadata] = await file.getMetadata();
+      res.set("Content-Type", metadata.contentType || "application/octet-stream");
+      res.set("Cache-Control", "public, max-age=31536000");
+      file.createReadStream().pipe(res);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
 
   // Admin: Upload image (logo or favicon)
-  app.post("/api/admin/upload", authMiddleware, adminOnly, upload.single("file"), (req: AuthRequest, res: Response) => {
+  app.post("/api/admin/upload", authMiddleware, adminOnly, upload.single("file"), async (req: AuthRequest, res: Response) => {
     if (!req.file) return res.status(400).json({ message: "لم يتم اختيار ملف أو نوع الملف غير مدعوم" });
-    res.json({ url: `/uploads/${req.file.filename}` });
+    try {
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      const url = await uploadToObjectStorage(req.file.buffer, filename, req.file.mimetype);
+      res.json({ url });
+    } catch (err) {
+      console.error("Upload error:", err);
+      res.status(500).json({ message: "فشل رفع الملف" });
+    }
   });
 
   // Public: Site Config
