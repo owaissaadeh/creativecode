@@ -174,7 +174,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const existing = await storage.getUserByEmail(email);
       if (existing) return res.status(400).json({ message: "البريد الإلكتروني مستخدم بالفعل" });
       const hashed = await bcrypt.hash(password, 10);
-      const user = await storage.createUser({ name, email, password: hashed, role: "sales", commissionRate: commissionRate || "10" });
+      const validRole = ["admin", "sales", "finance"].includes(req.body.role) ? req.body.role : "sales";
+      const user = await storage.createUser({ name, email, password: hashed, role: validRole, commissionRate: commissionRate || "10" });
       res.json({ ...user, password: undefined });
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
