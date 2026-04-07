@@ -503,15 +503,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  const VALID_STATUS = ["todo", "in_progress", "done"] as const;
+  const VALID_PRIORITY = ["low", "medium", "high"] as const;
+
   app.post("/api/admin/tasks", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
     try {
       const { title, description, assignedTo, dueDate, priority, status, relatedLeadId, relatedClientId } = req.body;
       if (!title) return res.status(400).json({ message: "العنوان مطلوب" });
+      const resolvedPriority = priority || "medium";
+      const resolvedStatus = status || "todo";
+      if (!VALID_PRIORITY.includes(resolvedPriority)) return res.status(400).json({ message: "أولوية غير صالحة" });
+      if (!VALID_STATUS.includes(resolvedStatus)) return res.status(400).json({ message: "حالة غير صالحة" });
       const task = await storage.createTask({
         title, description, assignedTo: assignedTo || null,
         createdBy: req.user!.id,
-        dueDate: dueDate || null, priority: priority || "medium",
-        status: status || "todo",
+        dueDate: dueDate || null, priority: resolvedPriority,
+        status: resolvedStatus,
         relatedLeadId: relatedLeadId || null, relatedClientId: relatedClientId || null,
       });
       res.json(task);
@@ -528,8 +535,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if ("description" in body) updates.description = body.description || null;
       if ("assignedTo" in body) updates.assignedTo = body.assignedTo || null;
       if ("dueDate" in body) updates.dueDate = body.dueDate || null;
-      if ("priority" in body) updates.priority = body.priority;
-      if ("status" in body) updates.status = body.status;
+      if ("priority" in body) {
+        if (!VALID_PRIORITY.includes(body.priority)) return res.status(400).json({ message: "أولوية غير صالحة" });
+        updates.priority = body.priority;
+      }
+      if ("status" in body) {
+        if (!VALID_STATUS.includes(body.status)) return res.status(400).json({ message: "حالة غير صالحة" });
+        updates.status = body.status;
+      }
       if ("relatedLeadId" in body) updates.relatedLeadId = body.relatedLeadId || null;
       if ("relatedClientId" in body) updates.relatedClientId = body.relatedClientId || null;
       const task = await storage.updateTask(req.params.id, updates);
@@ -572,9 +585,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Sales: Tasks (own tasks only)
+  const validStatus = ["todo", "in_progress", "done"] as const;
+  const validPriority = ["low", "medium", "high"] as const;
+
   app.get("/api/sales/tasks", authMiddleware, async (req: AuthRequest, res) => {
     try {
-      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      if (!req.user || req.user.role !== "sales") return res.status(403).json({ message: "غير مسموح" });
       const myTasks = await storage.getTasksByUser(req.user.id);
       res.json(myTasks);
     } catch {
@@ -584,12 +600,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/sales/tasks/:id", authMiddleware, async (req: AuthRequest, res) => {
     try {
-      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      if (!req.user || req.user.role !== "sales") return res.status(403).json({ message: "غير مسموح" });
+      const { status } = req.body;
+      if (status && !validStatus.includes(status)) return res.status(400).json({ message: "حالة غير صالحة" });
       const allTasks = await storage.getAllTasks();
       const task = allTasks.find((t) => t.id === req.params.id);
       if (!task) return res.status(404).json({ message: "المهمة غير موجودة" });
       if (task.assignedTo !== req.user.id) return res.status(403).json({ message: "غير مسموح" });
-      const { status } = req.body;
       const updated = await storage.updateTask(req.params.id, { status });
       res.json(updated);
     } catch {
