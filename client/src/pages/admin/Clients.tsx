@@ -58,7 +58,7 @@ export default function AdminClients() {
   const { data: clients = [], isLoading } = useQuery<ClientWithSales[]>({ queryKey: ["/api/admin/clients"] });
   const { data: salesUsers = [] } = useQuery<User[]>({ queryKey: ["/api/admin/users"] });
   const { data: clientTasks = [] } = useQuery<TaskWithNames[]>({
-    queryKey: ["/api/tasks/by-client", clientTasksPanel?.id],
+    queryKey: [`/api/tasks/by-client/${clientTasksPanel?.id}`],
     enabled: !!clientTasksPanel,
   });
 
@@ -87,7 +87,7 @@ export default function AdminClients() {
   const createTaskMutation = useMutation({
     mutationFn: (data: object) => apiRequest("POST", "/api/admin/tasks", data),
     onSuccess: () => {
-      if (clientTasksPanel) queryClient.invalidateQueries({ queryKey: ["/api/tasks/by-client", clientTasksPanel.id] });
+      if (clientTasksPanel) queryClient.invalidateQueries({ queryKey: [`/api/tasks/by-client/${clientTasksPanel.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/pending-count"] });
       setTaskDialog(null);

@@ -52,7 +52,7 @@ export default function AdminLeads() {
   const { data: leads = [], isLoading } = useQuery<Lead[]>({ queryKey: ["/api/admin/leads"] });
   const { data: salesUsers = [] } = useQuery<User[]>({ queryKey: ["/api/admin/users"] });
   const { data: leadTasks = [] } = useQuery<TaskWithNames[]>({
-    queryKey: ["/api/tasks/by-lead", leadTasksPanel?.id],
+    queryKey: [`/api/tasks/by-lead/${leadTasksPanel?.id}`],
     enabled: !!leadTasksPanel,
   });
 
@@ -80,7 +80,7 @@ export default function AdminLeads() {
   const createTaskMutation = useMutation({
     mutationFn: (data: object) => apiRequest("POST", "/api/admin/tasks", data),
     onSuccess: () => {
-      if (leadTasksPanel) queryClient.invalidateQueries({ queryKey: ["/api/tasks/by-lead", leadTasksPanel.id] });
+      if (leadTasksPanel) queryClient.invalidateQueries({ queryKey: [`/api/tasks/by-lead/${leadTasksPanel.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/pending-count"] });
       setTaskDialog(null);
