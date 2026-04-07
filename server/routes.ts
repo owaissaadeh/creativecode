@@ -555,7 +555,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/tasks/by-client/:clientId", authMiddleware, async (req: AuthRequest, res) => {
+  app.get("/api/tasks/by-client/:clientId", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
     try {
       const tasks = await storage.getTasksByClient(req.params.clientId);
       const allUsers = await storage.getAllUsers();

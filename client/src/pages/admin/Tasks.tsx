@@ -56,6 +56,7 @@ export default function AdminTasks() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
+  const [filterUser, setFilterUser] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<TaskWithNames | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -136,6 +137,7 @@ export default function AdminTasks() {
   const filtered = tasks
     .filter((t) => filterStatus === "all" || t.status === filterStatus)
     .filter((t) => filterPriority === "all" || t.priority === filterPriority)
+    .filter((t) => filterUser === "all" || t.assignedTo === filterUser)
     .filter((t) =>
       !search ||
       t.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -188,6 +190,18 @@ export default function AdminTasks() {
             <SelectItem value="high">عالية</SelectItem>
             <SelectItem value="medium">متوسطة</SelectItem>
             <SelectItem value="low">منخفضة</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterUser} onValueChange={setFilterUser}>
+          <SelectTrigger className="w-48" data-testid="select-tasks-user-filter">
+            <User className="w-4 h-4 ml-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع الموظفين</SelectItem>
+            {salesAndAdminUsers.map((u) => (
+              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
