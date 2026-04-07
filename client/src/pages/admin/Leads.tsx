@@ -9,8 +9,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { Target, Phone, Mail, Building, UserCheck, ArrowRight, Search, Filter } from "lucide-react";
-import type { Lead, User } from "@shared/schema";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Target, Phone, Mail, Building, UserCheck, ArrowRight, Search, Filter, ClipboardList, Plus, Circle, Clock, CheckCircle2 } from "lucide-react";
+import type { Lead, User, Task } from "@shared/schema";
+
+const taskStatusIcon: Record<string, typeof Circle> = {
+  todo: Circle,
+  in_progress: Clock,
+  done: CheckCircle2,
+};
+const taskStatusColor: Record<string, string> = {
+  todo: "text-blue-500",
+  in_progress: "text-orange-500",
+  done: "text-green-600",
+};
+const taskStatusLabel: Record<string, string> = {
+  todo: "انتظار",
+  in_progress: "جارية",
+  done: "مكتملة",
+};
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   New: { label: "جديد", color: "bg-blue-500/10 text-blue-600" },
@@ -19,15 +37,24 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   Lost: { label: "مفقود", color: "bg-red-500/10 text-red-600" },
 };
 
+interface TaskWithNames extends Task { assignedToName?: string | null; }
+
 export default function AdminLeads() {
   const { toast } = useToast();
   const [assignDialog, setAssignDialog] = useState<Lead | null>(null);
   const [selectedSales, setSelectedSales] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [search, setSearch] = useState("");
+  const [taskDialog, setTaskDialog] = useState<Lead | null>(null);
+  const [leadTasksPanel, setLeadTasksPanel] = useState<Lead | null>(null);
+  const [taskForm, setTaskForm] = useState({ title: "", description: "", assignedTo: "", dueDate: "", priority: "medium" });
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({ queryKey: ["/api/admin/leads"] });
   const { data: salesUsers = [] } = useQuery<User[]>({ queryKey: ["/api/admin/users"] });
+  const { data: leadTasks = [] } = useQuery<TaskWithNames[]>({
+    queryKey: ["/api/tasks/by-lead", leadTasksPanel?.id],
+    enabled: !!leadTasksPanel,
+  });
 
   const assignMutation = useMutation({
     mutationFn: ({ id, salesId }: { id: string; salesId: string }) =>
@@ -46,6 +73,19 @@ export default function AdminLeads() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
       toast({ title: "تم تحويل العميل المحتمل إلى عميل بنجاح" });
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: (data: object) => apiRequest("POST", "/api/admin/tasks", data),
+    onSuccess: () => {
+      if (leadTasksPanel) queryClient.invalidateQueries({ queryKey: ["/api/tasks/by-lead", leadTasksPanel.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks/pending-count"] });
+      setTaskDialog(null);
+      setTaskForm({ title: "", description: "", assignedTo: "", dueDate: "", priority: "medium" });
+      toast({ title: "تم إنشاء المهمة بنجاح" });
     },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
@@ -131,7 +171,16 @@ export default function AdminLeads() {
                       </div>
                       {lead.message && <p className="text-sm text-muted-foreground line-clamp-1">{lead.message}</p>}
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { setLeadTasksPanel(lead); setTaskDialog(null); }}
+                        data-testid={`button-lead-tasks-${lead.id}`}
+                      >
+                        <ClipboardList className="w-4 h-4 ml-1" />
+                        المهام
+                      </Button>
                       {lead.status !== "Converted" && (
                         <Button
                           size="sm"
@@ -162,6 +211,123 @@ export default function AdminLeads() {
           })}
         </div>
       )}
+
+      {/* Lead Tasks Panel */}
+      <Dialog open={!!leadTasksPanel} onOpenChange={(v) => { if (!v) setLeadTasksPanel(null); }}>
+        <DialogContent dir="rtl" className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between gap-2">
+              <span>مهام: {leadTasksPanel?.name}</span>
+              <Button
+                size="sm"
+                onClick={() => { setTaskDialog(leadTasksPanel); }}
+                data-testid="button-add-lead-task"
+              >
+                <Plus className="w-4 h-4 ml-1" />
+                مهمة جديدة
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-2">
+            {leadTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">لا توجد مهام مرتبطة بهذا العميل المحتمل</p>
+            ) : (
+              leadTasks.map((task) => {
+                const Icon = taskStatusIcon[task.status] || Circle;
+                return (
+                  <div key={task.id} className="flex items-start gap-2 p-3 rounded-lg border border-border">
+                    <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${taskStatusColor[task.status]}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                      {task.assignedToName && <p className="text-xs text-muted-foreground">{task.assignedToName}</p>}
+                      <Badge className="text-xs mt-1">{taskStatusLabel[task.status]}</Badge>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Task for Lead Dialog */}
+      <Dialog open={!!taskDialog} onOpenChange={(v) => { if (!v) setTaskDialog(null); }}>
+        <DialogContent dir="rtl" className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>إضافة مهمة — {taskDialog?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>عنوان المهمة *</Label>
+              <Input
+                data-testid="input-lead-task-title"
+                placeholder="أدخل عنوان المهمة"
+                value={taskForm.title}
+                onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>الوصف</Label>
+              <Textarea
+                rows={2}
+                placeholder="وصف اختياري..."
+                value={taskForm.description}
+                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>تعيين إلى</Label>
+                <Select value={taskForm.assignedTo || "_none"} onValueChange={(v) => setTaskForm({ ...taskForm, assignedTo: v === "_none" ? "" : v })}>
+                  <SelectTrigger data-testid="select-lead-task-assignee">
+                    <SelectValue placeholder="موظف" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">بدون</SelectItem>
+                    {salesUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>الأولوية</Label>
+                <Select value={taskForm.priority} onValueChange={(v) => setTaskForm({ ...taskForm, priority: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">منخفضة</SelectItem>
+                    <SelectItem value="medium">متوسطة</SelectItem>
+                    <SelectItem value="high">عالية</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>تاريخ الاستحقاق</Label>
+              <Input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })} />
+            </div>
+            <div className="flex gap-3">
+              <Button
+                className="flex-1"
+                disabled={!taskForm.title.trim() || createTaskMutation.isPending}
+                onClick={() => taskDialog && createTaskMutation.mutate({
+                  title: taskForm.title,
+                  description: taskForm.description || null,
+                  assignedTo: taskForm.assignedTo || null,
+                  dueDate: taskForm.dueDate || null,
+                  priority: taskForm.priority,
+                  status: "todo",
+                  relatedLeadId: taskDialog.id,
+                })}
+                data-testid="button-submit-lead-task"
+              >
+                {createTaskMutation.isPending ? "جاري الإنشاء..." : "إنشاء"}
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setTaskDialog(null)}>إلغاء</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!assignDialog} onOpenChange={() => setAssignDialog(null)}>
         <DialogContent dir="rtl" className="sm:max-w-sm">

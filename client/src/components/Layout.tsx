@@ -48,6 +48,7 @@ export default function Layout({ children }: LayoutProps) {
       title: "المهام",
       href: "/admin/tasks",
       icon: ClipboardList,
+      badge: pendingTasks?.count && pendingTasks.count > 0 ? pendingTasks.count : undefined,
     },
   ];
 

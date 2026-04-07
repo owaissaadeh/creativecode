@@ -543,6 +543,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Shared: Get tasks related to a lead or client
+  app.get("/api/tasks/by-lead/:leadId", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const tasks = await storage.getTasksByLead(req.params.leadId);
+      const allUsers = await storage.getAllUsers();
+      const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
+      res.json(tasks.map((t) => ({ ...t, assignedToName: t.assignedTo ? userMap[t.assignedTo] : null })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/tasks/by-client/:clientId", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const tasks = await storage.getTasksByClient(req.params.clientId);
+      const allUsers = await storage.getAllUsers();
+      const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
+      res.json(tasks.map((t) => ({ ...t, assignedToName: t.assignedTo ? userMap[t.assignedTo] : null })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   // Sales: Tasks (own tasks only)
   app.get("/api/sales/tasks", authMiddleware, async (req: AuthRequest, res) => {
     try {
@@ -557,9 +580,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/sales/tasks/:id", authMiddleware, async (req: AuthRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const allTasks = await storage.getAllTasks();
+      const task = allTasks.find((t) => t.id === req.params.id);
+      if (!task) return res.status(404).json({ message: "المهمة غير موجودة" });
+      if (task.assignedTo !== req.user.id) return res.status(403).json({ message: "غير مسموح" });
       const { status } = req.body;
-      const task = await storage.updateTask(req.params.id, { status });
-      res.json(task);
+      const updated = await storage.updateTask(req.params.id, { status });
+      res.json(updated);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
