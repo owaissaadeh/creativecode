@@ -487,6 +487,95 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Admin: Tasks (all tasks)
+  app.get("/api/admin/tasks", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const allTasks = await storage.getAllTasks();
+      const allUsers = await storage.getAllUsers();
+      const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
+      res.json(allTasks.map((t) => ({
+        ...t,
+        assignedToName: t.assignedTo ? userMap[t.assignedTo] : null,
+        createdByName: t.createdBy ? userMap[t.createdBy] : null,
+      })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post("/api/admin/tasks", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
+    try {
+      const { title, description, assignedTo, dueDate, priority, status, relatedLeadId, relatedClientId } = req.body;
+      if (!title) return res.status(400).json({ message: "العنوان مطلوب" });
+      const task = await storage.createTask({
+        title, description, assignedTo: assignedTo || null,
+        createdBy: req.user!.id,
+        dueDate: dueDate || null, priority: priority || "medium",
+        status: status || "todo",
+        relatedLeadId: relatedLeadId || null, relatedClientId: relatedClientId || null,
+      });
+      res.json(task);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.patch("/api/admin/tasks/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { title, description, assignedTo, dueDate, priority, status, relatedLeadId, relatedClientId } = req.body;
+      const task = await storage.updateTask(req.params.id, {
+        title, description, assignedTo: assignedTo || null,
+        dueDate: dueDate || null, priority, status,
+        relatedLeadId: relatedLeadId || null, relatedClientId: relatedClientId || null,
+      });
+      res.json(task);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.delete("/api/admin/tasks/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      await storage.deleteTask(req.params.id);
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Sales: Tasks (own tasks only)
+  app.get("/api/sales/tasks", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const myTasks = await storage.getTasksByUser(req.user.id);
+      res.json(myTasks);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.patch("/api/sales/tasks/:id", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const { status } = req.body;
+      const task = await storage.updateTask(req.params.id, { status });
+      res.json(task);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Shared: Pending tasks count (for sidebar badge)
+  app.get("/api/tasks/pending-count", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const count = await storage.getPendingTasksCount(req.user.id);
+      res.json({ count });
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   // Sales: Commissions
   app.get("/api/sales/commissions", authMiddleware, async (req: AuthRequest, res) => {
     if (!req.user) return res.status(401).json({ message: "غير مصرح" });

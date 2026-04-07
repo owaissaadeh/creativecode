@@ -20,6 +20,8 @@ import SalesDashboard from "@/pages/sales/Dashboard";
 import SalesLeads from "@/pages/sales/Leads";
 import SalesClients from "@/pages/sales/Clients";
 import SalesCommissions from "@/pages/sales/Commissions";
+import SalesTasks from "@/pages/sales/Tasks";
+import AdminTasks from "@/pages/admin/Tasks";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, adminOnly = false }: { component: React.ComponentType; adminOnly?: boolean }) {
@@ -69,6 +71,9 @@ function Router() {
       <Route path="/admin/consultations">
         <ProtectedRoute component={Consultations} adminOnly />
       </Route>
+      <Route path="/admin/tasks">
+        <ProtectedRoute component={AdminTasks} adminOnly />
+      </Route>
 
       {/* Sales Routes */}
       <Route path="/sales">
@@ -82,6 +87,9 @@ function Router() {
       </Route>
       <Route path="/sales/commissions">
         <ProtectedRoute component={SalesCommissions} />
+      </Route>
+      <Route path="/sales/tasks">
+        <ProtectedRoute component={SalesTasks} />
       </Route>
 
       <Route component={NotFound} />

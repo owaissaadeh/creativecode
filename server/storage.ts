@@ -1,11 +1,12 @@
 import { db } from "./db";
-import { users, leads, clients, commissions, pageItems, consultations } from "@shared/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { users, leads, clients, commissions, pageItems, consultations, tasks } from "@shared/schema";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type {
   User, InsertUser, Lead, InsertLead,
   Client, InsertClient, Commission, InsertCommission,
-  PageItem, InsertPageItem, Consultation, InsertConsultation
+  PageItem, InsertPageItem, Consultation, InsertConsultation,
+  Task, InsertTask
 } from "@shared/schema";
 
 export interface IStorage {
@@ -41,6 +42,13 @@ export interface IStorage {
   getAllConsultations(): Promise<Consultation[]>;
   createConsultation(data: InsertConsultation & { id?: string }): Promise<Consultation>;
   updateConsultation(id: string, data: Partial<Consultation>): Promise<Consultation>;
+
+  getAllTasks(): Promise<Task[]>;
+  getTasksByUser(userId: string): Promise<Task[]>;
+  getPendingTasksCount(userId: string): Promise<number>;
+  createTask(data: InsertTask & { id?: string }): Promise<Task>;
+  updateTask(id: string, data: Partial<Task>): Promise<Task>;
+  deleteTask(id: string): Promise<void>;
 
   getAdminStats(): Promise<unknown>;
   getSalesStats(salesId: string): Promise<unknown>;
@@ -199,6 +207,37 @@ export class DatabaseStorage implements IStorage {
   async updateConsultation(id: string, data: Partial<Consultation>) {
     const [consultation] = await db.update(consultations).set(data).where(eq(consultations.id, id)).returning();
     return consultation;
+  }
+
+  async getAllTasks() {
+    return db.select().from(tasks).orderBy(desc(tasks.createdAt));
+  }
+
+  async getTasksByUser(userId: string) {
+    return db.select().from(tasks)
+      .where(eq(tasks.assignedTo, userId))
+      .orderBy(desc(tasks.createdAt));
+  }
+
+  async getPendingTasksCount(userId: string) {
+    const result = await db.select().from(tasks)
+      .where(and(eq(tasks.assignedTo, userId), or(eq(tasks.status, "todo"), eq(tasks.status, "in_progress"))));
+    return result.length;
+  }
+
+  async createTask(data: InsertTask & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [task] = await db.insert(tasks).values({ ...data, id }).returning();
+    return task;
+  }
+
+  async updateTask(id: string, data: Partial<Task>) {
+    const [task] = await db.update(tasks).set(data).where(eq(tasks.id, id)).returning();
+    return task;
+  }
+
+  async deleteTask(id: string) {
+    await db.delete(tasks).where(eq(tasks.id, id));
   }
 
   async getAdminStats() {

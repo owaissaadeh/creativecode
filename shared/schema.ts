@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, integer, timestamp, decimal, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, decimal, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -83,12 +83,27 @@ export const consultations = pgTable("consultations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const tasks = pgTable("tasks", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTo: varchar("assigned_to", { length: 36 }).references(() => users.id),
+  createdBy: varchar("created_by", { length: 36 }).references(() => users.id).notNull(),
+  dueDate: date("due_date"),
+  priority: text("priority", { enum: ["low", "medium", "high"] }).notNull().default("medium"),
+  status: text("status", { enum: ["todo", "in_progress", "done"] }).notNull().default("todo"),
+  relatedLeadId: varchar("related_lead_id", { length: 36 }).references(() => leads.id),
+  relatedClientId: varchar("related_client_id", { length: 36 }).references(() => clients.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, createdAt: true });
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true });
 export const insertCommissionSchema = createInsertSchema(commissions).omit({ id: true, createdAt: true });
 export const insertPageItemSchema = createInsertSchema(pageItems).omit({ id: true, createdAt: true });
 export const insertConsultationSchema = createInsertSchema(consultations).omit({ id: true, createdAt: true });
+export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -102,6 +117,8 @@ export type InsertPageItem = z.infer<typeof insertPageItemSchema>;
 export type PageItem = typeof pageItems.$inferSelect;
 export type InsertConsultation = z.infer<typeof insertConsultationSchema>;
 export type Consultation = typeof consultations.$inferSelect;
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Task = typeof tasks.$inferSelect;
 
 export const loginSchema = z.object({
   email: z.string().email(),

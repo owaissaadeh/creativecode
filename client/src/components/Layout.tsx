@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Users, UserCheck, TrendingUp, DollarSign,
-  LogOut, Target, Code2, Layers, CalendarCheck
+  LogOut, Target, Code2, Layers, CalendarCheck, ClipboardList
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -23,6 +23,11 @@ export default function Layout({ children }: LayoutProps) {
   const { data: stats } = useQuery<{ pendingConsultations?: number }>({
     queryKey: ["/api/admin/stats"],
     enabled: isAdmin(),
+  });
+
+  const { data: pendingTasks } = useQuery<{ count: number }>({
+    queryKey: ["/api/tasks/pending-count"],
+    enabled: !!user,
   });
 
   const adminNav = [
@@ -39,6 +44,11 @@ export default function Layout({ children }: LayoutProps) {
       icon: CalendarCheck,
       badge: stats?.pendingConsultations && stats.pendingConsultations > 0 ? stats.pendingConsultations : undefined
     },
+    {
+      title: "المهام",
+      href: "/admin/tasks",
+      icon: ClipboardList,
+    },
   ];
 
   const salesNav = [
@@ -46,6 +56,12 @@ export default function Layout({ children }: LayoutProps) {
     { title: "عملائي المحتملون", href: "/sales/leads", icon: Target },
     { title: "عملائي", href: "/sales/clients", icon: UserCheck },
     { title: "عمولاتي", href: "/sales/commissions", icon: DollarSign },
+    {
+      title: "مهامي",
+      href: "/sales/tasks",
+      icon: ClipboardList,
+      badge: pendingTasks?.count && pendingTasks.count > 0 ? pendingTasks.count : undefined,
+    },
   ];
 
   const navItems = isAdmin() ? adminNav : salesNav;
