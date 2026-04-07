@@ -49,6 +49,8 @@ const emptyForm = {
   dueDate: "",
   priority: "medium",
   status: "todo",
+  relatedLeadId: "",
+  relatedClientId: "",
 };
 
 export default function AdminTasks() {
@@ -121,6 +123,8 @@ export default function AdminTasks() {
       dueDate: task.dueDate || "",
       priority: task.priority,
       status: task.status,
+      relatedLeadId: task.relatedLeadId || "",
+      relatedClientId: task.relatedClientId || "",
     });
     setDialogOpen(true);
   };

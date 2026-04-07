@@ -522,12 +522,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/admin/tasks/:id", authMiddleware, adminOnly, async (req, res) => {
     try {
-      const { title, description, assignedTo, dueDate, priority, status, relatedLeadId, relatedClientId } = req.body;
-      const task = await storage.updateTask(req.params.id, {
-        title, description, assignedTo: assignedTo || null,
-        dueDate: dueDate || null, priority, status,
-        relatedLeadId: relatedLeadId || null, relatedClientId: relatedClientId || null,
-      });
+      const body = req.body;
+      const updates: Record<string, unknown> = {};
+      if ("title" in body) updates.title = body.title;
+      if ("description" in body) updates.description = body.description || null;
+      if ("assignedTo" in body) updates.assignedTo = body.assignedTo || null;
+      if ("dueDate" in body) updates.dueDate = body.dueDate || null;
+      if ("priority" in body) updates.priority = body.priority;
+      if ("status" in body) updates.status = body.status;
+      if ("relatedLeadId" in body) updates.relatedLeadId = body.relatedLeadId || null;
+      if ("relatedClientId" in body) updates.relatedClientId = body.relatedClientId || null;
+      const task = await storage.updateTask(req.params.id, updates);
       res.json(task);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
