@@ -96,6 +96,22 @@ export async function migrateDb() {
       )
     `);
 
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id VARCHAR(36) PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        assigned_to VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
+        created_by VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        due_date DATE,
+        priority TEXT NOT NULL DEFAULT 'medium',
+        status TEXT NOT NULL DEFAULT 'todo',
+        related_lead_id VARCHAR(36) REFERENCES leads(id) ON DELETE SET NULL,
+        related_client_id VARCHAR(36) REFERENCES clients(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+
     console.log("✅ Database tables ready");
 
     await seedPageItems();
