@@ -106,7 +106,9 @@ const HRM_CONFIG = {
     pricingCta: "ابدأ الآن",
     pricingCtaSub: "تواصل معنا للحصول على عرضك",
     pricingPopular: "الأكثر طلباً",
-    pricingPeriod: "/ سنة"
+    pricingPeriod: "/ سنة",
+    pricingAddonLabel: "إضافة اختيارية",
+    pricingAddonCta: "+ أضف iOS"
   },
 
   problems: {
@@ -358,6 +360,11 @@ const HRM_CONFIG = {
       price: "700",
       currency: "د.أ",
       highlight: true,
+      addon: {
+        label: "تطبيق iOS (App Store)",
+        price: "60",
+        note: "نشر التطبيق على متجر Apple — اشتراك سنوي إضافي"
+      },
       includes: [
         { svg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', label: "تطبيق موبايل Android" },
         { svg: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>', label: "لوحة ويب إدارية كاملة" },
