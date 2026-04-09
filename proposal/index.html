@@ -1249,7 +1249,7 @@
         div.className = `pricing-card fade-up${ph.highlight ? ' highlight' : ''}`;
         div.innerHTML = `
           ${ph.highlight ? '<div class="pricing-badge-popular">الأكبر حجماً</div>' : ''}
-          <div class="pricing-phase">${ph.phase}</div>
+          <div class="pricing-phase">المرحلة ${ph.number}</div>
           <div class="pricing-title">${ph.title}</div>
           <div class="pricing-amount">
             <span class="pricing-num" style="color:${colors[i]}">${ph.amount}</span>
