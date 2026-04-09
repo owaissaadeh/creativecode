@@ -324,6 +324,69 @@
     .phone-nav-item { font-size: 0.9rem; opacity: 0.4; }
     .phone-nav-item.active { opacity: 1; }
 
+    /* Hero devices layout */
+    .hero-devices-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      position: relative;
+    }
+
+    .hero-web-card {
+      background: rgba(15,23,42,0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px;
+      width: 180px;
+      flex-shrink: 0;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .hero-web-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .hero-web-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    .hero-web-url {
+      font-size: 0.45rem;
+      color: rgba(255,255,255,0.3);
+      font-family: monospace;
+    }
+
+    .hero-web-kpis {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .hero-web-kpi {
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+      padding: 5px 6px;
+    }
+
+    .hero-web-kpi-num { font-size: 0.75rem; font-weight: 900; line-height: 1; }
+    .hero-web-kpi-label { font-size: 0.35rem; color: rgba(255,255,255,0.35); }
+
+    .hero-web-bars {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      height: 40px;
+      margin-bottom: 6px;
+    }
+
+    .hero-web-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 6px; }
+
+    .hero-web-label { font-size: 0.42rem; color: rgba(255,255,255,0.3); text-align: center; }
+
     .phone-badge-gps {
       position: absolute;
       bottom: -16px; right: -32px;
@@ -649,6 +712,7 @@
       .hero { flex-direction: column; padding: 110px 24px 64px; text-align: center; }
       .hero-sub, .hero-actions, .hero-stats { justify-content: center; }
       .hero-right { margin: 0 auto; }
+      .hero-web-card { display: none; }
       .leaves-layout, .payroll-layout, .app-layout { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr; gap: 28px; }
       .sync-steps { flex-direction: column; gap: 8px; }
@@ -708,16 +772,41 @@
   </div>
 
   <div class="hero-right">
-    <div class="phone-wrap">
-      <div class="phone-glow"></div>
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen" id="phone-screen">
-          <!-- filled by JS -->
+    <div class="hero-devices-wrap">
+      <!-- Phone -->
+      <div class="phone-wrap">
+        <div class="phone-glow"></div>
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen" id="phone-screen">
+            <!-- filled by JS -->
+          </div>
         </div>
+        <div class="phone-badge-gps" id="phone-badge-gps"></div>
+        <div class="phone-badge-offline" id="phone-badge-offline"></div>
       </div>
-      <div class="phone-badge-gps" id="phone-badge-gps"></div>
-      <div class="phone-badge-offline" id="phone-badge-offline"></div>
+
+      <!-- Mini Web Dashboard card -->
+      <div class="hero-web-card">
+        <div class="hero-web-card-top">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="hero-web-dot" style="background:#EF4444"></div>
+            <div class="hero-web-dot" style="background:#F59E0B"></div>
+            <div class="hero-web-dot" style="background:#10B981"></div>
+          </div>
+          <span class="hero-web-url">dashboard</span>
+        </div>
+        <div class="hero-web-kpis" id="hero-web-kpis"></div>
+        <div class="hero-web-bars">
+          <div class="hero-web-bar" style="height:70%;background:#7C3AED"></div>
+          <div class="hero-web-bar" style="height:85%;background:#0EA5E9"></div>
+          <div class="hero-web-bar" style="height:95%;background:#10B981"></div>
+          <div class="hero-web-bar" style="height:60%;background:#F59E0B"></div>
+          <div class="hero-web-bar" style="height:100%;background:#7C3AED"></div>
+          <div class="hero-web-bar" style="height:45%;background:#EF4444"></div>
+        </div>
+        <div class="hero-web-label" id="hero-web-label"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -972,6 +1061,16 @@ function build() {
   document.getElementById('hero-cta2').textContent = c.hero.ctaSecondary;
   document.getElementById('phone-badge-gps').textContent = L.phoneFloatingGps;
   document.getElementById('phone-badge-offline').textContent = L.phoneFloatingOffline;
+
+  // Hero web dashboard mini-card (config-driven)
+  const kpisEl = document.getElementById('hero-web-kpis');
+  L.heroWebCardKpis.forEach(k => {
+    const d = document.createElement('div');
+    d.className = 'hero-web-kpi';
+    d.innerHTML = `<div class="hero-web-kpi-num" style="color:${k.color}">${k.num}</div><div class="hero-web-kpi-label">${k.label}</div>`;
+    kpisEl.appendChild(d);
+  });
+  document.getElementById('hero-web-label').textContent = L.heroWebCardLabel;
 
   // Hero stats
   c.stats.forEach(s => {

@@ -31,9 +31,9 @@ const HRM_CONFIG = {
 
   stats: [
     { num: "٢٠+", label: "شاشة في التطبيق" },
-    { num: "٥", label: "لغات مدعومة" },
+    { num: "iOS / Android / Web", label: "المنصات المدعومة" },
     { num: "٦", label: "طبقات GPS أمان" },
-    { num: "٣", label: "أدوار وصلاحيات" }
+    { num: "٥", label: "لغات مدعومة" }
   ],
 
   labels: {
@@ -61,6 +61,13 @@ const HRM_CONFIG = {
     footerServicesTitle: "خدماتنا",
     footerServices: ["تنفيذ Trusted HRM", "تطوير الأنظمة", "الذكاء الاصطناعي", "التحول الرقمي"],
     footerContactTitle: "التواصل",
+    heroWebCardKpis: [
+      { num: "٤٨", label: "حاضر اليوم", color: "#10B981" },
+      { num: "٩٤٪", label: "الالتزام", color: "#38BDF8" },
+      { num: "٣", label: "طلب إجازة", color: "#F59E0B" },
+      { num: "٠", label: "غياب", color: "#EF4444" }
+    ],
+    heroWebCardLabel: "📊 لوحة التحكم — الويب",
     footerHrmBadge: "⚡ Trusted HRM Official Partner",
     footerRights: "جميع الحقوق محفوظة",
     phoneMockup: {
