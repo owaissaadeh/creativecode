@@ -357,7 +357,7 @@ const HRM_CONFIG = {
     plan: {
       name: "Enterprise Annual",
       nameAr: "الباقة السنوية الشاملة",
-      price: "700",
+      price: "650",
       currency: "د.أ",
       highlight: true,
       addon: {
