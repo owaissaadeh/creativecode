@@ -14,7 +14,7 @@ const HRM_CONFIG = {
     name: "Creative Code",
     nameAr: "كريتف كود",
     tagline: "نحوّل أعمالكم إلى منظومة رقمية متكاملة",
-    phone: "+962 79 XXX XXXX",
+    phone: "+962 79 153 5520",
     email: "info@creativecode-jo.com",
     website: "www.creativecode-jo.com",
     address: "عمّان، المملكة الأردنية الهاشمية"
