@@ -580,6 +580,46 @@
     /* WEB DASHBOARD */
     .web-section { background: var(--bg-soft); }
     .desktop-mockup { background: #1E293B; border-radius: 12px; padding: 12px; margin-bottom: 48px; box-shadow: 0 24px 64px rgba(0,0,0,0.2); }
+
+    /* Web dashboard image preview */
+    .web-image-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 64px rgba(15,23,42,0.12);
+      margin-bottom: 48px;
+      background: #1E293B;
+    }
+
+    .web-image-bar {
+      background: #1E293B;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .web-image-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .web-image-url {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+      padding: 4px 12px;
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.35);
+      font-family: monospace;
+    }
+
+    .web-image-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 620px;
+      object-fit: cover;
+      object-position: top;
+    }
     .desktop-bar { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 10px; }
     .desktop-dot { width: 10px; height: 10px; border-radius: 50%; }
     .desktop-url { flex: 1; background: rgba(255,255,255,0.05); border-radius: 5px; height: 22px; display: flex; align-items: center; padding: 0 10px; font-size: 0.55rem; color: rgba(255,255,255,0.3); font-family: monospace; }
@@ -1294,42 +1334,58 @@ function build() {
   document.getElementById('web-title').textContent = c.webDashboard.title;
   document.getElementById('web-sub').textContent = c.webDashboard.subtitle;
 
-  // Desktop mockup (config-driven)
+  // Web Dashboard: show image if provided, else CSS mockup
   const dm = L;
-  document.getElementById('desktop-mockup').innerHTML = `
-    <div class="desktop-bar">
-      <div class="desktop-dot" style="background:#EF4444"></div>
-      <div class="desktop-dot" style="background:#F59E0B"></div>
-      <div class="desktop-dot" style="background:#10B981"></div>
-      <div class="desktop-url">🔒 ${dm.desktopUrl}</div>
-    </div>
-    <div class="desktop-screen">
-      <div class="desktop-sidebar">
-        <div class="desktop-sidebar-logo">${dm.desktopSystemName}</div>
-        ${dm.desktopNavItems.map((item, i) =>
-          `<div class="desktop-nav-item${i === 0 ? ' active' : ''}">${item}</div>`
-        ).join('')}
-      </div>
-      <div class="desktop-content">
-        <div class="desktop-kpi-row">
-          ${dm.desktopKpis.map(k => `
-            <div class="desktop-kpi">
-              <div class="desktop-kpi-num" style="color:${k.color}">${k.num}</div>
-              <div class="desktop-kpi-label">${k.label}</div>
-            </div>`).join('')}
+  const webImgUrl = c.webDashboard.image;
+  const mockupEl = document.getElementById('desktop-mockup');
+
+  if (webImgUrl && webImgUrl.trim() !== '') {
+    mockupEl.outerHTML = `
+      <div class="web-image-wrap">
+        <div class="web-image-bar">
+          <div class="web-image-dot" style="background:#EF4444"></div>
+          <div class="web-image-dot" style="background:#F59E0B"></div>
+          <div class="web-image-dot" style="background:#10B981"></div>
+          <div class="web-image-url">🔒 ${dm.desktopUrl}</div>
         </div>
-        <div class="desktop-chart-area">
-          <div class="desktop-chart-header">${dm.desktopChartTitle}</div>
-          <div class="desktop-bars">
-            ${['#7C3AED','#0EA5E9','#10B981','#F59E0B','#7C3AED','#EF4444','#0EA5E9']
-              .map((col, i) => {
-                const heights = [75,88,92,65,98,45,80];
-                return `<div class="desktop-bar-col" style="background:${col};height:${heights[i]}%"></div>`;
-              }).join('')}
+        <img class="web-image-img" src="${webImgUrl}" alt="لوحة التحكم الإدارية — Trusted HRM" loading="lazy" />
+      </div>`;
+  } else {
+    mockupEl.innerHTML = `
+      <div class="desktop-bar">
+        <div class="desktop-dot" style="background:#EF4444"></div>
+        <div class="desktop-dot" style="background:#F59E0B"></div>
+        <div class="desktop-dot" style="background:#10B981"></div>
+        <div class="desktop-url">🔒 ${dm.desktopUrl}</div>
+      </div>
+      <div class="desktop-screen">
+        <div class="desktop-sidebar">
+          <div class="desktop-sidebar-logo">${dm.desktopSystemName}</div>
+          ${dm.desktopNavItems.map((item, i) =>
+            `<div class="desktop-nav-item${i === 0 ? ' active' : ''}">${item}</div>`
+          ).join('')}
+        </div>
+        <div class="desktop-content">
+          <div class="desktop-kpi-row">
+            ${dm.desktopKpis.map(k => `
+              <div class="desktop-kpi">
+                <div class="desktop-kpi-num" style="color:${k.color}">${k.num}</div>
+                <div class="desktop-kpi-label">${k.label}</div>
+              </div>`).join('')}
+          </div>
+          <div class="desktop-chart-area">
+            <div class="desktop-chart-header">${dm.desktopChartTitle}</div>
+            <div class="desktop-bars">
+              ${['#7C3AED','#0EA5E9','#10B981','#F59E0B','#7C3AED','#EF4444','#0EA5E9']
+                .map((col, i) => {
+                  const heights = [75,88,92,65,98,45,80];
+                  return `<div class="desktop-bar-col" style="background:${col};height:${heights[i]}%"></div>`;
+                }).join('')}
+            </div>
           </div>
         </div>
-      </div>
-    </div>`;
+      </div>`;
+  }
 
   c.webDashboard.features.forEach(f => {
     const d = document.createElement('div');
