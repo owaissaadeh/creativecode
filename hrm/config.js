@@ -4,8 +4,8 @@ const HRM_CONFIG = {
     tagline: "نظام إدارة الموارد البشرية الذكي",
     badge: "نظام GPS مضاد للتزوير ✦ وضع أوف لاين كامل",
     version: "2.4.1",
-    platforms: ["iOS", "Android", "Web"],
-    languages: ["العربية", "English", "Español", "हिन्दी", "中文"],
+    platforms: ["Android", "Web"],
+    languages: ["العربية", "English"],
     screens: "20+",
     roles: ["Admin", "HR", "Staff"]
   },
@@ -24,14 +24,14 @@ const HRM_CONFIG = {
     badge: "🛡 نظام GPS مضاد للتزوير — 6 طبقات حماية",
     headline: "إدارة موارد بشرية",
     headlineHighlight: "بذكاء لا يُخدع",
-    sub: "نظام HRM متكامل بتطبيق موبايل (iOS & Android) ولوحة ويب إدارية — مع حضور ذكي مضاد لتزوير الـ GPS ووضع أوف لاين كامل",
+    sub: "نظام HRM متكامل بتطبيق موبايل (Android) ولوحة ويب إدارية — مع حضور ذكي مضاد لتزوير الـ GPS ووضع أوف لاين كامل",
     cta: "اعرف أكثر",
     ctaSecondary: "تواصل معنا"
   },
 
   stats: [
     { num: "٢٠+", label: "شاشة في التطبيق" },
-    { num: "iOS / Android / Web", label: "المنصات المدعومة" },
+    { num: "Android / Web", label: "المنصات المدعومة" },
     { num: "٦", label: "طبقات GPS أمان" },
     { num: "٥", label: "لغات مدعومة" }
   ],
@@ -44,7 +44,7 @@ const HRM_CONFIG = {
     payrollChartTitle: "تركيبة الراتب",
     appTechSpecsTitle: "المواصفات التقنية",
     appScreensTitle: "شاشات التطبيق",
-    appPlatforms: ["iOS (App Store)", "Android (Play Store)"],
+    appPlatforms: ["Android (Play Store)"],
     desktopUrl: "demo.trustedhrm.com/dashboard",
     desktopSystemName: "⚡ Trusted HRM",
     desktopNavItems: ["📊 لوحة التحكم", "👥 الموظفون", "📅 الحضور", "🌴 الإجازات", "💸 الرواتب", "📋 الشكاوى", "⚙ الإعدادات"],
@@ -216,7 +216,7 @@ const HRM_CONFIG = {
       }
     ],
     tech: [
-      "WorkManager (Android) و Background Tasks (iOS)",
+      "WorkManager (Android)",
       "BootReceiver — يُعيد الجدولة بعد إعادة تشغيل الجهاز",
       "Timezone-Aware — دقة عبر جميع المناطق الزمنية",
       "إعدادات فردية لكل موظف (تشغيل/إيقاف)"
@@ -292,7 +292,7 @@ const HRM_CONFIG = {
   },
 
   mobileApp: {
-    title: "تطبيق الجوال — iOS & Android",
+    title: "تطبيق الجوال — Android",
     subtitle: "تجربة موبايل سلسة وجميلة — بُنيت بـ Flutter",
     specs: [
       { label: "المنصة", value: "Flutter (Android)" },
