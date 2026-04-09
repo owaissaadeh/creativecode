@@ -295,11 +295,10 @@ const HRM_CONFIG = {
     title: "تطبيق الجوال — iOS & Android",
     subtitle: "تجربة موبايل سلسة وجميلة — بُنيت بـ Flutter",
     specs: [
-      { label: "المنصة", value: "Flutter (iOS & Android)" },
+      { label: "المنصة", value: "Flutter (Android)" },
       { label: "الحد الأدنى Android", value: "SDK 21+" },
-      { label: "الحد الأدنى iOS", value: "iOS 12.0+" },
       { label: "عدد الشاشات", value: "20+ شاشة" },
-      { label: "اللغات", value: "٥ لغات (عربي، إنجليزي، إسباني، هندي، صيني)" },
+      { label: "اللغات", value: "عربي، إنجليزي" },
       { label: "الوضع", value: "داكن وفاتح (Dark & Light Mode)" }
     ],
     screens: [
@@ -342,8 +341,8 @@ const HRM_CONFIG = {
       { icon: "⚠️", label: "التحذيرات الشفهية والرسمية" },
       { icon: "💾", label: "نسخ احتياطي لقاعدة البيانات" },
       { icon: "🌙", label: "وضع داكن وفاتح (Dark/Light)" },
-      { icon: "🌐", label: "5 لغات مدعومة بالكامل" },
-      { icon: "📱", label: "iOS & Android (Flutter)" },
+      { icon: "🌐", label: "عربي، إنجليزي" },
+      { icon: "📱", label: " Android " },
       { icon: "🖥", label: "لوحة ويب إدارية كاملة" },
       { icon: "👤", label: "إدارة ملفات الموظفين" },
       { icon: "🔐", label: "نظام أدوار وصلاحيات ثلاثي" }
@@ -371,7 +370,7 @@ const HRM_CONFIG = {
         { svg: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>', label: "إدارة رواتب وقسائم احترافية" },
         { svg: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', label: "3 أدوار صلاحيات — Admin / HR / Staff" },
         { svg: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>', label: "نسخ احتياطي تلقائي لقاعدة البيانات" },
-        { svg: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>', label: "5 لغات مدعومة — عربي، إنجليزي وأكثر" }
+        { svg: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>', label: " عربي، إنجليزي " }
       ]
     }
   },
