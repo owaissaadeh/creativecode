@@ -76,6 +76,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Serve standalone proposal pages
   app.use("/proposal", express.static(path.join(process.cwd(), "proposal")));
   app.use("/hrm", express.static(path.join(process.cwd(), "hrm")));
+  app.use("/ecommerce", express.static(path.join(process.cwd(), "ecommerce")));
 
   // Public lead form
   app.post("/api/leads/public", async (req, res) => {
