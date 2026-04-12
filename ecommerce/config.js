@@ -39,6 +39,7 @@ const EC_CONFIG = {
     pricingCta: "اطلب الآن",
     pricingCtaSub: "تواصل معنا للبدء",
     pricingPopular: "الأكثر طلباً",
+    pricingBest: "الأفضل",
     pricingPeriod: "مشروع واحد",
     processStep: "الخطوة",
     footerRights: "جميع الحقوق محفوظة",
@@ -287,7 +288,8 @@ const EC_CONFIG = {
         nameAr: "متجر مخصص",
         price: "350",
         currency: "د.أ",
-        popular: true,
+        popular: false,
+        best: true,
         color: "#F59E0B",
         duration: "14-21 يوم",
         includes: [

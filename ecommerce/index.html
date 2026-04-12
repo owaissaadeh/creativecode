@@ -659,6 +659,12 @@
       box-shadow: 0 0 40px rgba(139,92,246,0.1);
     }
 
+    .price-card.best {
+      border-color: rgba(245,158,11,0.45);
+      background: rgba(245,158,11,0.03);
+      box-shadow: 0 0 50px rgba(245,158,11,0.12), 0 0 0 1px rgba(245,158,11,0.2);
+    }
+
     .price-card:hover { transform: translateY(-4px); }
 
     .popular-badge {
@@ -671,6 +677,19 @@
       font-weight: 700;
       padding: 5px 16px;
       border-radius: 100px;
+    }
+
+    .best-badge {
+      position: absolute;
+      top: -14px;
+      right: 28px;
+      background: linear-gradient(90deg, #F59E0B, #FCD34D, #F59E0B);
+      color: #0F172A;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 5px 16px;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
     }
 
     .price-plan-name { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
@@ -761,6 +780,16 @@
     }
 
     .price-cta.popular-cta:hover { opacity: 0.88; }
+
+    .price-cta.best-cta {
+      background: linear-gradient(135deg, #F59E0B, #FCD34D);
+      border-color: transparent;
+      color: #0F172A;
+    }
+
+    .price-cta.best-cta .price-cta-text { color: #0F172A; }
+    .price-cta.best-cta .price-cta-arrow { color: #0F172A; }
+    .price-cta.best-cta:hover { opacity: 0.88; }
 
     .pricing-note-wrap {
       text-align: center;
@@ -1404,8 +1433,9 @@ function hexToRgb(hex) {
 }
 
 document.getElementById('pricing-grid').innerHTML = c.pricing.plans.map(p => `
-  <div class="price-card ${p.popular ? 'popular' : ''} fade-up">
+  <div class="price-card ${p.popular ? 'popular' : p.best ? 'best' : ''} fade-up">
     ${p.popular ? `<div class="popular-badge">${L.pricingPopular}</div>` : ''}
+    ${p.best ? `<div class="best-badge">✦ ${L.pricingBest}</div>` : ''}
     <div class="price-plan-name">${p.name}</div>
     <div class="price-plan-ar">${p.nameAr}</div>
     <div class="price-amount">
@@ -1419,7 +1449,7 @@ document.getElementById('pricing-grid').innerHTML = c.pricing.plans.map(p => `
       ${p.includes.map(item => `<li>${checkSvg(hexToRgb(p.color))}<span>${item}</span></li>`).join('')}
       ${p.notIncludes.map(item => `<li>${xSvg}<span style="text-decoration:line-through;opacity:0.4">${item}</span></li>`).join('')}
     </ul>
-    <a href="tel:${cc.phone}" class="price-cta ${p.popular ? 'popular-cta' : ''}">
+    <a href="tel:${cc.phone}" class="price-cta ${p.popular ? 'popular-cta' : p.best ? 'best-cta' : ''}">
       <span class="price-cta-text">${L.pricingCta}</span>
       <span class="price-cta-arrow">${svg('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>', 16)}</span>
     </a>
