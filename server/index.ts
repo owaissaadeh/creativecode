@@ -65,6 +65,10 @@ app.use((req, res, next) => {
   const { seedDatabase } = await import("./seed");
   await seedDatabase();
   await registerRoutes(httpServer, app);
+  const { registerPortalRoutes } = await import("./portalRoutes");
+  registerPortalRoutes(app);
+  const { registerProjectRoutes } = await import("./projectRoutes");
+  registerProjectRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

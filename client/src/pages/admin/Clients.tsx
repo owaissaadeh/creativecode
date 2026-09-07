@@ -11,8 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { UserCheck, Phone, Mail, Building, DollarSign, Search, Plus, ClipboardList, Circle, Clock, CheckCircle2 } from "lucide-react";
+import { UserCheck, Phone, Mail, Building, DollarSign, Search, Plus, ClipboardList, Circle, Clock, CheckCircle2, KeyRound } from "lucide-react";
 import type { Client, User, Task } from "@shared/schema";
+import ClientPortalAccessDialog from "@/components/projects/ClientPortalAccessDialog";
 
 interface TaskWithNames extends Task { assignedToName?: string | null; }
 
@@ -53,6 +54,7 @@ export default function AdminClients() {
   const [editForm, setEditForm] = useState({ status: "", dealValue: "", nextMeetingDate: "" });
   const [taskDialog, setTaskDialog] = useState<Client | null>(null);
   const [clientTasksPanel, setClientTasksPanel] = useState<Client | null>(null);
+  const [portalDialog, setPortalDialog] = useState<Client | null>(null);
   const [taskForm, setTaskForm] = useState({ title: "", description: "", assignedTo: "", dueDate: "", priority: "medium" });
 
   const { data: clients = [], isLoading } = useQuery<ClientWithSales[]>({ queryKey: ["/api/admin/clients"] });
@@ -176,6 +178,12 @@ export default function AdminClients() {
                         <Plus className="w-4 h-4 ml-1" />
                         ملاحظة
                       </Button>
+                      {client.status === "Won" && (
+                        <Button size="sm" variant="outline" onClick={() => setPortalDialog(client)} data-testid={`button-portal-access-${client.id}`}>
+                          <KeyRound className="w-4 h-4 ml-1" />
+                          بوابة العميل
+                        </Button>
+                      )}
                       <Button size="sm" onClick={() => openEdit(client)} data-testid={`button-edit-client-${client.id}`}>
                         تحديث
                       </Button>
@@ -356,6 +364,10 @@ export default function AdminClients() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {portalDialog && (
+        <ClientPortalAccessDialog client={portalDialog} open={!!portalDialog} onClose={() => setPortalDialog(null)} />
+      )}
     </div>
   );
 }

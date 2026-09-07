@@ -112,6 +112,138 @@ export async function migrateDb() {
       )
     `);
 
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS client_users (
+        id VARCHAR(36) PRIMARY KEY,
+        client_id VARCHAR(36) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'member',
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        last_login_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_client_users_client_id ON client_users(client_id)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS projects (
+        id VARCHAR(36) PRIMARY KEY,
+        client_id VARCHAR(36) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        start_date DATE,
+        target_end_date DATE,
+        owner_staff_id VARCHAR(36) REFERENCES users(id),
+        created_by VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS project_stages (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        sequence INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'not_started',
+        planned_date DATE,
+        started_at TIMESTAMP,
+        submitted_for_review_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_project_stages_project_id ON project_stages(project_id, sequence)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS deliverables (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        stage_id VARCHAR(36) REFERENCES project_stages(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        file_name TEXT NOT NULL,
+        object_key TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        version INTEGER NOT NULL DEFAULT 1,
+        uploaded_by VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_deliverables_project_id ON deliverables(project_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_deliverables_stage_id ON deliverables(stage_id)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS project_comments (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        stage_id VARCHAR(36) REFERENCES project_stages(id) ON DELETE CASCADE,
+        author_type TEXT NOT NULL,
+        author_client_user_id VARCHAR(36) REFERENCES client_users(id),
+        author_staff_id VARCHAR(36) REFERENCES users(id),
+        body TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_project_comments_project_id ON project_comments(project_id)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS approvals (
+        id VARCHAR(36) PRIMARY KEY,
+        stage_id VARCHAR(36) NOT NULL REFERENCES project_stages(id) ON DELETE CASCADE,
+        decision TEXT NOT NULL,
+        client_comment TEXT,
+        approved_by_client_user_id VARCHAR(36) NOT NULL REFERENCES client_users(id),
+        stage_title_snapshot TEXT NOT NULL,
+        project_name_snapshot TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_approvals_stage_id ON approvals(stage_id)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS support_tickets (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        client_id VARCHAR(36) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        subject TEXT NOT NULL,
+        description TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        priority TEXT NOT NULL DEFAULT 'medium',
+        assigned_to VARCHAR(36) REFERENCES users(id),
+        created_by_client_user_id VARCHAR(36) NOT NULL REFERENCES client_users(id),
+        resolved_at TIMESTAMP,
+        closed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_support_tickets_project_id ON support_tickets(project_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_support_tickets_client_id ON support_tickets(client_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_support_tickets_assigned_to ON support_tickets(assigned_to)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS ticket_messages (
+        id VARCHAR(36) PRIMARY KEY,
+        ticket_id VARCHAR(36) NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+        sender_type TEXT NOT NULL,
+        sender_client_user_id VARCHAR(36) REFERENCES client_users(id),
+        sender_staff_id VARCHAR(36) REFERENCES users(id),
+        body TEXT NOT NULL,
+        attachment_file_name TEXT,
+        attachment_object_key TEXT,
+        attachment_mime_type TEXT,
+        attachment_file_size INTEGER,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket_id ON ticket_messages(ticket_id)`);
+
     console.log("✅ Database tables ready");
 
     await seedPageItems();

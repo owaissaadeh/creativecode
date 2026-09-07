@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Users, UserCheck, TrendingUp, DollarSign,
-  LogOut, Target, Code2, Layers, CalendarCheck, ClipboardList
+  LogOut, Target, Code2, Layers, CalendarCheck, ClipboardList,
+  FolderKanban, LifeBuoy
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -27,6 +28,11 @@ export default function Layout({ children }: LayoutProps) {
 
   const { data: pendingTasks } = useQuery<{ count: number }>({
     queryKey: ["/api/tasks/pending-count"],
+    enabled: !!user,
+  });
+
+  const { data: openTickets } = useQuery<{ count: number }>({
+    queryKey: [isAdmin() ? "/api/admin/tickets/open-count" : "/api/sales/tickets/open-count"],
     enabled: !!user,
   });
 
@@ -50,6 +56,13 @@ export default function Layout({ children }: LayoutProps) {
       icon: ClipboardList,
       badge: pendingTasks?.count && pendingTasks.count > 0 ? pendingTasks.count : undefined,
     },
+    { title: "المشاريع", href: "/admin/projects", icon: FolderKanban },
+    {
+      title: "تذاكر الدعم",
+      href: "/admin/tickets",
+      icon: LifeBuoy,
+      badge: openTickets?.count && openTickets.count > 0 ? openTickets.count : undefined,
+    },
   ];
 
   const salesNav = [
@@ -62,6 +75,13 @@ export default function Layout({ children }: LayoutProps) {
       href: "/sales/tasks",
       icon: ClipboardList,
       badge: pendingTasks?.count && pendingTasks.count > 0 ? pendingTasks.count : undefined,
+    },
+    { title: "المشاريع", href: "/sales/projects", icon: FolderKanban },
+    {
+      title: "تذاكر الدعم",
+      href: "/sales/tickets",
+      icon: LifeBuoy,
+      badge: openTickets?.count && openTickets.count > 0 ? openTickets.count : undefined,
     },
   ];
 

@@ -1,12 +1,20 @@
 import { db } from "./db";
-import { users, leads, clients, commissions, pageItems, consultations, tasks } from "@shared/schema";
+import {
+  users, leads, clients, commissions, pageItems, consultations, tasks,
+  clientUsers, projects, projectStages, deliverables, projectComments,
+  approvals, supportTickets, ticketMessages,
+} from "@shared/schema";
 import { eq, and, desc, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type {
   User, InsertUser, Lead, InsertLead,
   Client, InsertClient, Commission, InsertCommission,
   PageItem, InsertPageItem, Consultation, InsertConsultation,
-  Task, InsertTask
+  Task, InsertTask,
+  ClientUser, InsertClientUser, Project, InsertProject,
+  ProjectStage, InsertProjectStage, Deliverable, InsertDeliverable,
+  ProjectComment, InsertProjectComment, Approval, InsertApproval,
+  SupportTicket, InsertSupportTicket, TicketMessage, InsertTicketMessage,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -55,6 +63,50 @@ export interface IStorage {
   getAdminStats(): Promise<unknown>;
   getSalesStats(salesId: string): Promise<unknown>;
   getReports(): Promise<unknown>;
+
+  // ─── Client Portal ────────────────────────────────────────────────────
+  getClientUserById(id: string): Promise<ClientUser | undefined>;
+  getClientUserByEmail(email: string): Promise<ClientUser | undefined>;
+  getClientUsersByClient(clientId: string): Promise<ClientUser[]>;
+  createClientUser(data: InsertClientUser & { id?: string }): Promise<ClientUser>;
+  updateClientUser(id: string, data: Partial<ClientUser>): Promise<ClientUser>;
+
+  getAllProjects(): Promise<Project[]>;
+  getProjectById(id: string): Promise<Project | undefined>;
+  getProjectsByClient(clientId: string): Promise<Project[]>;
+  getProjectsBySales(salesId: string): Promise<Project[]>;
+  createProject(data: InsertProject & { id?: string }): Promise<Project>;
+  updateProject(id: string, data: Partial<Project>): Promise<Project>;
+
+  getProjectStagesByProject(projectId: string): Promise<ProjectStage[]>;
+  getProjectStageById(id: string): Promise<ProjectStage | undefined>;
+  createProjectStage(data: InsertProjectStage & { id?: string }): Promise<ProjectStage>;
+  updateProjectStage(id: string, data: Partial<ProjectStage>): Promise<ProjectStage>;
+  deleteProjectStage(id: string): Promise<void>;
+
+  getDeliverablesByProject(projectId: string): Promise<Deliverable[]>;
+  getDeliverablesByStage(stageId: string): Promise<Deliverable[]>;
+  getDeliverableById(id: string): Promise<Deliverable | undefined>;
+  createDeliverable(data: InsertDeliverable & { id?: string }): Promise<Deliverable>;
+  deleteDeliverable(id: string): Promise<void>;
+
+  getProjectComments(projectId: string, stageId?: string): Promise<ProjectComment[]>;
+  createProjectComment(data: InsertProjectComment & { id?: string }): Promise<ProjectComment>;
+
+  getApprovalsByStage(stageId: string): Promise<Approval[]>;
+  createApproval(data: InsertApproval & { id?: string }): Promise<Approval>;
+
+  getAllTickets(): Promise<SupportTicket[]>;
+  getTicketById(id: string): Promise<SupportTicket | undefined>;
+  getTicketsByClient(clientId: string): Promise<SupportTicket[]>;
+  getTicketsByProject(projectId: string): Promise<SupportTicket[]>;
+  getTicketsForSales(salesId: string): Promise<SupportTicket[]>;
+  createTicket(data: InsertSupportTicket & { id?: string }): Promise<SupportTicket>;
+  updateTicket(id: string, data: Partial<SupportTicket>): Promise<SupportTicket>;
+
+  getTicketMessages(ticketId: string): Promise<TicketMessage[]>;
+  getTicketMessageById(id: string): Promise<TicketMessage | undefined>;
+  createTicketMessage(data: InsertTicketMessage & { id?: string }): Promise<TicketMessage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -339,6 +391,190 @@ export class DatabaseStorage implements IStorage {
     const leadsBySource = Object.entries(sourceCount).map(([source, count]) => ({ source, count }));
 
     return { totalSales, totalCommissions, closingRate, bestSales, salesByMonth, clientsByStatus, leadsBySource };
+  }
+
+  // ─── Client Portal ──────────────────────────────────────────────────────
+
+  async getClientUserById(id: string) {
+    const [row] = await db.select().from(clientUsers).where(eq(clientUsers.id, id));
+    return row;
+  }
+
+  async getClientUserByEmail(email: string) {
+    const [row] = await db.select().from(clientUsers).where(eq(clientUsers.email, email));
+    return row;
+  }
+
+  async getClientUsersByClient(clientId: string) {
+    return db.select().from(clientUsers).where(eq(clientUsers.clientId, clientId)).orderBy(desc(clientUsers.createdAt));
+  }
+
+  async createClientUser(data: InsertClientUser & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(clientUsers).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updateClientUser(id: string, data: Partial<ClientUser>) {
+    const [row] = await db.update(clientUsers).set(data).where(eq(clientUsers.id, id)).returning();
+    return row;
+  }
+
+  async getAllProjects() {
+    return db.select().from(projects).orderBy(desc(projects.createdAt));
+  }
+
+  async getProjectById(id: string) {
+    const [row] = await db.select().from(projects).where(eq(projects.id, id));
+    return row;
+  }
+
+  async getProjectsByClient(clientId: string) {
+    return db.select().from(projects).where(eq(projects.clientId, clientId)).orderBy(desc(projects.createdAt));
+  }
+
+  async getProjectsBySales(salesId: string) {
+    const rows = await db.select({ project: projects })
+      .from(projects)
+      .innerJoin(clients, eq(projects.clientId, clients.id))
+      .where(eq(clients.salesId, salesId))
+      .orderBy(desc(projects.createdAt));
+    return rows.map((r) => r.project);
+  }
+
+  async createProject(data: InsertProject & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(projects).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updateProject(id: string, data: Partial<Project>) {
+    const [row] = await db.update(projects).set(data).where(eq(projects.id, id)).returning();
+    return row;
+  }
+
+  async getProjectStagesByProject(projectId: string) {
+    return db.select().from(projectStages).where(eq(projectStages.projectId, projectId)).orderBy(projectStages.sequence);
+  }
+
+  async getProjectStageById(id: string) {
+    const [row] = await db.select().from(projectStages).where(eq(projectStages.id, id));
+    return row;
+  }
+
+  async createProjectStage(data: InsertProjectStage & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(projectStages).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updateProjectStage(id: string, data: Partial<ProjectStage>) {
+    const [row] = await db.update(projectStages).set(data).where(eq(projectStages.id, id)).returning();
+    return row;
+  }
+
+  async deleteProjectStage(id: string) {
+    await db.delete(projectStages).where(eq(projectStages.id, id));
+  }
+
+  async getDeliverablesByProject(projectId: string) {
+    return db.select().from(deliverables).where(eq(deliverables.projectId, projectId)).orderBy(desc(deliverables.createdAt));
+  }
+
+  async getDeliverablesByStage(stageId: string) {
+    return db.select().from(deliverables).where(eq(deliverables.stageId, stageId)).orderBy(desc(deliverables.createdAt));
+  }
+
+  async getDeliverableById(id: string) {
+    const [row] = await db.select().from(deliverables).where(eq(deliverables.id, id));
+    return row;
+  }
+
+  async createDeliverable(data: InsertDeliverable & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(deliverables).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async deleteDeliverable(id: string) {
+    await db.delete(deliverables).where(eq(deliverables.id, id));
+  }
+
+  async getProjectComments(projectId: string, stageId?: string) {
+    if (stageId) {
+      return db.select().from(projectComments)
+        .where(and(eq(projectComments.projectId, projectId), eq(projectComments.stageId, stageId)))
+        .orderBy(projectComments.createdAt);
+    }
+    return db.select().from(projectComments).where(eq(projectComments.projectId, projectId)).orderBy(projectComments.createdAt);
+  }
+
+  async createProjectComment(data: InsertProjectComment & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(projectComments).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async getApprovalsByStage(stageId: string) {
+    return db.select().from(approvals).where(eq(approvals.stageId, stageId)).orderBy(desc(approvals.createdAt));
+  }
+
+  async createApproval(data: InsertApproval & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(approvals).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async getAllTickets() {
+    return db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt));
+  }
+
+  async getTicketById(id: string) {
+    const [row] = await db.select().from(supportTickets).where(eq(supportTickets.id, id));
+    return row;
+  }
+
+  async getTicketsByClient(clientId: string) {
+    return db.select().from(supportTickets).where(eq(supportTickets.clientId, clientId)).orderBy(desc(supportTickets.createdAt));
+  }
+
+  async getTicketsByProject(projectId: string) {
+    return db.select().from(supportTickets).where(eq(supportTickets.projectId, projectId)).orderBy(desc(supportTickets.createdAt));
+  }
+
+  async getTicketsForSales(salesId: string) {
+    const rows = await db.select({ ticket: supportTickets })
+      .from(supportTickets)
+      .leftJoin(clients, eq(supportTickets.clientId, clients.id))
+      .where(or(eq(clients.salesId, salesId), eq(supportTickets.assignedTo, salesId)))
+      .orderBy(desc(supportTickets.createdAt));
+    return rows.map((r) => r.ticket);
+  }
+
+  async createTicket(data: InsertSupportTicket & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(supportTickets).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updateTicket(id: string, data: Partial<SupportTicket>) {
+    const [row] = await db.update(supportTickets).set(data).where(eq(supportTickets.id, id)).returning();
+    return row;
+  }
+
+  async getTicketMessages(ticketId: string) {
+    return db.select().from(ticketMessages).where(eq(ticketMessages.ticketId, ticketId)).orderBy(ticketMessages.createdAt);
+  }
+
+  async getTicketMessageById(id: string) {
+    const [row] = await db.select().from(ticketMessages).where(eq(ticketMessages.id, id));
+    return row;
+  }
+
+  async createTicketMessage(data: InsertTicketMessage & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(ticketMessages).values({ ...data, id }).returning();
+    return row;
   }
 }
 

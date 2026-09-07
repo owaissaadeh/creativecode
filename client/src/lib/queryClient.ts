@@ -1,8 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 
-function getToken() {
+function getToken(url: string) {
+  const key = url.startsWith("/api/portal") ? "portal-auth" : "crm-auth";
   try {
-    const stored = localStorage.getItem("crm-auth");
+    const stored = localStorage.getItem(key);
     if (stored) {
       const parsed = JSON.parse(stored);
       return parsed?.state?.token || null;
@@ -16,7 +17,7 @@ export async function apiRequest(
   url: string,
   data?: unknown,
 ): Promise<unknown> {
-  const token = getToken();
+  const token = getToken(url);
   const headers: Record<string, string> = {};
   if (data) headers["Content-Type"] = "application/json";
   if (token) headers["Authorization"] = `Bearer ${token}`;

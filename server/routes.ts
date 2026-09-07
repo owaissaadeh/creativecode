@@ -46,15 +46,18 @@ const upload = multer({
 
 const JWT_SECRET = process.env.SESSION_SECRET || "crm-secret-key-2026";
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: { id: string; role: string; commissionRate: string };
 }
 
-function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.replace("Bearer ", "");
   if (!token) return res.status(401).json({ message: "غير مصرح" });
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; commissionRate: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; commissionRate: string; type?: string };
+    // Reject client-portal tokens outright — a client token must never work on staff routes,
+    // even if the JWT secrets happened to collide (defense in depth alongside portalAuthMiddleware).
+    if (decoded.type !== "staff") return res.status(401).json({ message: "غير مصرح" });
     req.user = decoded;
     next();
   } catch {
@@ -62,7 +65,7 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   }
 }
 
-function adminOnly(req: AuthRequest, res: Response, next: NextFunction) {
+export function adminOnly(req: AuthRequest, res: Response, next: NextFunction) {
   if (req.user?.role !== "admin") return res.status(403).json({ message: "غير مسموح" });
   next();
 }
@@ -207,7 +210,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!user) return res.status(401).json({ message: "بيانات الدخول غير صحيحة" });
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) return res.status(401).json({ message: "بيانات الدخول غير صحيحة" });
-      const token = jwt.sign({ id: user.id, role: user.role, commissionRate: user.commissionRate }, JWT_SECRET, { expiresIn: "7d" });
+      const token = jwt.sign({ id: user.id, role: user.role, commissionRate: user.commissionRate, type: "staff" }, JWT_SECRET, { expiresIn: "7d" });
       res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, commissionRate: user.commissionRate } });
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
