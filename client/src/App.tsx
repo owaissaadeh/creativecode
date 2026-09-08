@@ -9,6 +9,7 @@ import { useFaviconSync } from "@/lib/siteConfig";
 import Layout from "@/components/Layout";
 import PortalLayout from "@/components/PortalLayout";
 import Landing from "@/pages/Landing";
+import ProjectShowcase from "@/pages/ProjectShowcase";
 import Login from "@/pages/Login";
 import PortalLogin from "@/pages/portal/Login";
 import PortalDashboard from "@/pages/portal/Dashboard";
@@ -68,6 +69,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/projects/:id" component={ProjectShowcase} />
       <Route path="/login">
         {user ? <Redirect to={user.role === "admin" ? "/admin" : "/sales"} /> : <Login />}
       </Route>

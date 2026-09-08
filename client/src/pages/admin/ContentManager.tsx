@@ -16,7 +16,7 @@ import {
   AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Layers, FolderKanban, Settings, Save, Upload, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Layers, FolderKanban, Settings, Save, Upload, ImageIcon, ArrowUp, ArrowDown, X } from "lucide-react";
 import { useSiteConfig } from "@/lib/siteConfig";
 import type { SiteConfig } from "@/lib/siteConfig";
 import type { PageItem } from "@shared/schema";
@@ -29,10 +29,11 @@ type ItemForm = {
   tags: string;
   orderIndex: number;
   isActive: boolean;
+  imageUrls: string[];
 };
 
 const emptyForm: ItemForm = {
-  title: "", subtitle: "", description: "", icon: "", tags: "", orderIndex: 0, isActive: true
+  title: "", subtitle: "", description: "", icon: "", tags: "", orderIndex: 0, isActive: true, imageUrls: []
 };
 
 function ItemDialog({
@@ -49,7 +50,7 @@ function ItemDialog({
   const { toast } = useToast();
   const [form, setForm] = useState<ItemForm>(
     editing
-      ? { title: editing.title, subtitle: editing.subtitle || "", description: editing.description || "", icon: editing.icon || "", tags: editing.tags.join(", "), orderIndex: editing.orderIndex, isActive: editing.isActive }
+      ? { title: editing.title, subtitle: editing.subtitle || "", description: editing.description || "", icon: editing.icon || "", tags: editing.tags.join(", "), orderIndex: editing.orderIndex, isActive: editing.isActive, imageUrls: editing.imageUrls || [] }
       : emptyForm
   );
 
@@ -89,6 +90,7 @@ function ItemDialog({
       tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
       orderIndex: form.orderIndex,
       isActive: form.isActive,
+      imageUrls: form.imageUrls,
     };
     editing ? updateMutation.mutate(payload) : createMutation.mutate(payload);
   };
@@ -130,6 +132,12 @@ function ItemDialog({
             <Label>الوسوم / التقنيات (مفصولة بفواصل)</Label>
             <Input data-testid="input-item-tags" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="مثال: React, Node.js, TypeScript" />
           </div>
+          {itemType === "project" && (
+            <GalleryField
+              images={form.imageUrls}
+              onChange={(imageUrls) => setForm({ ...form, imageUrls })}
+            />
+          )}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -307,6 +315,93 @@ function uploadImage(file: File): Promise<{ url: string }> {
     if (!r.ok) throw new Error("فشل الرفع");
     return r.json();
   });
+}
+
+function GalleryField({
+  images, onChange,
+}: {
+  images: string[]; onChange: (images: string[]) => void;
+}) {
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await uploadImage(file);
+      onChange([...images, url]);
+      toast({ title: "تم رفع الصورة" });
+    } catch {
+      toast({ title: "خطأ في رفع الصورة", variant: "destructive" });
+    }
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= images.length) return;
+    const next = [...images];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function remove(index: number) {
+    onChange(images.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="space-y-3">
+      <Label>صور المشروع</Label>
+      {images.length > 0 && (
+        <div className="space-y-2">
+          {images.map((url, index) => (
+            <div key={`${url}-${index}`} className="flex items-center gap-3 p-2 rounded-lg border border-border bg-muted/20">
+              <div className="w-16 h-12 rounded border border-border bg-muted/40 overflow-hidden flex-shrink-0">
+                <img src={url} alt={`صورة ${index + 1}`} className="w-full h-full object-cover" data-testid={`gallery-image-${index}`} />
+              </div>
+              <span className="text-xs text-muted-foreground flex-1 truncate">{url}</span>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" disabled={index === 0} onClick={() => move(index, -1)} data-testid={`gallery-up-${index}`}>
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" disabled={index === images.length - 1} onClick={() => move(index, 1)} data-testid={`gallery-down-${index}`}>
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => remove(index)} data-testid={`gallery-remove-${index}`}>
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        data-testid="gallery-input"
+        onChange={handleFile}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-2"
+        disabled={uploading}
+        data-testid="gallery-add-btn"
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload className="w-4 h-4" />
+        {uploading ? "جارٍ الرفع..." : "إضافة صورة"}
+      </Button>
+      <p className="text-xs text-muted-foreground">أول صورة تُستخدم كغلاف بالصفحة الرئيسية. رتّب الصور بالأسهم.</p>
+    </div>
+  );
 }
 
 function ImageUploadField({

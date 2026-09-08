@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/lib/siteConfig";
 import { Button } from "@/components/ui/button";
@@ -347,35 +348,45 @@ export default function Landing() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => {
               const IconComp = iconMap[project.icon || ""] || BarChart3;
+              const coverImage = project.imageUrls?.[0];
               return (
-                <div key={project.id} data-testid={`card-project-${project.id}`} className="hover:shadow-md rounded-xl border border-border bg-card p-6 space-y-4 transition-all">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <IconComp className="w-5 h-5 text-primary" />
+                <Link key={project.id} href={`/projects/${project.id}`}>
+                  <div data-testid={`card-project-${project.id}`} className="hover:shadow-md rounded-xl border border-border bg-card p-6 space-y-4 transition-all cursor-pointer">
+                    {coverImage && (
+                      <div className="-mx-6 -mt-6 h-40 rounded-t-xl overflow-hidden">
+                        <img src={coverImage} alt={project.title} className="w-full h-full object-cover" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-sm">{project.title}</h3>
-                        {project.subtitle && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary mt-0.5 inline-block">{project.subtitle}</span>
+                    )}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        {!coverImage && (
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <IconComp className="w-5 h-5 text-primary" />
+                          </div>
                         )}
+                        <div>
+                          <h3 className="font-semibold text-sm">{project.title}</h3>
+                          {project.subtitle && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary mt-0.5 inline-block">{project.subtitle}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-0.5 shrink-0">
+                        {[1,2,3,4,5].map((i) => (
+                          <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                        ))}
                       </div>
                     </div>
-                    <div className="flex gap-0.5 shrink-0">
-                      {[1,2,3,4,5].map((i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{project.description}</p>
+                    {project.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
+                        {project.tags.map((tag) => (
+                          <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted font-mono text-muted-foreground">{tag}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{project.description}</p>
-                  {project.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
-                      {project.tags.map((tag) => (
-                        <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted font-mono text-muted-foreground">{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </Link>
               );
             })}
           </div>

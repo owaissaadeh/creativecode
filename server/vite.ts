@@ -5,6 +5,8 @@ import viteConfig from "../vite.config";
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import { storage } from "./storage";
+import { injectFavicon } from "./lib/html";
 
 const viteLogger = createLogger();
 
@@ -48,7 +50,13 @@ export async function setupVite(server: Server, app: Express) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
-      const page = await vite.transformIndexHtml(url, template);
+      let page = await vite.transformIndexHtml(url, template);
+      try {
+        const config = await storage.getSiteConfig();
+        page = injectFavicon(page, config.favicon_url);
+      } catch (err) {
+        console.error("Failed to inject favicon:", err);
+      }
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);

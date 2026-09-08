@@ -134,6 +134,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/content/items/:id", async (req, res) => {
+    try {
+      const item = await storage.getPageItem(req.params.id as string);
+      if (!item || !item.isActive) return res.status(404).json({ message: "العنصر غير موجود" });
+      res.json(item);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   // Public: Consultation booking
   app.post("/api/consultations/public", async (req, res) => {
     try {
@@ -452,9 +462,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/content/items", authMiddleware, adminOnly, async (req, res) => {
     try {
-      const { itemType, title, subtitle, description, icon, tags, orderIndex, isActive } = req.body;
+      const { itemType, title, subtitle, description, icon, imageUrls, tags, orderIndex, isActive } = req.body;
       if (!itemType || !title) return res.status(400).json({ message: "النوع والعنوان مطلوبان" });
-      const item = await storage.createPageItem({ itemType, title, subtitle, description, icon, tags: tags || [], orderIndex: orderIndex || 0, isActive: isActive !== false });
+      const item = await storage.createPageItem({ itemType, title, subtitle, description, icon, imageUrls: imageUrls || [], tags: tags || [], orderIndex: orderIndex || 0, isActive: isActive !== false });
       res.json(item);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });

@@ -111,6 +111,7 @@ export async function migrateDb() {
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `);
+    await db.execute(sql`ALTER TABLE page_items ADD COLUMN IF NOT EXISTS image_urls TEXT[] NOT NULL DEFAULT '{}'`);
 
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS client_users (

@@ -62,6 +62,7 @@ export const pageItems = pgTable("page_items", {
   subtitle: text("subtitle"),
   description: text("description"),
   icon: text("icon"),
+  imageUrls: text("image_urls").array().notNull().default([]),
   tags: text("tags").array().notNull().default([]),
   orderIndex: integer("order_index").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
