@@ -48,6 +48,8 @@ export default function AdminLeads() {
   const [taskDialog, setTaskDialog] = useState<Lead | null>(null);
   const [leadTasksPanel, setLeadTasksPanel] = useState<Lead | null>(null);
   const [taskForm, setTaskForm] = useState({ title: "", description: "", assignedTo: "", dueDate: "", priority: "medium" });
+  const [newLeadDialog, setNewLeadDialog] = useState(false);
+  const [newLeadForm, setNewLeadForm] = useState({ name: "", companyName: "", phone: "", email: "", serviceType: "", budget: "", message: "", assignedTo: "" });
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({ queryKey: ["/api/admin/leads"] });
   const { data: salesUsers = [] } = useQuery<User[]>({ queryKey: ["/api/admin/users"] });
@@ -73,6 +75,17 @@ export default function AdminLeads() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
       toast({ title: "تم تحويل العميل المحتمل إلى عميل بنجاح" });
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
+  const createLeadMutation = useMutation({
+    mutationFn: (data: object) => apiRequest("POST", "/api/admin/leads", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/leads"] });
+      setNewLeadDialog(false);
+      setNewLeadForm({ name: "", companyName: "", phone: "", email: "", serviceType: "", budget: "", message: "", assignedTo: "" });
+      toast({ title: "تم إضافة العميل المحتمل بنجاح" });
     },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
@@ -103,9 +116,14 @@ export default function AdminLeads() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">العملاء المحتملون</h1>
-        <p className="text-muted-foreground mt-1">إدارة وتعيين العملاء المحتملين</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">العملاء المحتملون</h1>
+          <p className="text-muted-foreground mt-1">إدارة وتعيين العملاء المحتملين</p>
+        </div>
+        <Button className="gap-1.5" onClick={() => setNewLeadDialog(true)} data-testid="button-new-lead">
+          <Plus className="w-4 h-4" /> ليد جديد
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -324,6 +342,70 @@ export default function AdminLeads() {
                 {createTaskMutation.isPending ? "جاري الإنشاء..." : "إنشاء"}
               </Button>
               <Button variant="outline" className="flex-1" onClick={() => setTaskDialog(null)}>إلغاء</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Lead Dialog */}
+      <Dialog open={newLeadDialog} onOpenChange={setNewLeadDialog}>
+        <DialogContent dir="rtl" className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>إضافة عميل محتمل جديد</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1.5">
+              <Label>الاسم *</Label>
+              <Input data-testid="input-new-lead-name" value={newLeadForm.name} onChange={(e) => setNewLeadForm({ ...newLeadForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>اسم الشركة</Label>
+              <Input data-testid="input-new-lead-company" value={newLeadForm.companyName} onChange={(e) => setNewLeadForm({ ...newLeadForm, companyName: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>الهاتف *</Label>
+                <Input data-testid="input-new-lead-phone" value={newLeadForm.phone} onChange={(e) => setNewLeadForm({ ...newLeadForm, phone: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>البريد الإلكتروني *</Label>
+                <Input type="email" data-testid="input-new-lead-email" value={newLeadForm.email} onChange={(e) => setNewLeadForm({ ...newLeadForm, email: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>نوع الخدمة *</Label>
+                <Input placeholder="مثال: موقع ويب" data-testid="input-new-lead-service" value={newLeadForm.serviceType} onChange={(e) => setNewLeadForm({ ...newLeadForm, serviceType: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>الميزانية</Label>
+                <Input data-testid="input-new-lead-budget" value={newLeadForm.budget} onChange={(e) => setNewLeadForm({ ...newLeadForm, budget: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>تعيين إلى</Label>
+              <Select value={newLeadForm.assignedTo || "_none"} onValueChange={(v) => setNewLeadForm({ ...newLeadForm, assignedTo: v === "_none" ? "" : v })}>
+                <SelectTrigger data-testid="select-new-lead-assignee"><SelectValue placeholder="بدون" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">بدون</SelectItem>
+                  {salesList.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>ملاحظات</Label>
+              <Textarea rows={2} value={newLeadForm.message} onChange={(e) => setNewLeadForm({ ...newLeadForm, message: e.target.value })} />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                className="flex-1"
+                disabled={!newLeadForm.name.trim() || !newLeadForm.phone.trim() || !newLeadForm.email.trim() || !newLeadForm.serviceType.trim() || createLeadMutation.isPending}
+                onClick={() => createLeadMutation.mutate(newLeadForm)}
+                data-testid="button-submit-new-lead"
+              >
+                {createLeadMutation.isPending ? "جاري الإضافة..." : "إضافة"}
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setNewLeadDialog(false)}>إلغاء</Button>
             </div>
           </div>
         </DialogContent>

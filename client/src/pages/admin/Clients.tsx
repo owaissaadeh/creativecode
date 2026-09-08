@@ -55,6 +55,8 @@ export default function AdminClients() {
   const [taskDialog, setTaskDialog] = useState<Client | null>(null);
   const [clientTasksPanel, setClientTasksPanel] = useState<Client | null>(null);
   const [portalDialog, setPortalDialog] = useState<Client | null>(null);
+  const [newClientDialog, setNewClientDialog] = useState(false);
+  const [newClientForm, setNewClientForm] = useState({ clientName: "", companyName: "", phone: "", email: "", serviceType: "", dealValue: "", status: "New Lead", salesId: "" });
   const [taskForm, setTaskForm] = useState({ title: "", description: "", assignedTo: "", dueDate: "", priority: "medium" });
 
   const { data: clients = [], isLoading } = useQuery<ClientWithSales[]>({ queryKey: ["/api/admin/clients"] });
@@ -71,6 +73,17 @@ export default function AdminClients() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       setEditClient(null);
       toast({ title: "تم تحديث بيانات العميل" });
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
+  const createClientMutation = useMutation({
+    mutationFn: (data: object) => apiRequest("POST", "/api/admin/clients", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      setNewClientDialog(false);
+      setNewClientForm({ clientName: "", companyName: "", phone: "", email: "", serviceType: "", dealValue: "", status: "New Lead", salesId: "" });
+      toast({ title: "تم إضافة العميل بنجاح" });
     },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
@@ -118,9 +131,14 @@ export default function AdminClients() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">العملاء</h1>
-        <p className="text-muted-foreground mt-1">إدارة ومتابعة جميع العملاء</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">العملاء</h1>
+          <p className="text-muted-foreground mt-1">إدارة ومتابعة جميع العملاء</p>
+        </div>
+        <Button className="gap-1.5" onClick={() => setNewClientDialog(true)} data-testid="button-new-client">
+          <Plus className="w-4 h-4" /> عميل جديد
+        </Button>
       </div>
 
       <div className="relative max-w-sm">
@@ -178,12 +196,10 @@ export default function AdminClients() {
                         <Plus className="w-4 h-4 ml-1" />
                         ملاحظة
                       </Button>
-                      {client.status === "Won" && (
-                        <Button size="sm" variant="outline" onClick={() => setPortalDialog(client)} data-testid={`button-portal-access-${client.id}`}>
-                          <KeyRound className="w-4 h-4 ml-1" />
-                          بوابة العميل
-                        </Button>
-                      )}
+                      <Button size="sm" variant="outline" onClick={() => setPortalDialog(client)} data-testid={`button-portal-access-${client.id}`}>
+                        <KeyRound className="w-4 h-4 ml-1" />
+                        بوابة العميل
+                      </Button>
                       <Button size="sm" onClick={() => openEdit(client)} data-testid={`button-edit-client-${client.id}`}>
                         تحديث
                       </Button>
@@ -360,6 +376,77 @@ export default function AdminClients() {
                 {createTaskMutation.isPending ? "جاري الإنشاء..." : "إنشاء"}
               </Button>
               <Button variant="outline" className="flex-1" onClick={() => setTaskDialog(null)}>إلغاء</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Client Dialog */}
+      <Dialog open={newClientDialog} onOpenChange={setNewClientDialog}>
+        <DialogContent dir="rtl" className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>إضافة عميل جديد</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1.5">
+              <Label>اسم العميل *</Label>
+              <Input data-testid="input-new-client-name" value={newClientForm.clientName} onChange={(e) => setNewClientForm({ ...newClientForm, clientName: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>اسم الشركة</Label>
+              <Input data-testid="input-new-client-company" value={newClientForm.companyName} onChange={(e) => setNewClientForm({ ...newClientForm, companyName: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>الهاتف *</Label>
+                <Input data-testid="input-new-client-phone" value={newClientForm.phone} onChange={(e) => setNewClientForm({ ...newClientForm, phone: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>البريد الإلكتروني *</Label>
+                <Input type="email" data-testid="input-new-client-email" value={newClientForm.email} onChange={(e) => setNewClientForm({ ...newClientForm, email: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>نوع الخدمة *</Label>
+                <Input placeholder="مثال: تطوير موقع ويب" data-testid="input-new-client-service" value={newClientForm.serviceType} onChange={(e) => setNewClientForm({ ...newClientForm, serviceType: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>قيمة الصفقة</Label>
+                <Input type="number" data-testid="input-new-client-value" value={newClientForm.dealValue} onChange={(e) => setNewClientForm({ ...newClientForm, dealValue: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>الحالة</Label>
+                <Select value={newClientForm.status} onValueChange={(v) => setNewClientForm({ ...newClientForm, status: v })}>
+                  <SelectTrigger data-testid="select-new-client-status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(statusConfig).map((s) => <SelectItem key={s} value={s}>{statusConfig[s].label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>موظف المبيعات</Label>
+                <Select value={newClientForm.salesId || "_none"} onValueChange={(v) => setNewClientForm({ ...newClientForm, salesId: v === "_none" ? "" : v })}>
+                  <SelectTrigger data-testid="select-new-client-sales"><SelectValue placeholder="بدون" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">بدون</SelectItem>
+                    {salesUsers.filter((u) => u.role === "sales").map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                className="flex-1"
+                disabled={!newClientForm.clientName.trim() || !newClientForm.phone.trim() || !newClientForm.email.trim() || !newClientForm.serviceType.trim() || createClientMutation.isPending}
+                onClick={() => createClientMutation.mutate(newClientForm)}
+                data-testid="button-submit-new-client"
+              >
+                {createClientMutation.isPending ? "جاري الإضافة..." : "إضافة"}
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setNewClientDialog(false)}>إلغاء</Button>
             </div>
           </div>
         </DialogContent>

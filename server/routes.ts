@@ -21,6 +21,13 @@ const upload = multer({
 
 const JWT_SECRET = process.env.SESSION_SECRET || "crm-secret-key-2026";
 
+// The one admin account that can never be deleted or demoted — matches whichever
+// email seed.ts created the initial admin with (ADMIN_EMAIL, same fallback).
+function isProtectedAdmin(email: string): boolean {
+  const protectedEmail = process.env.ADMIN_EMAIL || "admin@creativecode-jo.com";
+  return email.toLowerCase() === protectedEmail.toLowerCase();
+}
+
 export interface AuthRequest extends Request {
   user?: { id: string; role: string; commissionRate: string };
 }
@@ -201,6 +208,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/admin/users/:id", authMiddleware, adminOnly, async (req, res) => {
     try {
+      const existing = await storage.getUserById(req.params.id);
+      if (!existing) return res.status(404).json({ message: "المستخدم غير موجود" });
+      if (isProtectedAdmin(existing.email) && req.body.role && req.body.role !== "admin") {
+        return res.status(403).json({ message: "لا يمكن تغيير صلاحية الأدمن الرئيسي" });
+      }
       const { role, commissionRate } = req.body;
       const user = await storage.updateUser(req.params.id, { role, commissionRate });
       res.json({ ...user, password: undefined });
@@ -213,7 +225,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const user = await storage.getUserById(req.params.id);
       if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
-      if (user.email === "admin@creativecode-jo.com") {
+      if (isProtectedAdmin(user.email)) {
         return res.status(403).json({ message: "لا يمكن حذف الأدمن الرئيسي" });
       }
       const { db } = await import("./db");
@@ -237,6 +249,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/admin/leads", authMiddleware, adminOnly, async (req, res) => {
     const allLeads = await storage.getAllLeads();
     res.json(allLeads);
+  });
+
+  app.post("/api/admin/leads", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { name, companyName, phone, email, serviceType, budget, message, assignedTo } = req.body;
+      if (!name || !phone || !email || !serviceType) return res.status(400).json({ message: "حقول مطلوبة ناقصة" });
+      const lead = await storage.createLead({
+        name, companyName: companyName || undefined, phone, email, serviceType,
+        budget: budget || undefined, message: message || undefined, source: "manual",
+        status: "New", assignedTo: assignedTo || undefined,
+      });
+      res.json(lead);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
   });
 
   app.patch("/api/admin/leads/:id/assign", authMiddleware, adminOnly, async (req, res) => {
@@ -270,6 +297,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Admin: Clients
+  app.post("/api/admin/clients", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { clientName, companyName, phone, email, serviceType, dealValue, status, salesId } = req.body;
+      if (!clientName || !phone || !email || !serviceType) return res.status(400).json({ message: "حقول مطلوبة ناقصة" });
+      const validStatuses = ["New Lead", "Contacted", "Meeting Scheduled", "Proposal Sent", "Negotiation", "Won", "Lost"];
+      const client = await storage.createClient({
+        clientName, companyName: companyName || undefined, phone, email, serviceType,
+        dealValue: dealValue || "0", status: validStatuses.includes(status) ? status : "New Lead",
+        salesId: salesId || undefined, notes: [],
+      });
+      res.json(client);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   app.get("/api/admin/clients", authMiddleware, adminOnly, async (req, res) => {
     const allClients = await storage.getAllClients();
     const allUsers = await storage.getAllUsers();
