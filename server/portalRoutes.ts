@@ -92,7 +92,10 @@ export function registerPortalRoutes(app: Express) {
       const project = await storage.getProjectById(req.params.id);
       if (!project || project.clientId !== req.clientUser.clientId) return res.status(404).json({ message: "المشروع غير موجود" });
       const stages = await storage.getProjectStagesByProject(project.id);
-      res.json({ ...project, stages, progress: computeProgress(stages) });
+      const stagesWithApprovals = await Promise.all(
+        stages.map(async (stage) => ({ ...stage, approvals: await storage.getApprovalsByStage(stage.id) }))
+      );
+      res.json({ ...project, stages: stagesWithApprovals, progress: computeProgress(stages) });
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }

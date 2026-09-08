@@ -116,7 +116,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string) {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(sql`lower(${users.email})`, email.toLowerCase()));
     return user;
   }
 
@@ -126,7 +126,7 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(data: InsertUser & { id?: string }) {
     const id = data.id || randomUUID();
-    const [user] = await db.insert(users).values({ ...data, id }).returning();
+    const [user] = await db.insert(users).values({ ...data, id, email: data.email.toLowerCase() }).returning();
     return user;
   }
 
@@ -401,7 +401,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getClientUserByEmail(email: string) {
-    const [row] = await db.select().from(clientUsers).where(eq(clientUsers.email, email));
+    const [row] = await db.select().from(clientUsers).where(eq(sql`lower(${clientUsers.email})`, email.toLowerCase()));
     return row;
   }
 
@@ -411,7 +411,7 @@ export class DatabaseStorage implements IStorage {
 
   async createClientUser(data: InsertClientUser & { id?: string }) {
     const id = data.id || randomUUID();
-    const [row] = await db.insert(clientUsers).values({ ...data, id }).returning();
+    const [row] = await db.insert(clientUsers).values({ ...data, id, email: data.email.toLowerCase() }).returning();
     return row;
   }
 

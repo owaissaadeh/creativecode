@@ -12,8 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  CheckCircle2, Circle, Clock, FileEdit, Download, MessageSquare, Send, File as FileIcon,
+  CheckCircle2, Circle, Clock, FileEdit, Download, MessageSquare, Send, File as FileIcon, Bell, ArrowLeft, XCircle,
 } from "lucide-react";
+
+interface Approval {
+  id: string;
+  decision: "approved" | "changes_requested";
+  clientComment: string | null;
+  createdAt: string;
+}
 
 interface Stage {
   id: string;
@@ -22,6 +29,7 @@ interface Stage {
   sequence: number;
   status: "not_started" | "in_progress" | "needs_review" | "changes_requested" | "approved" | "completed";
   plannedDate: string | null;
+  approvals: Approval[];
 }
 
 interface ProjectData {
@@ -82,7 +90,7 @@ async function downloadDeliverable(id: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function ApproveDialog({ stage, open, onClose }: { stage: Stage; open: boolean; onClose: () => void }) {
+function ApproveDialog({ stage, projectId, open, onClose }: { stage: Stage; projectId: string; open: boolean; onClose: () => void }) {
   const { toast } = useToast();
   const [decision, setDecision] = useState<"approved" | "changes_requested">("approved");
   const [comment, setComment] = useState("");
@@ -90,6 +98,7 @@ function ApproveDialog({ stage, open, onClose }: { stage: Stage; open: boolean; 
   const mutation = useMutation({
     mutationFn: () => apiRequest("POST", `/api/portal/stages/${stage.id}/approve`, { decision, comment: comment || undefined }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/portal/projects/${projectId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/portal/projects`] });
       toast({ title: decision === "approved" ? "تم اعتماد المرحلة" : "تم إرسال طلب التعديلات" });
       onClose();
@@ -180,6 +189,7 @@ export default function PortalProjectDetail() {
   }
 
   const sortedStages = [...project.stages].sort((a, b) => a.sequence - b.sequence);
+  const stagesNeedingReview = sortedStages.filter((s) => s.status === "needs_review");
 
   return (
     <div className="space-y-6">
@@ -195,6 +205,33 @@ export default function PortalProjectDetail() {
         </div>
       </div>
 
+      {/* Action-needed banner */}
+      {stagesNeedingReview.map((stage) => (
+        <div
+          key={stage.id}
+          data-testid={`banner-needs-review-${stage.id}`}
+          className="flex items-center justify-between gap-3 rounded-xl border border-orange-300 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-800 p-4"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <Bell className="w-5 h-5 text-orange-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">بانتظار مراجعتك</p>
+              <p className="text-sm text-orange-700 dark:text-orange-400 truncate">
+                مرحلة "{stage.title}" جاهزة — راجعها واعتمدها أو اطلب تعديلات
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            className="gap-1.5 flex-shrink-0 bg-orange-600 hover:bg-orange-700"
+            onClick={() => setApprovingStage(stage)}
+            data-testid={`button-banner-review-${stage.id}`}
+          >
+            راجع الآن <ArrowLeft className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      ))}
+
       {/* Stages timeline */}
       <Card>
         <CardContent className="p-5 space-y-4">
@@ -204,19 +241,41 @@ export default function PortalProjectDetail() {
               const cfg = STAGE_STATUS[stage.status];
               const Icon = cfg.icon;
               return (
-                <div key={stage.id} data-testid={`stage-${stage.id}`} className="flex items-start gap-3 rounded-lg border p-3">
-                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${cfg.color}`} />
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-sm">{stage.title}</span>
-                      <Badge variant="outline" className={`text-xs ${cfg.color}`}>{cfg.label}</Badge>
+                <div key={stage.id} data-testid={`stage-${stage.id}`} className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${cfg.color}`} />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-sm">{stage.title}</span>
+                        <Badge variant="outline" className={`text-xs ${cfg.color}`}>{cfg.label}</Badge>
+                      </div>
+                      {stage.description && <p className="text-xs text-muted-foreground">{stage.description}</p>}
                     </div>
-                    {stage.description && <p className="text-xs text-muted-foreground">{stage.description}</p>}
+                    {stage.status === "needs_review" && (
+                      <Button size="sm" onClick={() => setApprovingStage(stage)} data-testid={`button-review-stage-${stage.id}`}>
+                        مراجعة الآن
+                      </Button>
+                    )}
                   </div>
-                  {stage.status === "needs_review" && (
-                    <Button size="sm" onClick={() => setApprovingStage(stage)} data-testid={`button-review-stage-${stage.id}`}>
-                      مراجعة الآن
-                    </Button>
+                  {stage.approvals.length > 0 && (
+                    <div className="mr-8 space-y-1.5 border-r-2 border-border pr-3">
+                      {stage.approvals.map((a) => (
+                        <div key={a.id} data-testid={`approval-${a.id}`} className="text-xs flex items-start gap-1.5">
+                          {a.decision === "approved" ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0 mt-0.5" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                          )}
+                          <div>
+                            <span className={a.decision === "approved" ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"}>
+                              {a.decision === "approved" ? "اعتمدتها" : "طلبت تعديلات"}
+                            </span>
+                            <span className="text-muted-foreground"> — {new Date(a.createdAt).toLocaleDateString("ar-SA")}</span>
+                            {a.clientComment && <p className="text-muted-foreground mt-0.5">{a.clientComment}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               );
@@ -299,7 +358,7 @@ export default function PortalProjectDetail() {
       </Card>
 
       {approvingStage && (
-        <ApproveDialog stage={approvingStage} open={!!approvingStage} onClose={() => setApprovingStage(null)} />
+        <ApproveDialog stage={approvingStage} projectId={projectId} open={!!approvingStage} onClose={() => setApprovingStage(null)} />
       )}
     </div>
   );
