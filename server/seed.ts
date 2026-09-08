@@ -6,24 +6,37 @@ import { randomUUID } from "crypto";
 
 export async function seedDatabase() {
   try {
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@creativecode-jo.com";
     // Only seed if admin doesn't exist — NEVER delete existing data
-    const existingAdmin = await storage.getUserByEmail("admin@creativecode-jo.com");
+    const existingAdmin = await storage.getUserByEmail(adminEmail);
     if (existingAdmin) {
       console.log("✅ Database already seeded, skipping.");
       return;
     }
 
-    console.log("🌱 Seeding fresh demo data...");
+    // In production, only fake demo data (extra sales users, leads, clients, commissions,
+    // consultations) is skipped unless explicitly requested — the real admin account below
+    // is always created so there's a way to log in on a fresh deploy. Set ADMIN_EMAIL/
+    // ADMIN_PASSWORD/ADMIN_NAME to avoid the hardcoded demo credentials in production.
+    const isProduction = process.env.NODE_ENV === "production";
+    const seedDemoData = !isProduction || process.env.SEED_DEMO_DATA === "true";
+
+    console.log(seedDemoData ? "🌱 Seeding fresh demo data..." : "🌱 Creating initial admin account...");
 
     // ─── Users ───────────────────────────────────────────────────────────────
     const admin = await storage.createUser({
       id: randomUUID(),
-      name: "أويس - المدير العام",
-      email: "admin@creativecode-jo.com",
-      password: await bcrypt.hash("owais@123", 10),
+      name: process.env.ADMIN_NAME || "أويس - المدير العام",
+      email: adminEmail,
+      password: await bcrypt.hash(process.env.ADMIN_PASSWORD || "owais@123", 10),
       role: "admin",
       commissionRate: "0",
     });
+
+    if (!seedDemoData) {
+      console.log("✅ Admin account created (demo data skipped in production).");
+      return;
+    }
 
     const sales1 = await storage.createUser({
       id: randomUUID(),

@@ -22,6 +22,23 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+// Optional domain split: when PORTAL_HOSTNAME is set, the staff CRM and client portal
+// (/admin, /sales, /portal, /login) live on that subdomain while the root domain serves
+// only the public landing page. Left unset (e.g. local dev), this is a no-op.
+const portalHost = process.env.PORTAL_HOSTNAME;
+if (portalHost) {
+  app.use((req, res, next) => {
+    const isPortalHost = req.hostname === portalHost;
+    if (isPortalHost && req.path === "/") {
+      return res.redirect("/login");
+    }
+    if (!isPortalHost && /^\/(admin|sales|portal|login)(\/|$)/.test(req.path)) {
+      return res.redirect(`https://${portalHost}${req.originalUrl}`);
+    }
+    next();
+  });
+}
+
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",

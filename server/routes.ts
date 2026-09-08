@@ -7,32 +7,7 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import multer from "multer";
 import path from "path";
-import { Storage } from "@google-cloud/storage";
-
-const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
-
-const gcsClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: { type: "json", subject_token_field_name: "access_token" },
-    },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-} as any);
-
-async function uploadToObjectStorage(buffer: Buffer, filename: string, mimetype: string): Promise<string> {
-  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
-  const objectName = `public/${filename}`;
-  const file = gcsClient.bucket(bucketId).file(objectName);
-  await file.save(buffer, { contentType: mimetype, resumable: false, validation: false });
-  return `/api/files/${filename}`;
-}
+import { uploadPublicFile, streamPublicFile } from "./lib/objectStorage";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -103,21 +78,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Serve files from object storage
   app.get("/api/files/:filename", async (req, res) => {
-    try {
-      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
-      const objectName = `public/${req.params.filename}`;
-      const file = gcsClient.bucket(bucketId).file(objectName);
-      const [exists] = await file.exists();
-      if (!exists) return res.status(404).json({ message: "الملف غير موجود" });
-      const [metadata] = await file.getMetadata();
-      const [buffer] = await file.download();
-      res.set("Content-Type", metadata.contentType || "application/octet-stream");
-      res.set("Content-Length", String(buffer.length));
-      res.set("Cache-Control", "public, max-age=31536000");
-      res.end(buffer);
-    } catch {
-      res.status(500).json({ message: "خطأ في الخادم" });
-    }
+    await streamPublicFile(req.params.filename as string, res);
   });
 
   // Admin: Upload image (logo or favicon)
@@ -126,7 +87,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const ext = path.extname(req.file.originalname).toLowerCase();
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-      const url = await uploadToObjectStorage(req.file.buffer, filename, req.file.mimetype);
+      const url = await uploadPublicFile(req.file.buffer, filename, req.file.mimetype);
       res.json({ url });
     } catch (err) {
       console.error("Upload error:", err);

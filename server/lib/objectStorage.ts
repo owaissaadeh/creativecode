@@ -1,5 +1,6 @@
-import { Storage } from "@google-cloud/storage";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { Response } from "express";
+import type { Readable } from "stream";
 import { randomUUID } from "crypto";
 import multer from "multer";
 import path from "path";
@@ -16,22 +17,68 @@ export const uploadPrivateFileMiddleware = multer({
   },
 });
 
-const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
+let r2Client: S3Client | null = null;
 
-const gcsClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: { type: "json", subject_token_field_name: "access_token" },
-    },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-} as any);
+function getR2Client(): S3Client {
+  if (r2Client) return r2Client;
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error("R2 storage credentials not set (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY).");
+  }
+  r2Client = new S3Client({
+    region: "auto",
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId, secretAccessKey },
+  });
+  return r2Client;
+}
+
+function getBucketName(): string {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) throw new Error("R2_BUCKET_NAME not set.");
+  return bucket;
+}
+
+async function streamToResponse(body: Readable | undefined, res: Response) {
+  if (!body) {
+    res.status(404).json({ message: "الملف غير موجود" });
+    return;
+  }
+  await new Promise<void>((resolve, reject) => {
+    body.pipe(res);
+    body.on("end", resolve);
+    body.on("error", reject);
+  });
+}
+
+/**
+ * Writes under `public/<filename>` — served back through `/api/files/:filename` (see routes.ts),
+ * used for logo/favicon uploads where the content is meant to be publicly viewable.
+ */
+export async function uploadPublicFile(buffer: Buffer, filename: string, mimetype: string): Promise<string> {
+  const client = getR2Client();
+  await client.send(new PutObjectCommand({
+    Bucket: getBucketName(),
+    Key: `public/${filename}`,
+    Body: buffer,
+    ContentType: mimetype,
+  }));
+  return `/api/files/${filename}`;
+}
+
+export async function streamPublicFile(filename: string, res: Response) {
+  try {
+    const client = getR2Client();
+    const obj = await client.send(new GetObjectCommand({ Bucket: getBucketName(), Key: `public/${filename}` }));
+    res.set("Content-Type", obj.ContentType || "application/octet-stream");
+    res.set("Cache-Control", "public, max-age=31536000");
+    await streamToResponse(obj.Body as Readable | undefined, res);
+  } catch {
+    res.status(404).json({ message: "الملف غير موجود" });
+  }
+}
 
 /**
  * Writes under a `private/` prefix and returns only the opaque object key —
@@ -40,26 +87,27 @@ const gcsClient = new Storage({
  * (see streamPrivateFile below); the key's randomness is hygiene, not the security boundary.
  */
 export async function uploadPrivateFile(buffer: Buffer, originalName: string, mimetype: string): Promise<string> {
-  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
+  const client = getR2Client();
   const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
   const objectKey = `private/${randomUUID()}-${safeName}`;
-  const file = gcsClient.bucket(bucketId).file(objectKey);
-  await file.save(buffer, { contentType: mimetype, resumable: false, validation: false });
+  await client.send(new PutObjectCommand({
+    Bucket: getBucketName(),
+    Key: objectKey,
+    Body: buffer,
+    ContentType: mimetype,
+  }));
   return objectKey;
 }
 
 export async function streamPrivateFile(objectKey: string, res: Response, filename: string, mimetype: string) {
-  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID!;
-  const file = gcsClient.bucket(bucketId).file(objectKey);
-  const [exists] = await file.exists();
-  if (!exists) {
+  try {
+    const client = getR2Client();
+    const obj = await client.send(new GetObjectCommand({ Bucket: getBucketName(), Key: objectKey }));
+    res.set("Content-Type", mimetype || obj.ContentType || "application/octet-stream");
+    res.set("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.set("Cache-Control", "private, no-store");
+    await streamToResponse(obj.Body as Readable | undefined, res);
+  } catch {
     res.status(404).json({ message: "الملف غير موجود" });
-    return;
   }
-  const [buffer] = await file.download();
-  res.set("Content-Type", mimetype || "application/octet-stream");
-  res.set("Content-Length", String(buffer.length));
-  res.set("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
-  res.set("Cache-Control", "private, no-store");
-  res.end(buffer);
 }
