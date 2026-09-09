@@ -160,8 +160,8 @@ export default function Landing() {
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-sans">
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="fixed top-4 inset-x-4 md:inset-x-8 z-50 rounded-full bg-white/95 backdrop-blur-sm shadow-lg shadow-black/5 border border-black/5">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {config.logo_url ? (
               <img src={config.logo_url} alt={siteName} className="h-9 w-auto object-contain max-w-[160px]" />
@@ -212,65 +212,112 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="relative flex items-center pt-32 pb-20 lg:min-h-screen lg:pt-20 overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#414141] to-[#0e3a63]">
-        {heroImages.length > 0 && (
-          <div className="hidden lg:block absolute top-1/2 left-[22%] -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-primary/20 blur-3xl" aria-hidden="true" />
-        )}
+      <section className="relative flex items-center pt-28 pb-20 lg:min-h-screen lg:pt-24 overflow-hidden bg-[#eaf2fc]">
+        <div
+          className="hidden lg:block absolute -top-1/4 -right-1/4 w-[75%] h-[150%] bg-white"
+          style={{ borderRadius: "42% 58% 65% 35% / 45% 40% 60% 55%", transform: "rotate(-6deg)" }}
+          aria-hidden="true"
+        />
+        <div className="hidden lg:block absolute bottom-10 left-10 w-40 h-40 rounded-full bg-primary/10" aria-hidden="true" />
         <div className={`relative max-w-7xl mx-auto px-6 py-8 grid gap-16 items-center ${heroImages.length > 0 ? "lg:py-24 lg:grid-cols-2" : "lg:py-40"}`}>
-          <div className="space-y-8">
-            <div className="flex items-center gap-3">
-              <span className="h-1 w-10 bg-primary rounded-full" aria-hidden="true" />
-              <span className="text-sm font-bold text-primary">نحول أفكارك إلى واقع رقمي</span>
-            </div>
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-tight text-white">
+          <div className="space-y-6">
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-tight text-foreground">
               نبني حلولاً تقنية{" "}
               <span className="text-primary">مبتكرة</span>{" "}
               لمستقبلك
             </h1>
-            <p className="text-xl text-white/70 leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               فريق من المبدعين والمطورين المتخصصين في بناء التطبيقات، الأنظمة الذكية، وحلول الذكاء الاصطناعي
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-6 pt-2">
+              {[
+                { icon: Zap, label: "تسليم سريع" },
+                { icon: CheckCircle, label: "فريق متخصص" },
+                { icon: Clock, label: "دعم مستمر" },
+              ].map((f) => (
+                <div key={f.label} className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <f.icon className="w-4 h-4 text-primary" />
+                  {f.label}
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-6 pt-2">
               <a href="#contact">
-                <Button size="lg" data-testid="button-hero-cta" className="gap-2">
+                <Button size="lg" data-testid="button-hero-cta" className="rounded-full gap-2 shadow-lg shadow-primary/30">
                   احجز استشارة مجانية
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </a>
-              <a href="#projects">
-                <Button size="lg" variant="outline" data-testid="button-hero-projects" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
-                  شاهد أعمالنا
-                </Button>
+              <div className="hidden sm:flex items-center gap-2">
+                <svg width="56" height="36" viewBox="0 0 56 36" fill="none" className="text-muted-foreground/50" aria-hidden="true">
+                  <path d="M4 30 C 18 34, 28 6, 50 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="1 5" />
+                  <path d="M43 3 L50 6 L45 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+                <span className="text-sm text-muted-foreground" style={{ fontFamily: "cursive" }}>بدون أي التزام</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">تقييم 5 نجوم من عملائنا</span>
+              </div>
+              <a href="#projects" className="text-sm font-semibold text-foreground hover:text-primary transition-colors inline-flex items-center gap-1" data-testid="button-hero-projects">
+                شاهد أعمالنا
+                <ChevronLeft className="w-4 h-4" />
               </a>
             </div>
-            <div className={`flex flex-wrap gap-8 ${heroImages.length > 0 ? "pt-4" : "pt-8"}`}>
-              {[
-                { value: "+50", label: "مشروع مكتمل" },
-                { value: "+30", label: "عميل سعيد" },
-                { value: "+5", label: "سنوات خبرة" },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <div className={`font-bold text-primary ${heroImages.length > 0 ? "text-3xl" : "text-4xl"}`}>{stat.value}</div>
-                  <div className="text-sm text-white/60">{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {heroImages.length === 0 && (
+              <div className="flex flex-wrap gap-8 pt-4">
+                {[
+                  { value: "+50", label: "مشروع مكتمل" },
+                  { value: "+30", label: "عميل سعيد" },
+                  { value: "+5", label: "سنوات خبرة" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <div className="text-4xl font-bold text-primary">{stat.value}</div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {heroImages.length > 0 ? (
             <div className="hidden lg:flex justify-center items-center">
-              <div className="relative w-full max-w-md h-96">
-                {heroImages.map((src, i) => (
-                  <div
-                    key={src}
-                    className="absolute inset-x-8 top-4 rounded-2xl border border-white/10 bg-card shadow-2xl shadow-primary/20 overflow-hidden h-72"
-                    style={{
-                      transform: `rotate(${i === 0 ? -3 : i === 1 ? 2 : -1}deg) translateY(${i * 28}px)`,
-                      zIndex: heroImages.length - i,
-                    }}
-                  >
-                    <img src={src} alt="" className="w-full h-full object-cover" />
+              <div className="relative w-full max-w-md h-[28rem]">
+                <div
+                  className="absolute inset-x-6 top-8 h-80 rounded-3xl border border-border bg-card shadow-2xl overflow-hidden z-10"
+                  style={{ transform: "rotate(-2deg)" }}
+                >
+                  <img src={heroImages[0]} alt="" className="w-full h-full object-cover" />
+                </div>
+                {heroImages.length > 1 && (
+                  <div className="absolute -top-6 -right-2 w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden z-20">
+                    <img src={heroImages[1]} alt="" className="w-full h-full object-cover" />
                   </div>
-                ))}
+                )}
+                {heroImages.length > 2 && (
+                  <div className="absolute bottom-14 -left-6 w-20 h-20 rounded-full border-4 border-white shadow-xl overflow-hidden z-20">
+                    <img src={heroImages[2]} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div
+                  className="absolute top-2 -left-6 bg-primary text-primary-foreground rounded-2xl shadow-xl px-5 py-4 z-30"
+                  style={{ transform: "rotate(-6deg)" }}
+                >
+                  <div className="text-2xl font-bold">+50</div>
+                  <div className="text-xs">مشروع مكتمل</div>
+                </div>
+                <div
+                  className="absolute bottom-0 right-2 bg-card border border-border rounded-2xl shadow-xl px-5 py-4 z-30"
+                  style={{ transform: "rotate(4deg)" }}
+                >
+                  <div className="text-2xl font-bold text-primary">+30</div>
+                  <div className="text-xs text-muted-foreground">عميل سعيد</div>
+                </div>
               </div>
             </div>
           ) : null}
