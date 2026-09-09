@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { authMiddleware, adminOnly, type AuthRequest } from "./routes";
 import { uploadPrivateFile, uploadPrivateFileMiddleware, streamPrivateFile } from "./lib/objectStorage";
-import { sendNewDeliverableEmail, sendStageNeedsActionEmail, sendTicketReplyEmail, sendTicketResolvedEmail } from "./lib/email";
+import { sendNewDeliverableEmail, sendStageNeedsActionEmail, sendTicketReplyEmail, sendTicketResolvedEmail, sendPaymentReceivedEmail } from "./lib/email";
 
 const TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
 const TICKET_PRIORITIES = ["low", "medium", "high", "urgent"];
@@ -271,6 +271,120 @@ export function registerProjectRoutes(app: Express) {
       const deliverable = await storage.getDeliverableById(req.params.id);
       if (!deliverable) return res.status(404).json({ message: "الملف غير موجود" });
       await streamPrivateFile(deliverable.objectKey, res, deliverable.fileName, deliverable.mimeType);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // ─── Admin: Contract & Payments ─────────────────────────────────────────
+  app.get("/api/admin/projects/:id/contract", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const contract = await storage.getContractByProject(req.params.id);
+      res.json(contract ? { ...contract, objectKey: undefined } : null);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post(
+    "/api/admin/projects/:id/contract",
+    authMiddleware, adminOnly, uploadPrivateFileMiddleware.single("file"),
+    async (req: AuthRequest, res: Response) => {
+      if (!req.file) return res.status(400).json({ message: "لم يتم اختيار ملف" });
+      try {
+        if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+        const { totalValue } = req.body;
+        if (!totalValue || isNaN(Number(totalValue))) return res.status(400).json({ message: "قيمة العقد مطلوبة" });
+        const objectKey = await uploadPrivateFile(req.file.buffer, req.file.originalname, req.file.mimetype);
+        const existing = await storage.getContractByProject(req.params.id);
+        const fileData = {
+          fileName: req.file.originalname, objectKey, mimeType: req.file.mimetype, fileSize: req.file.size,
+          totalValue: String(totalValue), uploadedBy: req.user.id, updatedAt: new Date(),
+        };
+        const contract = existing
+          ? await storage.updateContract(existing.id, fileData)
+          : await storage.createContract({ projectId: req.params.id, ...fileData });
+        res.json({ ...contract, objectKey: undefined });
+      } catch (err) {
+        console.error("Contract upload error:", err);
+        res.status(500).json({ message: "فشل رفع العقد" });
+      }
+    }
+  );
+
+  app.get("/api/admin/projects/:id/contract/download", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const contract = await storage.getContractByProject(req.params.id);
+      if (!contract) return res.status(404).json({ message: "لا يوجد عقد لهذا المشروع" });
+      await streamPrivateFile(contract.objectKey, res, contract.fileName, contract.mimeType);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/admin/projects/:id/payments", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const list = await storage.getPaymentsByProject(req.params.id);
+      res.json(list.map((p) => ({ ...p, receiptObjectKey: undefined })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post("/api/admin/projects/:id/payments", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const { amount, label, dueDate } = req.body;
+      if (!amount || !label) return res.status(400).json({ message: "المبلغ والعنوان مطلوبان" });
+      const payment = await storage.createPayment({
+        projectId: req.params.id, amount: String(amount), label,
+        dueDate: dueDate || undefined, createdBy: req.user.id,
+      });
+      res.json({ ...payment, receiptObjectKey: undefined });
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post(
+    "/api/admin/payments/:id/receipt",
+    authMiddleware, adminOnly, uploadPrivateFileMiddleware.single("file"),
+    async (req: AuthRequest, res: Response) => {
+      if (!req.file) return res.status(400).json({ message: "لم يتم اختيار ملف الإيصال" });
+      try {
+        if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+        const { receivedByStaffId } = req.body;
+        if (!receivedByStaffId) return res.status(400).json({ message: "يرجى تحديد الموظف المستلم" });
+        const payment = await storage.getPaymentById(req.params.id);
+        if (!payment) return res.status(404).json({ message: "الدفعة غير موجودة" });
+        const objectKey = await uploadPrivateFile(req.file.buffer, req.file.originalname, req.file.mimetype);
+        const updated = await storage.updatePayment(payment.id, {
+          receiptFileName: req.file.originalname, receiptObjectKey: objectKey,
+          receiptMimeType: req.file.mimetype, receiptFileSize: req.file.size,
+          receivedByStaffId, receivedAt: new Date(), status: "received",
+        });
+        res.json({ ...updated, receiptObjectKey: undefined });
+
+        getClientUserEmailsForProject(payment.projectId).then(async (to) => {
+          if (to.length === 0) return;
+          const project = await storage.getProjectById(payment.projectId);
+          sendPaymentReceivedEmail({
+            to, projectName: project?.name || "", paymentLabel: payment.label, amount: payment.amount,
+            portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${payment.projectId}`,
+          }).catch((err) => console.error("Email send failed (payment received):", err));
+        });
+      } catch (err) {
+        console.error("Receipt upload error:", err);
+        res.status(500).json({ message: "فشل رفع الإيصال" });
+      }
+    }
+  );
+
+  app.get("/api/admin/payments/:id/download-receipt", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const payment = await storage.getPaymentById(req.params.id);
+      if (!payment || !payment.receiptObjectKey) return res.status(404).json({ message: "لا يوجد إيصال لهذه الدفعة" });
+      await streamPrivateFile(payment.receiptObjectKey, res, payment.receiptFileName!, payment.receiptMimeType!);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }

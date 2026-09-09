@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  CheckCircle2, Circle, Clock, FileEdit, Download, MessageSquare, Send, File as FileIcon, Bell, ArrowLeft, XCircle,
+  CheckCircle2, Circle, Clock, FileEdit, Download, MessageSquare, Send, File as FileIcon, Bell, ArrowLeft, XCircle, FileText,
 } from "lucide-react";
 
 interface Approval {
@@ -58,6 +58,21 @@ interface Comment {
   createdAt: string;
 }
 
+interface ContractData {
+  id: string;
+  totalValue: string;
+  fileName: string;
+}
+
+interface PaymentData {
+  id: string;
+  amount: string;
+  label: string;
+  dueDate: string | null;
+  status: "pending" | "received";
+  receivedByName: string | null;
+}
+
 const STAGE_STATUS: Record<string, { label: string; color: string; icon: typeof Circle }> = {
   not_started: { label: "لم تبدأ", color: "text-muted-foreground", icon: Circle },
   in_progress: { label: "جارية", color: "text-blue-600", icon: Clock },
@@ -73,21 +88,25 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-async function downloadDeliverable(id: string, filename: string) {
+async function downloadFile(url: string, filename: string) {
   const token = (() => {
     try { const s = localStorage.getItem("portal-auth"); return s ? JSON.parse(s)?.state?.token : null; } catch { return null; }
   })();
-  const res = await fetch(`/api/portal/deliverables/${id}/download`, {
+  const res = await fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) throw new Error("فشل تنزيل الملف");
   const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
+  const objUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
+  a.href = objUrl;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(objUrl);
+}
+
+async function downloadDeliverable(id: string, filename: string) {
+  return downloadFile(`/api/portal/deliverables/${id}/download`, filename);
 }
 
 function ApproveDialog({ stage, projectId, open, onClose }: { stage: Stage; projectId: string; open: boolean; onClose: () => void }) {
@@ -170,6 +189,14 @@ export default function PortalProjectDetail() {
     queryKey: [`/api/portal/projects/${projectId}/comments`],
   });
 
+  const { data: contract = null } = useQuery<ContractData | null>({
+    queryKey: [`/api/portal/projects/${projectId}/contract`],
+  });
+
+  const { data: payments = [] } = useQuery<PaymentData[]>({
+    queryKey: [`/api/portal/projects/${projectId}/payments`],
+  });
+
   const commentMutation = useMutation({
     mutationFn: (body: string) => apiRequest("POST", `/api/portal/projects/${projectId}/comments`, { body }),
     onSuccess: () => {
@@ -190,6 +217,8 @@ export default function PortalProjectDetail() {
 
   const sortedStages = [...project.stages].sort((a, b) => a.sequence - b.sequence);
   const stagesNeedingReview = sortedStages.filter((s) => s.status === "needs_review");
+  const today = new Date();
+  const overduePayments = payments.filter((p) => p.status === "pending" && p.dueDate && new Date(p.dueDate) < today);
 
   return (
     <div className="space-y-6">
@@ -231,6 +260,82 @@ export default function PortalProjectDetail() {
           </Button>
         </div>
       ))}
+
+      {/* Overdue payment banner */}
+      {overduePayments.map((p) => (
+        <div
+          key={p.id}
+          data-testid={`banner-overdue-payment-${p.id}`}
+          className="flex items-center gap-3 rounded-xl border border-orange-300 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-800 p-4"
+        >
+          <Bell className="w-5 h-5 text-orange-600 flex-shrink-0" />
+          <p className="text-sm text-orange-700 dark:text-orange-400">
+            دفعة متأخرة: <span className="font-semibold">{p.label}</span> — {Number(p.amount).toLocaleString()} د.أ كانت مستحقة بتاريخ {p.dueDate}
+          </p>
+        </div>
+      ))}
+
+      {/* Contract & Payments */}
+      <Card>
+        <CardContent className="p-5 space-y-4">
+          <h2 className="font-semibold flex items-center gap-1.5"><FileText className="w-4 h-4" /> العقد والدفعات</h2>
+          {contract ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border p-3 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <p className="text-sm font-medium truncate">{contract.fileName}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-bold text-primary">{Number(contract.totalValue).toLocaleString()} د.أ</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => downloadFile(`/api/portal/projects/${projectId}/contract/download`, contract.fileName).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                  data-testid="button-download-contract"
+                >
+                  <Download className="w-3.5 h-3.5" /> تنزيل العقد
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">لم يتم رفع العقد بعد</p>
+          )}
+
+          {payments.length > 0 && (
+            <div className="space-y-2 pt-1">
+              {payments.map((p) => (
+                <div key={p.id} data-testid={`payment-${p.id}`} className="flex items-center gap-3 rounded-lg border p-3 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-sm">{p.label}</span>
+                      <Badge className={p.status === "received" ? "bg-green-500/10 text-green-600" : "bg-orange-500/10 text-orange-600"}>
+                        {p.status === "received" ? "تم الاستلام" : "قيد الانتظار"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {Number(p.amount).toLocaleString()} د.أ
+                      {p.dueDate && ` · تاريخ الاستحقاق: ${p.dueDate}`}
+                      {p.status === "received" && p.receivedByName && ` · استلمها: ${p.receivedByName}`}
+                    </p>
+                  </div>
+                  {p.status === "received" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => downloadFile(`/api/portal/payments/${p.id}/download-receipt`, `receipt-${p.label}`).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                      data-testid={`button-download-receipt-${p.id}`}
+                    >
+                      <Download className="w-3.5 h-3.5" /> تنزيل الإيصال
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stages timeline */}
       <Card>

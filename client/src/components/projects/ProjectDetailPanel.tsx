@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, Upload, Send, File as FileIcon, Trash2 } from "lucide-react";
+import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText } from "lucide-react";
 
 interface Stage {
   id: string;
@@ -42,6 +42,27 @@ interface Comment {
   authorType: "client" | "staff";
   body: string;
   createdAt: string;
+}
+
+interface ContractData {
+  id: string;
+  totalValue: string;
+  fileName: string;
+  fileSize: number;
+}
+
+interface PaymentData {
+  id: string;
+  amount: string;
+  label: string;
+  dueDate: string | null;
+  status: "pending" | "received";
+  receivedByStaffId: string | null;
+}
+
+interface StaffUser {
+  id: string;
+  name: string;
 }
 
 const STAGE_STATUS_OPTIONS = [
@@ -198,7 +219,196 @@ function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; proj
   );
 }
 
-export default function ProjectDetailPanel({ apiBase, projectId }: { apiBase: string; projectId: string }) {
+async function downloadFile(url: string, filename: string) {
+  const token = getStaffToken();
+  const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!res.ok) throw new Error("فشل تنزيل الملف");
+  const blob = await res.blob();
+  const objUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(objUrl);
+}
+
+function UploadContractDialog({ apiBase, projectId, hasContract }: { apiBase: string; projectId: string; hasContract: boolean }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [totalValue, setTotalValue] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async () => {
+    if (!file || !totalValue) return;
+    setUploading(true);
+    try {
+      const token = getStaffToken();
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("totalValue", totalValue);
+      const res = await fetch(`${apiBase}/projects/${projectId}/contract`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || "فشل رفع العقد");
+      queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/contract`] });
+      toast({ title: "تم رفع العقد بنجاح" });
+      setTotalValue("");
+      setFile(null);
+      setOpen(false);
+    } catch (err) {
+      toast({ title: (err as Error).message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="gap-1.5" data-testid="button-upload-contract">
+          <Upload className="w-3.5 h-3.5" /> {hasContract ? "إعادة رفع العقد" : "رفع العقد"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="max-w-md">
+        <DialogHeader><DialogTitle>{hasContract ? "إعادة رفع العقد" : "رفع العقد"}</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>قيمة العقد الإجمالية (د.أ)</Label>
+            <Input data-testid="input-contract-value" type="number" value={totalValue} onChange={(e) => setTotalValue(e.target.value)} placeholder="0" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>ملف العقد</Label>
+            <Input data-testid="input-contract-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleUpload} disabled={uploading || !file || !totalValue} data-testid="button-submit-contract">
+            {uploading ? "جاري الرفع..." : "رفع العقد"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddPaymentDialog({ apiBase, projectId }: { apiBase: string; projectId: string }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ label: "", amount: "", dueDate: "" });
+
+  const mutation = useMutation({
+    mutationFn: () => apiRequest("POST", `${apiBase}/projects/${projectId}/payments`, form),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/payments`] });
+      toast({ title: "تمت إضافة الدفعة" });
+      setForm({ label: "", amount: "", dueDate: "" });
+      setOpen(false);
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="gap-1.5" data-testid="button-add-payment">
+          <Plus className="w-3.5 h-3.5" /> دفعة جديدة
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="max-w-md">
+        <DialogHeader><DialogTitle>إضافة دفعة</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>تسمية الدفعة</Label>
+            <Input data-testid="input-payment-label" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="مثال: الدفعة الأولى" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>المبلغ (د.أ)</Label>
+            <Input data-testid="input-payment-amount" type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>تاريخ الاستحقاق (اختياري)</Label>
+            <Input data-testid="input-payment-due-date" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !form.label.trim() || !form.amount} data-testid="button-submit-payment">
+            {mutation.isPending ? "جاري الإضافة..." : "إضافة"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UploadReceiptDialog({ apiBase, projectId, paymentId, staff }: { apiBase: string; projectId: string; paymentId: string; staff: StaffUser[] }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [receivedByStaffId, setReceivedByStaffId] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async () => {
+    if (!file || !receivedByStaffId) return;
+    setUploading(true);
+    try {
+      const token = getStaffToken();
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("receivedByStaffId", receivedByStaffId);
+      const res = await fetch(`${apiBase}/payments/${paymentId}/receipt`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || "فشل رفع الإيصال");
+      queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/payments`] });
+      toast({ title: "تم تأكيد استلام الدفعة" });
+      setFile(null);
+      setReceivedByStaffId("");
+      setOpen(false);
+    } catch (err) {
+      toast({ title: (err as Error).message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="gap-1.5" data-testid={`button-upload-receipt-${paymentId}`}>
+          <Upload className="w-3.5 h-3.5" /> رفع إيصال
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="max-w-md">
+        <DialogHeader><DialogTitle>رفع إيصال استلام</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>الموظف المستلم</Label>
+            <Select value={receivedByStaffId} onValueChange={setReceivedByStaffId}>
+              <SelectTrigger data-testid="select-received-by"><SelectValue placeholder="اختر الموظف" /></SelectTrigger>
+              <SelectContent>
+                {staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>ملف الإيصال</Label>
+            <Input data-testid="input-receipt-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleUpload} disabled={uploading || !file || !receivedByStaffId} data-testid="button-submit-receipt">
+            {uploading ? "جاري الرفع..." : "تأكيد الاستلام"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function ProjectDetailPanel({ apiBase, projectId, canManageContract = false }: { apiBase: string; projectId: string; canManageContract?: boolean }) {
   const { toast } = useToast();
   const [commentText, setCommentText] = useState("");
 
@@ -206,6 +416,18 @@ export default function ProjectDetailPanel({ apiBase, projectId }: { apiBase: st
   const { data: stages = [] } = useQuery<Stage[]>({ queryKey: [`${apiBase}/projects/${projectId}/stages`] });
   const { data: deliverables = [] } = useQuery<Deliverable[]>({ queryKey: [`${apiBase}/projects/${projectId}/deliverables`] });
   const { data: comments = [] } = useQuery<Comment[]>({ queryKey: [`${apiBase}/projects/${projectId}/comments`] });
+  const { data: contract = null } = useQuery<ContractData | null>({
+    queryKey: [`${apiBase}/projects/${projectId}/contract`],
+    enabled: canManageContract,
+  });
+  const { data: payments = [] } = useQuery<PaymentData[]>({
+    queryKey: [`${apiBase}/projects/${projectId}/payments`],
+    enabled: canManageContract,
+  });
+  const { data: staff = [] } = useQuery<StaffUser[]>({
+    queryKey: ["/api/admin/users"],
+    enabled: canManageContract,
+  });
 
   const stageStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => apiRequest("PATCH", `${apiBase}/stages/${id}`, { status }),
@@ -246,6 +468,80 @@ export default function ProjectDetailPanel({ apiBase, projectId }: { apiBase: st
         <p className="text-muted-foreground mt-1">{project.clientName}</p>
         {project.description && <p className="text-sm text-muted-foreground mt-1">{project.description}</p>}
       </div>
+
+      {canManageContract && (
+        <Card>
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">العقد والدفعات</h2>
+              <UploadContractDialog apiBase={apiBase} projectId={projectId} hasContract={!!contract} />
+            </div>
+            {contract ? (
+              <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{contract.fileName}</p>
+                    <p className="text-xs text-muted-foreground">{formatBytes(contract.fileSize)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-2xl font-bold text-primary">{Number(contract.totalValue).toLocaleString()} د.أ</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => downloadFile(`${apiBase}/projects/${projectId}/contract/download`, contract.fileName).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                  >
+                    <Download className="w-3.5 h-3.5" /> تنزيل
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-sm text-muted-foreground border-2 border-dashed rounded-xl">
+                لم يتم رفع العقد بعد
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              <h3 className="font-medium text-sm">الدفعات</h3>
+              <AddPaymentDialog apiBase={apiBase} projectId={projectId} />
+            </div>
+            <div className="space-y-2">
+              {payments.map((p) => (
+                <div key={p.id} data-testid={`admin-payment-${p.id}`} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-medium text-sm">{p.label}</p>
+                      <Badge className={p.status === "received" ? "bg-green-500/10 text-green-600" : "bg-orange-500/10 text-orange-600"}>
+                        {p.status === "received" ? "تم الاستلام" : "قيد الانتظار"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {Number(p.amount).toLocaleString()} د.أ
+                      {p.dueDate && ` · تاريخ الاستحقاق: ${p.dueDate}`}
+                      {p.status === "received" && p.receivedByStaffId && ` · استلمها: ${staff.find((s) => s.id === p.receivedByStaffId)?.name || ""}`}
+                    </p>
+                  </div>
+                  {p.status === "pending" ? (
+                    <UploadReceiptDialog apiBase={apiBase} projectId={projectId} paymentId={p.id} staff={staff} />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => downloadFile(`${apiBase}/payments/${p.id}/download-receipt`, `receipt-${p.label}`).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                    >
+                      <Download className="w-3.5 h-3.5" /> تنزيل الإيصال
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {payments.length === 0 && <p className="text-sm text-muted-foreground">لا توجد دفعات مضافة بعد</p>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-5 space-y-4">

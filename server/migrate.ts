@@ -245,6 +245,42 @@ export async function migrateDb() {
     `);
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket_id ON ticket_messages(ticket_id)`);
 
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS contracts (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(36) NOT NULL UNIQUE REFERENCES projects(id) ON DELETE CASCADE,
+        total_value DECIMAL(12,2) NOT NULL,
+        file_name TEXT NOT NULL,
+        object_key TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        uploaded_by VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_contracts_project_id ON contracts(project_id)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS payments (
+        id VARCHAR(36) PRIMARY KEY,
+        project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        amount DECIMAL(12,2) NOT NULL,
+        label TEXT NOT NULL,
+        due_date DATE,
+        status TEXT NOT NULL DEFAULT 'pending',
+        received_by_staff_id VARCHAR(36) REFERENCES users(id),
+        received_at TIMESTAMP,
+        receipt_file_name TEXT,
+        receipt_object_key TEXT,
+        receipt_mime_type TEXT,
+        receipt_file_size INTEGER,
+        created_by VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_payments_project_id ON payments(project_id)`);
+
     console.log("✅ Database tables ready");
 
     await seedPageItems();

@@ -207,6 +207,36 @@ export const ticketMessages = pgTable("ticket_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const contracts = pgTable("contracts", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  projectId: varchar("project_id", { length: 36 }).references(() => projects.id, { onDelete: "cascade" }).notNull().unique(),
+  totalValue: decimal("total_value", { precision: 12, scale: 2 }).notNull(),
+  fileName: text("file_name").notNull(),
+  objectKey: text("object_key").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadedBy: varchar("uploaded_by", { length: 36 }).references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const payments = pgTable("payments", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  projectId: varchar("project_id", { length: 36 }).references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  label: text("label").notNull(),
+  dueDate: date("due_date"),
+  status: text("status", { enum: ["pending", "received"] }).notNull().default("pending"),
+  receivedByStaffId: varchar("received_by_staff_id", { length: 36 }).references(() => users.id),
+  receivedAt: timestamp("received_at"),
+  receiptFileName: text("receipt_file_name"),
+  receiptObjectKey: text("receipt_object_key"),
+  receiptMimeType: text("receipt_mime_type"),
+  receiptFileSize: integer("receipt_file_size"),
+  createdBy: varchar("created_by", { length: 36 }).references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertClientUserSchema = createInsertSchema(clientUsers).omit({ id: true, createdAt: true });
 export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
 export const insertProjectStageSchema = createInsertSchema(projectStages).omit({ id: true, createdAt: true });
@@ -215,6 +245,8 @@ export const insertProjectCommentSchema = createInsertSchema(projectComments).om
 export const insertApprovalSchema = createInsertSchema(approvals).omit({ id: true, createdAt: true });
 export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({ id: true, createdAt: true });
 export const insertTicketMessageSchema = createInsertSchema(ticketMessages).omit({ id: true, createdAt: true });
+export const insertContractSchema = createInsertSchema(contracts).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
 
 export type ClientUser = typeof clientUsers.$inferSelect;
 export type InsertClientUser = z.infer<typeof insertClientUserSchema>;
@@ -232,6 +264,10 @@ export type SupportTicket = typeof supportTickets.$inferSelect;
 export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
 export type TicketMessage = typeof ticketMessages.$inferSelect;
 export type InsertTicketMessage = z.infer<typeof insertTicketMessageSchema>;
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 export const portalLoginSchema = z.object({
   email: z.string().email(),

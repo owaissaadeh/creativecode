@@ -102,6 +102,18 @@ export async function sendNewDeliverableEmail(opts: {
   return sendEmail(opts.to, `تسليم جديد — ${opts.projectName}`, html);
 }
 
+export async function sendPaymentReceivedEmail(opts: {
+  to: string[]; projectName: string; paymentLabel: string; amount: string; portalUrl: string;
+}) {
+  const html = baseTemplate(`
+    <h2>💰 تم استلام دفعة</h2>
+    <p>تم تسجيل استلام دفعة من مشروع <b>${opts.projectName}</b>:</p>
+    <p style="background:#f0fdf4;border-radius:8px;padding:12px 16px;"><b>${opts.paymentLabel}</b> — ${opts.amount} د.أ</p>
+    ${button(opts.portalUrl, "عرض تفاصيل الدفعات")}
+  `);
+  return sendEmail(opts.to, `تم استلام دفعة — ${opts.projectName}`, html);
+}
+
 export async function sendNewClientCommentEmail(opts: {
   to: string[]; clientName: string; projectName: string; commentBody: string;
 }) {

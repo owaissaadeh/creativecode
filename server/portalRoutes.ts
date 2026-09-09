@@ -127,6 +127,62 @@ export function registerPortalRoutes(app: Express) {
     }
   });
 
+  // ─── Contract & Payments ────────────────────────────────────────────────
+  app.get("/api/portal/projects/:id/contract", portalAuthMiddleware, async (req: PortalAuthRequest, res) => {
+    try {
+      if (!req.clientUser) return res.status(401).json({ message: "غير مصرح" });
+      const project = await storage.getProjectById(req.params.id);
+      if (!project || project.clientId !== req.clientUser.clientId) return res.status(404).json({ message: "المشروع غير موجود" });
+      const contract = await storage.getContractByProject(project.id);
+      res.json(contract ? { ...contract, objectKey: undefined } : null);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/portal/projects/:id/contract/download", portalAuthMiddleware, async (req: PortalAuthRequest, res) => {
+    try {
+      if (!req.clientUser) return res.status(401).json({ message: "غير مصرح" });
+      const project = await storage.getProjectById(req.params.id);
+      if (!project || project.clientId !== req.clientUser.clientId) return res.status(404).json({ message: "المشروع غير موجود" });
+      const contract = await storage.getContractByProject(project.id);
+      if (!contract) return res.status(404).json({ message: "لا يوجد عقد لهذا المشروع" });
+      await streamPrivateFile(contract.objectKey, res, contract.fileName, contract.mimeType);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/portal/projects/:id/payments", portalAuthMiddleware, async (req: PortalAuthRequest, res) => {
+    try {
+      if (!req.clientUser) return res.status(401).json({ message: "غير مصرح" });
+      const project = await storage.getProjectById(req.params.id);
+      if (!project || project.clientId !== req.clientUser.clientId) return res.status(404).json({ message: "المشروع غير موجود" });
+      const list = await storage.getPaymentsByProject(project.id);
+      const users = await storage.getAllUsers();
+      const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
+      res.json(list.map((p) => ({
+        ...p, receiptObjectKey: undefined,
+        receivedByName: p.receivedByStaffId ? userMap[p.receivedByStaffId] ?? null : null,
+      })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/portal/payments/:id/download-receipt", portalAuthMiddleware, async (req: PortalAuthRequest, res) => {
+    try {
+      if (!req.clientUser) return res.status(401).json({ message: "غير مصرح" });
+      const payment = await storage.getPaymentById(req.params.id);
+      if (!payment || !payment.receiptObjectKey) return res.status(404).json({ message: "لا يوجد إيصال لهذه الدفعة" });
+      const project = await storage.getProjectById(payment.projectId);
+      if (!project || project.clientId !== req.clientUser.clientId) return res.status(403).json({ message: "غير مسموح" });
+      await streamPrivateFile(payment.receiptObjectKey, res, payment.receiptFileName!, payment.receiptMimeType!);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   // ─── Comments ───────────────────────────────────────────────────────────
   app.get("/api/portal/projects/:id/comments", portalAuthMiddleware, async (req: PortalAuthRequest, res) => {
     try {

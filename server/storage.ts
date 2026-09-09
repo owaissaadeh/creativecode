@@ -2,7 +2,7 @@ import { db } from "./db";
 import {
   users, leads, clients, commissions, pageItems, consultations, tasks,
   clientUsers, projects, projectStages, deliverables, projectComments,
-  approvals, supportTickets, ticketMessages,
+  approvals, supportTickets, ticketMessages, contracts, payments,
 } from "@shared/schema";
 import { eq, and, desc, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -15,6 +15,7 @@ import type {
   ProjectStage, InsertProjectStage, Deliverable, InsertDeliverable,
   ProjectComment, InsertProjectComment, Approval, InsertApproval,
   SupportTicket, InsertSupportTicket, TicketMessage, InsertTicketMessage,
+  Contract, InsertContract, Payment, InsertPayment,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -107,6 +108,15 @@ export interface IStorage {
   getTicketMessages(ticketId: string): Promise<TicketMessage[]>;
   getTicketMessageById(id: string): Promise<TicketMessage | undefined>;
   createTicketMessage(data: InsertTicketMessage & { id?: string }): Promise<TicketMessage>;
+
+  getContractByProject(projectId: string): Promise<Contract | undefined>;
+  createContract(data: InsertContract & { id?: string }): Promise<Contract>;
+  updateContract(id: string, data: Partial<Contract>): Promise<Contract>;
+
+  getPaymentsByProject(projectId: string): Promise<Payment[]>;
+  getPaymentById(id: string): Promise<Payment | undefined>;
+  createPayment(data: InsertPayment & { id?: string }): Promise<Payment>;
+  updatePayment(id: string, data: Partial<Payment>): Promise<Payment>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -574,6 +584,42 @@ export class DatabaseStorage implements IStorage {
   async createTicketMessage(data: InsertTicketMessage & { id?: string }) {
     const id = data.id || randomUUID();
     const [row] = await db.insert(ticketMessages).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async getContractByProject(projectId: string) {
+    const [row] = await db.select().from(contracts).where(eq(contracts.projectId, projectId));
+    return row;
+  }
+
+  async createContract(data: InsertContract & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(contracts).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updateContract(id: string, data: Partial<Contract>) {
+    const [row] = await db.update(contracts).set(data).where(eq(contracts.id, id)).returning();
+    return row;
+  }
+
+  async getPaymentsByProject(projectId: string) {
+    return db.select().from(payments).where(eq(payments.projectId, projectId)).orderBy(payments.dueDate);
+  }
+
+  async getPaymentById(id: string) {
+    const [row] = await db.select().from(payments).where(eq(payments.id, id));
+    return row;
+  }
+
+  async createPayment(data: InsertPayment & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(payments).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updatePayment(id: string, data: Partial<Payment>) {
+    const [row] = await db.update(payments).set(data).where(eq(payments.id, id)).returning();
     return row;
   }
 }
