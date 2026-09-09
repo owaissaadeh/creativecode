@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/lib/siteConfig";
 import { Button } from "@/components/ui/button";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import {
+  Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import type { PageItem } from "@shared/schema";
 import {
   Code2, Brain, Zap, Settings2, Cloud, Smartphone, Bot,
   UtensilsCrossed, GraduationCap, Truck, ShoppingCart, BarChart3,
-  ArrowRight, Star, Globe, Layers, Calendar, ChevronRight, ChevronLeft,
+  ArrowRight, Star, Globe, Layers, Calendar,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -21,7 +25,8 @@ export default function ProjectShowcase() {
   const { id } = useParams<{ id: string }>();
   const config = useSiteConfig();
   const siteName = config.logo_text || "Creative Code";
-  const [activeImage, setActiveImage] = useState(0);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
 
   const { data: project, isLoading, isError } = useQuery<PageItem>({
     queryKey: [`/api/content/items/${id}`],
@@ -29,6 +34,12 @@ export default function ProjectShowcase() {
 
   const IconComp = iconMap[project?.icon || ""] || BarChart3;
   const images = project?.imageUrls || [];
+
+  useEffect(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => setCurrent(api.selectedScrollSnap()));
+  }, [api]);
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-sans">
@@ -71,39 +82,34 @@ export default function ProjectShowcase() {
           <div className="space-y-8">
             {images.length > 0 ? (
               <div className="space-y-3">
-                <div className="w-full h-72 md:h-96 rounded-2xl overflow-hidden border border-border bg-muted/40">
-                  <img src={images[activeImage]} alt={project.title} className="w-full h-full object-cover" data-testid="showcase-main-image" />
-                </div>
-                {images.length > 1 && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveImage((i) => (i - 1 + images.length) % images.length)}
-                      className="p-2 rounded-lg border border-border hover:bg-muted shrink-0"
-                      data-testid="showcase-prev"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                    <div className="flex gap-2 overflow-x-auto flex-1">
-                      {images.map((url, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setActiveImage(i)}
-                          className={`w-16 h-12 rounded-lg overflow-hidden border-2 shrink-0 ${i === activeImage ? "border-primary" : "border-transparent"}`}
-                          data-testid={`showcase-thumb-${i}`}
-                        >
-                          <img src={url} alt="" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
+                <Carousel opts={{ direction: "rtl", loop: images.length > 1 }} setApi={setApi} className="w-full">
+                  <CarouselContent>
+                    {images.map((url, i) => (
+                      <CarouselItem key={i}>
+                        <div className="w-full rounded-2xl overflow-hidden border border-border bg-muted/40 flex items-center justify-center">
+                          <img src={url} alt={project.title} className="w-full h-auto max-h-[32rem] object-contain" data-testid={`showcase-image-${i}`} />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {images.length > 1 && (
+                    <div className="flex items-center justify-center gap-3 mt-4">
+                      <CarouselPrevious className="static translate-y-0" />
+                      <div className="flex gap-1.5">
+                        {images.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => api?.scrollTo(i)}
+                            className={`w-2 h-2 rounded-full transition-colors ${i === current ? "bg-primary" : "bg-muted-foreground/30"}`}
+                            aria-label={`صورة ${i + 1}`}
+                            data-testid={`showcase-dot-${i}`}
+                          />
+                        ))}
+                      </div>
+                      <CarouselNext className="static translate-y-0" />
                     </div>
-                    <button
-                      onClick={() => setActiveImage((i) => (i + 1) % images.length)}
-                      className="p-2 rounded-lg border border-border hover:bg-muted shrink-0"
-                      data-testid="showcase-next"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                  )}
+                </Carousel>
               </div>
             ) : (
               <div className="w-full h-56 rounded-2xl bg-primary/10 flex items-center justify-center">

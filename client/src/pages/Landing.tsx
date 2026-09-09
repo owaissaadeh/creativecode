@@ -388,8 +388,8 @@ export default function Landing() {
                 <Link key={project.id} href={`/projects/${project.id}`}>
                   <div data-testid={`card-project-${project.id}`} className="hover:shadow-md rounded-xl border border-border bg-card p-6 space-y-4 transition-all cursor-pointer">
                     {coverImage && (
-                      <div className="-mx-6 -mt-6 h-40 rounded-t-xl overflow-hidden">
-                        <img src={coverImage} alt={project.title} className="w-full h-full object-cover" />
+                      <div className="-mx-6 -mt-6 rounded-t-xl overflow-hidden bg-muted/40">
+                        <img src={coverImage} alt={project.title} className="w-full h-auto max-h-64 object-contain" />
                       </div>
                     )}
                     <div className="flex items-start justify-between gap-2">
