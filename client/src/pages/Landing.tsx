@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { PageItem } from "@shared/schema";
@@ -132,10 +133,7 @@ export default function Landing() {
 
   const services = useMemo(() => items.filter((i) => i.itemType === "service"), [items]);
   const projects = useMemo(() => items.filter((i) => i.itemType === "project"), [items]);
-  const heroImages = useMemo(
-    () => projects.flatMap((p) => p.imageUrls?.[0] ? [p.imageUrls[0]] : []).slice(0, 3),
-    [projects]
-  );
+  const heroImages = config.heroImages.slice(0, 3);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,19 +212,22 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="relative flex items-center pt-32 pb-20 lg:min-h-screen lg:pt-20 overflow-hidden">
+      <section className="relative flex items-center pt-32 pb-20 lg:min-h-screen lg:pt-20 overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#414141] to-[#0e3a63]">
+        {heroImages.length > 0 && (
+          <div className="hidden lg:block absolute top-1/2 left-[22%] -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-primary/20 blur-3xl" aria-hidden="true" />
+        )}
         <div className={`relative max-w-7xl mx-auto px-6 py-8 grid gap-16 items-center ${heroImages.length > 0 ? "lg:py-24 lg:grid-cols-2" : "lg:py-40"}`}>
           <div className="space-y-8">
             <div className="flex items-center gap-3">
               <span className="h-1 w-10 bg-primary rounded-full" aria-hidden="true" />
               <span className="text-sm font-bold text-primary">نحول أفكارك إلى واقع رقمي</span>
             </div>
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-tight">
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-tight text-white">
               نبني حلولاً تقنية{" "}
               <span className="text-primary">مبتكرة</span>{" "}
               لمستقبلك
             </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-white/70 leading-relaxed">
               فريق من المبدعين والمطورين المتخصصين في بناء التطبيقات، الأنظمة الذكية، وحلول الذكاء الاصطناعي
             </p>
             <div className="flex flex-wrap gap-4">
@@ -237,7 +238,7 @@ export default function Landing() {
                 </Button>
               </a>
               <a href="#projects">
-                <Button size="lg" variant="outline" data-testid="button-hero-projects">
+                <Button size="lg" variant="outline" data-testid="button-hero-projects" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
                   شاهد أعمالنا
                 </Button>
               </a>
@@ -250,7 +251,7 @@ export default function Landing() {
               ].map((stat) => (
                 <div key={stat.label}>
                   <div className={`font-bold text-primary ${heroImages.length > 0 ? "text-3xl" : "text-4xl"}`}>{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-sm text-white/60">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -261,7 +262,7 @@ export default function Landing() {
                 {heroImages.map((src, i) => (
                   <div
                     key={src}
-                    className="absolute inset-x-8 top-4 rounded-2xl border border-border bg-card shadow-2xl overflow-hidden h-72"
+                    className="absolute inset-x-8 top-4 rounded-2xl border border-white/10 bg-card shadow-2xl shadow-primary/20 overflow-hidden h-72"
                     style={{
                       transform: `rotate(${i === 0 ? -3 : i === 1 ? 2 : -1}deg) translateY(${i * 28}px)`,
                       zIndex: heroImages.length - i,
@@ -288,30 +289,39 @@ export default function Landing() {
               نقدم مجموعة شاملة من الخدمات التقنية لتحويل أفكارك إلى منتجات رقمية ناجحة
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => {
-              const IconComp = iconMap[service.icon || ""] || Code2;
-              return (
-                <div key={service.id} data-testid={`card-service-${service.id}`} className="hover:shadow-md rounded-xl border border-border bg-card p-6 space-y-4 transition-all">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/10 text-primary">
-                    <IconComp className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">{service.title}</h3>
-                    {service.subtitle && <p className="text-xs text-primary mt-0.5">{service.subtitle}</p>}
-                  </div>
-                  <p className="text-muted-foreground text-base leading-relaxed">{service.description}</p>
-                  {service.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {service.tags.map((tag) => (
-                        <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{tag}</span>
-                      ))}
+          <Carousel opts={{ direction: "rtl", loop: true, align: "start" }} className="w-full">
+            <CarouselContent>
+              {services.map((service, index) => {
+                const IconComp = iconMap[service.icon || ""] || Code2;
+                const isAmber = index % 2 === 1;
+                return (
+                  <CarouselItem key={service.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
+                    <div data-testid={`card-service-${service.id}`} className="h-full hover:shadow-md rounded-xl border border-border bg-card p-6 space-y-4 transition-all">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isAmber ? "bg-accent/15 text-accent" : "bg-primary/10 text-primary"}`}>
+                        <IconComp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold">{service.title}</h3>
+                        {service.subtitle && <p className="text-xs text-primary mt-0.5">{service.subtitle}</p>}
+                      </div>
+                      <p className="text-muted-foreground text-base leading-relaxed">{service.description}</p>
+                      {service.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {service.tags.map((tag) => (
+                            <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{tag}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <div className="flex items-center gap-2 justify-center mt-8">
+              <CarouselPrevious className="static translate-y-0" />
+              <CarouselNext className="static translate-y-0" />
+            </div>
+          </Carousel>
         </div>
       </section>
 
@@ -320,7 +330,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
             <div>
-              <span className="block text-sm font-bold text-primary mb-2">٠٢ — أعمالنا</span>
+              <span className="block text-sm font-bold text-accent mb-2">٠٢ — أعمالنا</span>
               <h2 className="text-4xl sm:text-5xl font-bold leading-tight">مشاريع نفخر بها</h2>
             </div>
             <p className="text-lg text-muted-foreground max-w-sm leading-relaxed">
@@ -376,7 +386,7 @@ export default function Landing() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-16 sm:py-20 lg:py-28 bg-primary">
+      <section className="py-16 sm:py-20 lg:py-28 bg-gradient-to-r from-primary to-[#0a5aa8]">
         <div className="max-w-4xl mx-auto px-6 text-center text-primary-foreground space-y-6">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">جاهز لتحويل فكرتك إلى واقع رقمي؟</h2>
           <p className="text-xl opacity-90">

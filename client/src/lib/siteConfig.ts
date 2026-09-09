@@ -5,12 +5,14 @@ export type SiteConfig = {
   logo_text: string;
   logo_url: string;
   favicon_url: string;
+  heroImages: string[];
 };
 
 const DEFAULTS: SiteConfig = {
   logo_text: "Creative Code",
   logo_url: "",
   favicon_url: "",
+  heroImages: [],
 };
 
 export function useSiteConfig() {

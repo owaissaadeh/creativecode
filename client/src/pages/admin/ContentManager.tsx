@@ -318,9 +318,9 @@ function uploadImage(file: File): Promise<{ url: string }> {
 }
 
 function GalleryField({
-  images, onChange,
+  images, onChange, label = "صور المشروع", hint = "أول صورة تُستخدم كغلاف بالصفحة الرئيسية. رتّب الصور بالأسهم.",
 }: {
-  images: string[]; onChange: (images: string[]) => void;
+  images: string[]; onChange: (images: string[]) => void; label?: string; hint?: string;
 }) {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -355,7 +355,7 @@ function GalleryField({
 
   return (
     <div className="space-y-3">
-      <Label>صور المشروع</Label>
+      <Label>{label}</Label>
       {images.length > 0 && (
         <div className="space-y-2">
           {images.map((url, index) => (
@@ -399,7 +399,7 @@ function GalleryField({
         <Upload className="w-4 h-4" />
         {uploading ? "جارٍ الرفع..." : "إضافة صورة"}
       </Button>
-      <p className="text-xs text-muted-foreground">أول صورة تُستخدم كغلاف بالصفحة الرئيسية. رتّب الصور بالأسهم.</p>
+      <p className="text-xs text-muted-foreground">{hint}</p>
     </div>
   );
 }
@@ -485,11 +485,12 @@ function SettingsTab() {
     logo_text: siteConfig.logo_text,
     logo_url: siteConfig.logo_url,
     favicon_url: siteConfig.favicon_url,
+    heroImages: siteConfig.heroImages,
   });
   const [synced, setSynced] = useState(false);
 
-  if (!synced && (siteConfig.logo_url || siteConfig.favicon_url || siteConfig.logo_text !== "Creative Code")) {
-    setForm({ logo_text: siteConfig.logo_text, logo_url: siteConfig.logo_url, favicon_url: siteConfig.favicon_url });
+  if (!synced && (siteConfig.logo_url || siteConfig.favicon_url || siteConfig.logo_text !== "Creative Code" || siteConfig.heroImages.length > 0)) {
+    setForm({ logo_text: siteConfig.logo_text, logo_url: siteConfig.logo_url, favicon_url: siteConfig.favicon_url, heroImages: siteConfig.heroImages });
     setSynced(true);
   }
 
@@ -504,6 +505,12 @@ function SettingsTab() {
 
   function handleImageUploaded(field: "logo_url" | "favicon_url", url: string) {
     const updated = { ...form, [field]: url };
+    setForm(updated);
+    saveMutation.mutate(updated);
+  }
+
+  function handleHeroImagesChanged(heroImages: string[]) {
+    const updated = { ...form, heroImages };
     setForm(updated);
     saveMutation.mutate(updated);
   }
@@ -555,6 +562,19 @@ function SettingsTab() {
           <Save className="w-4 h-4" />
           {saveMutation.isPending ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
         </Button>
+      </div>
+
+      <div className="rounded-xl border border-border p-6 space-y-6 bg-card">
+        <h2 className="font-semibold text-base flex items-center gap-2">
+          <ImageIcon className="w-4 h-4 text-primary" />
+          صور الهيرو الرئيسية
+        </h2>
+        <GalleryField
+          images={form.heroImages}
+          onChange={handleHeroImagesChanged}
+          label="صور الهيرو"
+          hint="تظهر متراكبة بجانب النص بالصفحة الرئيسية. يُفضَّل صور بنسبة عرض إلى ارتفاع متقاربة."
+        />
       </div>
     </div>
   );
