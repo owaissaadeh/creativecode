@@ -18,6 +18,23 @@ import type {
   Contract, InsertContract, Payment, InsertPayment,
 } from "@shared/schema";
 
+export interface SiteConfigData {
+  logo_text: string;
+  logo_url: string;
+  favicon_url: string;
+  heroImages: string[];
+  heroTitleBefore: string;
+  heroTitleAccent: string;
+  heroTitleAfter: string;
+  heroSubtitle: string;
+  heroFeatures: { icon: string; label: string }[];
+  heroCtaText: string;
+  heroAnnotationText: string;
+  heroRatingText: string;
+  heroSecondaryText: string;
+  heroStats: { value: string; label: string }[];
+}
+
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -45,8 +62,8 @@ export interface IStorage {
   createPageItem(data: InsertPageItem & { id?: string }): Promise<PageItem>;
   updatePageItem(id: string, data: Partial<PageItem>): Promise<PageItem>;
   deletePageItem(id: string): Promise<void>;
-  getSiteConfig(): Promise<{ logo_text: string; logo_url: string; favicon_url: string; heroImages: string[] }>;
-  setSiteConfig(data: { logo_text?: string; logo_url?: string; favicon_url?: string; heroImages?: string[] }): Promise<void>;
+  getSiteConfig(): Promise<SiteConfigData>;
+  setSiteConfig(data: Partial<SiteConfigData>): Promise<void>;
 
   getAllConsultations(): Promise<Consultation[]>;
   createConsultation(data: InsertConsultation & { id?: string }): Promise<Consultation>;
@@ -235,9 +252,27 @@ export class DatabaseStorage implements IStorage {
     await db.delete(pageItems).where(eq(pageItems.id, id));
   }
 
-  async getSiteConfig(): Promise<{ logo_text: string; logo_url: string; favicon_url: string; heroImages: string[] }> {
+  async getSiteConfig(): Promise<SiteConfigData> {
     const results = await db.execute(sql`SELECT description FROM page_items WHERE item_type = 'config' LIMIT 1`);
-    const defaults = { logo_text: "Creative Code", logo_url: "", favicon_url: "", heroImages: [] as string[] };
+    const defaults: SiteConfigData = {
+      logo_text: "Creative Code", logo_url: "", favicon_url: "", heroImages: [],
+      heroTitleBefore: "نبني حلولاً تقنية", heroTitleAccent: "مبتكرة", heroTitleAfter: "لمستقبلك",
+      heroSubtitle: "فريق من المبدعين والمطورين المتخصصين في بناء التطبيقات، الأنظمة الذكية، وحلول الذكاء الاصطناعي",
+      heroFeatures: [
+        { icon: "Zap", label: "تسليم سريع" },
+        { icon: "CheckCircle", label: "فريق متخصص" },
+        { icon: "Clock", label: "دعم مستمر" },
+      ],
+      heroCtaText: "احجز استشارة مجانية",
+      heroAnnotationText: "بدون أي التزام",
+      heroRatingText: "تقييم 5 نجوم من عملائنا",
+      heroSecondaryText: "شاهد أعمالنا",
+      heroStats: [
+        { value: "+50", label: "مشروع مكتمل" },
+        { value: "+30", label: "عميل سعيد" },
+        { value: "+5", label: "سنوات خبرة" },
+      ],
+    };
     if (!results.rows[0]) return defaults;
     try {
       const parsed = JSON.parse((results.rows[0] as any).description || "{}");
@@ -245,7 +280,7 @@ export class DatabaseStorage implements IStorage {
     } catch { return defaults; }
   }
 
-  async setSiteConfig(data: { logo_text?: string; logo_url?: string; favicon_url?: string; heroImages?: string[] }): Promise<void> {
+  async setSiteConfig(data: Partial<SiteConfigData>): Promise<void> {
     const current = await this.getSiteConfig();
     const merged = { ...current, ...data };
     const results = await db.execute(sql`SELECT id FROM page_items WHERE item_type = 'config' LIMIT 1`);

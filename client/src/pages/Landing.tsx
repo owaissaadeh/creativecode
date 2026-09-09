@@ -21,7 +21,7 @@ import {
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Code2, Brain, Zap, Settings2, Cloud, Smartphone, Bot,
   UtensilsCrossed, GraduationCap, Truck, ShoppingCart, BarChart3,
-  Globe, Layers, Calendar, Star
+  Globe, Layers, Calendar, Star, CheckCircle, Clock
 };
 
 const SERVICE_TYPES = [
@@ -222,29 +222,28 @@ export default function Landing() {
         <div className={`relative max-w-7xl mx-auto px-6 py-8 grid gap-16 items-center ${heroImages.length > 0 ? "lg:py-24 lg:grid-cols-2" : "lg:py-40"}`}>
           <div className="space-y-6">
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-tight text-foreground">
-              نبني حلولاً تقنية{" "}
-              <span className="text-primary">مبتكرة</span>{" "}
-              لمستقبلك
+              {config.heroTitleBefore}{" "}
+              <span className="text-primary">{config.heroTitleAccent}</span>{" "}
+              {config.heroTitleAfter}
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              فريق من المبدعين والمطورين المتخصصين في بناء التطبيقات، الأنظمة الذكية، وحلول الذكاء الاصطناعي
+              {config.heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-6 pt-2">
-              {[
-                { icon: Zap, label: "تسليم سريع" },
-                { icon: CheckCircle, label: "فريق متخصص" },
-                { icon: Clock, label: "دعم مستمر" },
-              ].map((f) => (
-                <div key={f.label} className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <f.icon className="w-4 h-4 text-primary" />
-                  {f.label}
-                </div>
-              ))}
+              {config.heroFeatures.map((f, i) => {
+                const FeatureIcon = iconMap[f.icon] || Zap;
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <FeatureIcon className="w-4 h-4 text-primary" />
+                    {f.label}
+                  </div>
+                );
+              })}
             </div>
             <div className="flex flex-wrap items-center gap-6 pt-2">
               <a href="#contact">
                 <Button size="lg" data-testid="button-hero-cta" className="rounded-full gap-2 shadow-lg shadow-primary/30">
-                  احجز استشارة مجانية
+                  {config.heroCtaText}
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </a>
@@ -253,7 +252,7 @@ export default function Landing() {
                   <path d="M4 30 C 18 34, 28 6, 50 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="1 5" />
                   <path d="M43 3 L50 6 L45 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                 </svg>
-                <span className="text-sm text-muted-foreground" style={{ fontFamily: "cursive" }}>بدون أي التزام</span>
+                <span className="text-sm text-muted-foreground" style={{ fontFamily: "cursive" }}>{config.heroAnnotationText}</span>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 pt-1">
@@ -263,21 +262,17 @@ export default function Landing() {
                     <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">تقييم 5 نجوم من عملائنا</span>
+                <span className="text-sm text-muted-foreground">{config.heroRatingText}</span>
               </div>
               <a href="#projects" className="text-sm font-semibold text-foreground hover:text-primary transition-colors inline-flex items-center gap-1" data-testid="button-hero-projects">
-                شاهد أعمالنا
+                {config.heroSecondaryText}
                 <ChevronLeft className="w-4 h-4" />
               </a>
             </div>
             {heroImages.length === 0 && (
               <div className="flex flex-wrap gap-8 pt-4">
-                {[
-                  { value: "+50", label: "مشروع مكتمل" },
-                  { value: "+30", label: "عميل سعيد" },
-                  { value: "+5", label: "سنوات خبرة" },
-                ].map((stat) => (
-                  <div key={stat.label}>
+                {config.heroStats.map((stat, i) => (
+                  <div key={i}>
                     <div className="text-4xl font-bold text-primary">{stat.value}</div>
                     <div className="text-sm text-muted-foreground">{stat.label}</div>
                   </div>
@@ -308,15 +303,15 @@ export default function Landing() {
                   className="absolute top-2 -left-6 bg-primary text-primary-foreground rounded-2xl shadow-xl px-5 py-4 z-30"
                   style={{ transform: "rotate(-6deg)" }}
                 >
-                  <div className="text-2xl font-bold">+50</div>
-                  <div className="text-xs">مشروع مكتمل</div>
+                  <div className="text-2xl font-bold">{config.heroStats[0]?.value}</div>
+                  <div className="text-xs">{config.heroStats[0]?.label}</div>
                 </div>
                 <div
                   className="absolute bottom-0 right-2 bg-card border border-border rounded-2xl shadow-xl px-5 py-4 z-30"
                   style={{ transform: "rotate(4deg)" }}
                 >
-                  <div className="text-2xl font-bold text-primary">+30</div>
-                  <div className="text-xs text-muted-foreground">عميل سعيد</div>
+                  <div className="text-2xl font-bold text-primary">{config.heroStats[1]?.value}</div>
+                  <div className="text-xs text-muted-foreground">{config.heroStats[1]?.label}</div>
                 </div>
               </div>
             </div>

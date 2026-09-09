@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -318,9 +318,9 @@ function uploadImage(file: File): Promise<{ url: string }> {
 }
 
 function GalleryField({
-  images, onChange, label = "صور المشروع", hint = "أول صورة تُستخدم كغلاف بالصفحة الرئيسية. رتّب الصور بالأسهم.",
+  images, onChange, label = "صور المشروع", hint = "أول صورة تُستخدم كغلاف بالصفحة الرئيسية. رتّب الصور بالأسهم.", slotHint,
 }: {
-  images: string[]; onChange: (images: string[]) => void; label?: string; hint?: string;
+  images: string[]; onChange: (images: string[]) => void; label?: string; hint?: string; slotHint?: (index: number) => string;
 }) {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -363,7 +363,10 @@ function GalleryField({
               <div className="w-16 h-12 rounded border border-border bg-muted/40 overflow-hidden flex-shrink-0">
                 <img src={url} alt={`صورة ${index + 1}`} className="w-full h-full object-cover" data-testid={`gallery-image-${index}`} />
               </div>
-              <span className="text-xs text-muted-foreground flex-1 truncate">{url}</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs text-muted-foreground block truncate">{url}</span>
+                {slotHint && <span className="text-xs text-primary/80 block mt-0.5">{slotHint(index)}</span>}
+              </div>
               <div className="flex items-center gap-1 shrink-0">
                 <Button type="button" size="icon" variant="ghost" className="h-7 w-7" disabled={index === 0} onClick={() => move(index, -1)} data-testid={`gallery-up-${index}`}>
                   <ArrowUp className="w-3.5 h-3.5" />
@@ -399,6 +402,7 @@ function GalleryField({
         <Upload className="w-4 h-4" />
         {uploading ? "جارٍ الرفع..." : "إضافة صورة"}
       </Button>
+      {slotHint && <p className="text-xs text-primary/80">{slotHint(images.length)}</p>}
       <p className="text-xs text-muted-foreground">{hint}</p>
     </div>
   );
@@ -478,21 +482,23 @@ function ImageUploadField({
   );
 }
 
+const heroImageSlotHint = (i: number) =>
+  i === 0 ? "بطاقة رئيسية — يفضّل مقاس أفقي تقريباً 800×640px"
+  : i <= 2 ? "صورة دائرية — يفضّل مقاس مربع تقريباً 300×300px"
+  : "لن تظهر بالهيرو (يُستخدم أول 3 صور فقط)";
+
 function SettingsTab() {
   const { toast } = useToast();
   const siteConfig = useSiteConfig();
-  const [form, setForm] = useState<SiteConfig>({
-    logo_text: siteConfig.logo_text,
-    logo_url: siteConfig.logo_url,
-    favicon_url: siteConfig.favicon_url,
-    heroImages: siteConfig.heroImages,
-  });
+  const { data: rawConfig } = useQuery<SiteConfig>({ queryKey: ["/api/content/config"] });
+  const [form, setForm] = useState<SiteConfig>(siteConfig);
   const [synced, setSynced] = useState(false);
 
-  if (!synced && (siteConfig.logo_url || siteConfig.favicon_url || siteConfig.logo_text !== "Creative Code" || siteConfig.heroImages.length > 0)) {
-    setForm({ logo_text: siteConfig.logo_text, logo_url: siteConfig.logo_url, favicon_url: siteConfig.favicon_url, heroImages: siteConfig.heroImages });
+  useEffect(() => {
+    if (synced || !rawConfig) return;
+    setForm(siteConfig);
     setSynced(true);
-  }
+  }, [rawConfig, synced]);
 
   const saveMutation = useMutation({
     mutationFn: (data: Partial<SiteConfig>) => apiRequest("PATCH", "/api/admin/content/config", data),
@@ -513,6 +519,16 @@ function SettingsTab() {
     const updated = { ...form, heroImages };
     setForm(updated);
     saveMutation.mutate(updated);
+  }
+
+  function updateHeroFeature(index: number, field: "icon" | "label", value: string) {
+    const heroFeatures = form.heroFeatures.map((f, i) => (i === index ? { ...f, [field]: value } : f));
+    setForm({ ...form, heroFeatures });
+  }
+
+  function updateHeroStat(index: number, field: "value" | "label", value: string) {
+    const heroStats = form.heroStats.map((s, i) => (i === index ? { ...s, [field]: value } : s));
+    setForm({ ...form, heroStats });
   }
 
   return (
@@ -574,7 +590,140 @@ function SettingsTab() {
           onChange={handleHeroImagesChanged}
           label="صور الهيرو"
           hint="الصورة الأولى تظهر كبطاقة رئيسية، والثانية والثالثة تظهران كصور دائرية متراكبة. أي صور إضافية بعد الثالثة لا تُعرض بالهيرو."
+          slotHint={heroImageSlotHint}
         />
+      </div>
+
+      <div className="rounded-xl border border-border p-6 space-y-6 bg-card">
+        <h2 className="font-semibold text-base flex items-center gap-2">
+          <Layers className="w-4 h-4 text-primary" />
+          محتوى الهيرو
+        </h2>
+
+        <div className="space-y-2">
+          <Label>العنوان</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <Input
+              data-testid="input-hero-title-before"
+              value={form.heroTitleBefore}
+              onChange={(e) => setForm({ ...form, heroTitleBefore: e.target.value })}
+              placeholder="نبني حلولاً تقنية"
+            />
+            <Input
+              data-testid="input-hero-title-accent"
+              value={form.heroTitleAccent}
+              onChange={(e) => setForm({ ...form, heroTitleAccent: e.target.value })}
+              placeholder="مبتكرة"
+            />
+            <Input
+              data-testid="input-hero-title-after"
+              value={form.heroTitleAfter}
+              onChange={(e) => setForm({ ...form, heroTitleAfter: e.target.value })}
+              placeholder="لمستقبلك"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">الحقل الأوسط هو الكلمة التي تظهر بلون مميز داخل العنوان</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="hero_subtitle">الفقرة التعريفية</Label>
+          <Textarea
+            id="hero_subtitle"
+            data-testid="input-hero-subtitle"
+            value={form.heroSubtitle}
+            onChange={(e) => setForm({ ...form, heroSubtitle: e.target.value })}
+            rows={3}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>الميزات الثلاث</Label>
+          {form.heroFeatures.map((f, i) => (
+            <div key={i} className="grid grid-cols-2 gap-2">
+              <Input
+                data-testid={`input-hero-feature-icon-${i}`}
+                value={f.icon}
+                onChange={(e) => updateHeroFeature(i, "icon", e.target.value)}
+                placeholder="اسم أيقونة lucide-react، مثال: Zap"
+              />
+              <Input
+                data-testid={`input-hero-feature-label-${i}`}
+                value={f.label}
+                onChange={(e) => updateHeroFeature(i, "label", e.target.value)}
+                placeholder="تسليم سريع"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="hero_cta_text">نص زر الحجز</Label>
+            <Input
+              id="hero_cta_text"
+              data-testid="input-hero-cta-text"
+              value={form.heroCtaText}
+              onChange={(e) => setForm({ ...form, heroCtaText: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hero_annotation_text">نص الملاحظة بجانب الزر</Label>
+            <Input
+              id="hero_annotation_text"
+              data-testid="input-hero-annotation-text"
+              value={form.heroAnnotationText}
+              onChange={(e) => setForm({ ...form, heroAnnotationText: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hero_rating_text">نص تقييم النجوم</Label>
+            <Input
+              id="hero_rating_text"
+              data-testid="input-hero-rating-text"
+              value={form.heroRatingText}
+              onChange={(e) => setForm({ ...form, heroRatingText: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hero_secondary_text">نص رابط "شاهد أعمالنا"</Label>
+            <Input
+              id="hero_secondary_text"
+              data-testid="input-hero-secondary-text"
+              value={form.heroSecondaryText}
+              onChange={(e) => setForm({ ...form, heroSecondaryText: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>الإحصائيات الثلاث</Label>
+          {form.heroStats.map((s, i) => (
+            <div key={i} className="grid grid-cols-2 gap-2">
+              <Input
+                data-testid={`input-hero-stat-value-${i}`}
+                value={s.value}
+                onChange={(e) => updateHeroStat(i, "value", e.target.value)}
+                placeholder="+50"
+              />
+              <Input
+                data-testid={`input-hero-stat-label-${i}`}
+                value={s.label}
+                onChange={(e) => updateHeroStat(i, "label", e.target.value)}
+                placeholder="مشروع مكتمل"
+              />
+            </div>
+          ))}
+        </div>
+
+        <Button
+          data-testid="button-save-hero-content"
+          onClick={() => saveMutation.mutate(form)}
+          disabled={saveMutation.isPending}
+          className="gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {saveMutation.isPending ? "جارٍ الحفظ..." : "حفظ محتوى الهيرو"}
+        </Button>
       </div>
     </div>
   );
