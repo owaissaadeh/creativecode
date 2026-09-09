@@ -3,6 +3,7 @@ import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/lib/siteConfig";
 import { Button } from "@/components/ui/button";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import type { PageItem } from "@shared/schema";
 import {
   Code2, Brain, Zap, Settings2, Cloud, Smartphone, Bot,
@@ -144,6 +145,8 @@ export default function ProjectShowcase() {
           </div>
         )}
       </main>
+
+      <WhatsAppButton />
     </div>
   );
 }

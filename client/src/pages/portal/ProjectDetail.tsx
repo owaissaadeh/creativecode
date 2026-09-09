@@ -302,6 +302,26 @@ export default function PortalProjectDetail() {
             <p className="text-sm text-muted-foreground">لم يتم رفع العقد بعد</p>
           )}
 
+          {contract && (() => {
+            const totalValue = Number(contract.totalValue);
+            const paidAmount = payments
+              .filter((p) => p.status === "received")
+              .reduce((sum, p) => sum + Number(p.amount), 0);
+            const percent = totalValue > 0 ? Math.min(100, (paidAmount / totalValue) * 100) : 0;
+            return (
+              <div className="space-y-1.5" data-testid="payment-progress">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>تقدم السداد</span>
+                  <span>{percent.toFixed(0)}%</span>
+                </div>
+                <Progress value={percent} />
+                <p className="text-xs text-muted-foreground">
+                  تم سداد {paidAmount.toLocaleString()} د.أ من أصل {totalValue.toLocaleString()} د.أ
+                </p>
+              </div>
+            );
+          })()}
+
           {payments.length > 0 && (
             <div className="space-y-2 pt-1">
               {payments.map((p) => (
