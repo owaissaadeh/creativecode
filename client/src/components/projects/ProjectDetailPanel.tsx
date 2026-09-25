@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText } from "lucide-react";
+import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText, Link2, ExternalLink } from "lucide-react";
 
 interface Stage {
   id: string;
@@ -32,9 +32,11 @@ interface ProjectData {
 interface Deliverable {
   id: string;
   title: string;
-  fileName: string;
-  fileSize: number;
+  type: "file" | "link";
+  fileName: string | null;
+  fileSize: number | null;
   version: number;
+  url: string | null;
 }
 
 interface Comment {
@@ -107,6 +109,17 @@ async function uploadDeliverable(apiBase: string, projectId: string, title: stri
   return res.json();
 }
 
+async function createLinkDeliverable(apiBase: string, projectId: string, title: string, url: string) {
+  const token = getStaffToken();
+  const res = await fetch(`${apiBase}/projects/${projectId}/deliverables/link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ title: title || url, url }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || "فشل إضافة الرابط");
+  return res.json();
+}
+
 async function downloadDeliverable(apiBase: string, id: string, filename: string) {
   const token = getStaffToken();
   const res = await fetch(`${apiBase}/deliverables/${id}/download`, {
@@ -170,19 +183,28 @@ function AddStageDialog({ apiBase, projectId, nextSequence }: { apiBase: string;
 function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; projectId: string }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"file" | "link">("file");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const canSubmit = mode === "file" ? !!file : !!url.trim();
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
     setUploading(true);
     try {
-      await uploadDeliverable(apiBase, projectId, title, file);
+      if (mode === "file") {
+        await uploadDeliverable(apiBase, projectId, title, file!);
+      } else {
+        await createLinkDeliverable(apiBase, projectId, title, url.trim());
+      }
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/deliverables`] });
-      toast({ title: "تم رفع الملف بنجاح" });
+      toast({ title: mode === "file" ? "تم رفع الملف بنجاح" : "تمت إضافة الرابط بنجاح" });
       setTitle("");
       setFile(null);
+      setUrl("");
       setOpen(false);
     } catch (err) {
       toast({ title: (err as Error).message, variant: "destructive" });
@@ -194,24 +216,39 @@ function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; proj
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="gap-1.5" data-testid="button-upload-deliverable">
-          <Upload className="w-3.5 h-3.5" /> رفع تسليم
+          <Upload className="w-3.5 h-3.5" /> إضافة تسليم
         </Button>
       </DialogTrigger>
       <DialogContent dir="rtl" className="max-w-md">
-        <DialogHeader><DialogTitle>رفع ملف تسليم</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>إضافة تسليم جديد</DialogTitle></DialogHeader>
         <div className="space-y-4 py-2">
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant={mode === "file" ? "default" : "outline"} className="flex-1 gap-1.5" onClick={() => setMode("file")} data-testid="button-mode-file">
+              <Upload className="w-3.5 h-3.5" /> رفع ملف
+            </Button>
+            <Button type="button" size="sm" variant={mode === "link" ? "default" : "outline"} className="flex-1 gap-1.5" onClick={() => setMode("link")} data-testid="button-mode-link">
+              <Link2 className="w-3.5 h-3.5" /> إضافة رابط
+            </Button>
+          </div>
           <div className="space-y-1.5">
-            <Label>عنوان الملف</Label>
+            <Label>العنوان</Label>
             <Input data-testid="input-deliverable-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تصميم الصفحة الرئيسية" />
           </div>
-          <div className="space-y-1.5">
-            <Label>الملف</Label>
-            <Input data-testid="input-deliverable-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          </div>
+          {mode === "file" ? (
+            <div className="space-y-1.5">
+              <Label>الملف</Label>
+              <Input data-testid="input-deliverable-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>الرابط</Label>
+              <Input data-testid="input-deliverable-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button onClick={handleUpload} disabled={uploading || !file} data-testid="button-submit-deliverable">
-            {uploading ? "جاري الرفع..." : "رفع الملف"}
+          <Button onClick={handleSubmit} disabled={uploading || !canSubmit} data-testid="button-submit-deliverable">
+            {uploading ? "جارٍ الحفظ..." : mode === "file" ? "رفع الملف" : "إضافة الرابط"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -590,20 +627,34 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
             {deliverables.map((d) => (
               <div key={d.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  {d.type === "link" ? (
+                    <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  ) : (
+                    <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{d.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatBytes(d.fileSize)} · v{d.version}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {d.type === "link" ? "رابط خارجي" : `${formatBytes(d.fileSize || 0)} · v${d.version}`}
+                    </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={() => downloadDeliverable(apiBase, d.id, d.fileName).catch((e) => toast({ title: e.message, variant: "destructive" }))}
-                >
-                  <Download className="w-3.5 h-3.5" /> تنزيل
-                </Button>
+                {d.type === "link" ? (
+                  <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                    <a href={d.url || "#"} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3.5 h-3.5" /> فتح
+                    </a>
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => downloadDeliverable(apiBase, d.id, d.fileName || d.title).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                  >
+                    <Download className="w-3.5 h-3.5" /> تنزيل
+                  </Button>
+                )}
               </div>
             ))}
             {deliverables.length === 0 && <p className="text-sm text-muted-foreground">لا توجد ملفات مرفوعة بعد</p>}

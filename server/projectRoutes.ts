@@ -236,7 +236,7 @@ export function registerProjectRoutes(app: Express) {
         const objectKey = await uploadPrivateFile(req.file.buffer, req.file.originalname, req.file.mimetype);
         const deliverable = await storage.createDeliverable({
           projectId: req.params.id, stageId: stageId || undefined,
-          title: title || req.file.originalname, description,
+          title: title || req.file.originalname, description, type: "file",
           fileName: req.file.originalname, objectKey, mimeType: req.file.mimetype, fileSize: req.file.size,
           version: 1, uploadedBy: req.user.id,
         });
@@ -257,6 +257,33 @@ export function registerProjectRoutes(app: Express) {
     }
   );
 
+  app.post("/api/admin/projects/:id/deliverables/link", authMiddleware, adminOnly, async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const { title, description, stageId, url } = req.body;
+      if (!title || !url) return res.status(400).json({ message: "العنوان والرابط مطلوبان" });
+      if (!/^https?:\/\//i.test(url)) return res.status(400).json({ message: "الرابط غير صالح" });
+      const deliverable = await storage.createDeliverable({
+        projectId: req.params.id, stageId: stageId || undefined,
+        title, description, type: "link", url,
+        version: 1, uploadedBy: req.user.id,
+      });
+      res.json(deliverable);
+
+      getClientUserEmailsForProject(req.params.id).then(async (to) => {
+        if (to.length === 0) return;
+        const project = await storage.getProjectById(req.params.id);
+        sendNewDeliverableEmail({
+          to, projectName: project?.name || "", deliverableTitle: deliverable.title,
+          portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${req.params.id}`,
+        }).catch((err) => console.error("Email send failed (new deliverable):", err));
+      });
+    } catch (err) {
+      console.error("Deliverable link create error:", err);
+      res.status(500).json({ message: "فشل إضافة الرابط" });
+    }
+  });
+
   app.delete("/api/admin/deliverables/:id", authMiddleware, adminOnly, async (req, res) => {
     try {
       await storage.deleteDeliverable(req.params.id);
@@ -270,7 +297,8 @@ export function registerProjectRoutes(app: Express) {
     try {
       const deliverable = await storage.getDeliverableById(req.params.id);
       if (!deliverable) return res.status(404).json({ message: "الملف غير موجود" });
-      await streamPrivateFile(deliverable.objectKey, res, deliverable.fileName, deliverable.mimeType);
+      if (deliverable.type === "link") return res.redirect(deliverable.url || "/");
+      await streamPrivateFile(deliverable.objectKey!, res, deliverable.fileName!, deliverable.mimeType!);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
@@ -517,7 +545,7 @@ export function registerProjectRoutes(app: Express) {
         const objectKey = await uploadPrivateFile(req.file.buffer, req.file.originalname, req.file.mimetype);
         const deliverable = await storage.createDeliverable({
           projectId: req.params.id, stageId: stageId || undefined,
-          title: title || req.file.originalname, description,
+          title: title || req.file.originalname, description, type: "file",
           fileName: req.file.originalname, objectKey, mimeType: req.file.mimetype, fileSize: req.file.size,
           version: 1, uploadedBy: req.user.id,
         });
@@ -538,13 +566,42 @@ export function registerProjectRoutes(app: Express) {
     }
   );
 
+  app.post("/api/sales/projects/:id/deliverables/link", authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      if (!(await projectBelongsToSales(req.params.id, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
+      const { title, description, stageId, url } = req.body;
+      if (!title || !url) return res.status(400).json({ message: "العنوان والرابط مطلوبان" });
+      if (!/^https?:\/\//i.test(url)) return res.status(400).json({ message: "الرابط غير صالح" });
+      const deliverable = await storage.createDeliverable({
+        projectId: req.params.id, stageId: stageId || undefined,
+        title, description, type: "link", url,
+        version: 1, uploadedBy: req.user.id,
+      });
+      res.json(deliverable);
+
+      getClientUserEmailsForProject(req.params.id).then(async (to) => {
+        if (to.length === 0) return;
+        const project = await storage.getProjectById(req.params.id);
+        sendNewDeliverableEmail({
+          to, projectName: project?.name || "", deliverableTitle: deliverable.title,
+          portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${req.params.id}`,
+        }).catch((err) => console.error("Email send failed (new deliverable):", err));
+      });
+    } catch (err) {
+      console.error("Deliverable link create error:", err);
+      res.status(500).json({ message: "فشل إضافة الرابط" });
+    }
+  });
+
   app.get("/api/sales/deliverables/:id/download", authMiddleware, async (req: AuthRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "غير مصرح" });
       const deliverable = await storage.getDeliverableById(req.params.id);
       if (!deliverable) return res.status(404).json({ message: "الملف غير موجود" });
       if (!(await projectBelongsToSales(deliverable.projectId, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
-      await streamPrivateFile(deliverable.objectKey, res, deliverable.fileName, deliverable.mimeType);
+      if (deliverable.type === "link") return res.redirect(deliverable.url || "/");
+      await streamPrivateFile(deliverable.objectKey!, res, deliverable.fileName!, deliverable.mimeType!);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }

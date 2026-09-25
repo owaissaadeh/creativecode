@@ -168,10 +168,12 @@ export async function migrateDb() {
         stage_id VARCHAR(36) REFERENCES project_stages(id) ON DELETE CASCADE,
         title TEXT NOT NULL,
         description TEXT,
-        file_name TEXT NOT NULL,
-        object_key TEXT NOT NULL,
-        mime_type TEXT NOT NULL,
-        file_size INTEGER NOT NULL,
+        type TEXT NOT NULL DEFAULT 'file',
+        url TEXT,
+        file_name TEXT,
+        object_key TEXT,
+        mime_type TEXT,
+        file_size INTEGER,
         version INTEGER NOT NULL DEFAULT 1,
         uploaded_by VARCHAR(36) NOT NULL REFERENCES users(id),
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
@@ -179,6 +181,12 @@ export async function migrateDb() {
     `);
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_deliverables_project_id ON deliverables(project_id)`);
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_deliverables_stage_id ON deliverables(stage_id)`);
+    await db.execute(sql`ALTER TABLE deliverables ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'file'`);
+    await db.execute(sql`ALTER TABLE deliverables ADD COLUMN IF NOT EXISTS url TEXT`);
+    await db.execute(sql`ALTER TABLE deliverables ALTER COLUMN file_name DROP NOT NULL`);
+    await db.execute(sql`ALTER TABLE deliverables ALTER COLUMN object_key DROP NOT NULL`);
+    await db.execute(sql`ALTER TABLE deliverables ALTER COLUMN mime_type DROP NOT NULL`);
+    await db.execute(sql`ALTER TABLE deliverables ALTER COLUMN file_size DROP NOT NULL`);
 
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS project_comments (

@@ -121,7 +121,8 @@ export function registerPortalRoutes(app: Express) {
       if (!deliverable) return res.status(404).json({ message: "الملف غير موجود" });
       const project = await storage.getProjectById(deliverable.projectId);
       if (!project || project.clientId !== req.clientUser.clientId) return res.status(403).json({ message: "غير مسموح" });
-      await streamPrivateFile(deliverable.objectKey, res, deliverable.fileName, deliverable.mimeType);
+      if (deliverable.type === "link") return res.redirect(deliverable.url || "/");
+      await streamPrivateFile(deliverable.objectKey!, res, deliverable.fileName!, deliverable.mimeType!);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }

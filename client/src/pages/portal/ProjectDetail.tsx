@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  CheckCircle2, Circle, Clock, FileEdit, Download, MessageSquare, Send, File as FileIcon, Bell, ArrowLeft, XCircle, FileText,
+  CheckCircle2, Circle, Clock, FileEdit, Download, MessageSquare, Send, File as FileIcon, Bell, ArrowLeft, XCircle, FileText, Link2, ExternalLink,
 } from "lucide-react";
 
 interface Approval {
@@ -44,9 +44,11 @@ interface ProjectData {
 interface Deliverable {
   id: string;
   title: string;
-  fileName: string;
-  fileSize: number;
+  type: "file" | "link";
+  fileName: string | null;
+  fileSize: number | null;
   version: number;
+  url: string | null;
   createdAt: string;
   stageId: string | null;
 }
@@ -421,21 +423,35 @@ export default function PortalProjectDetail() {
               {deliverables.map((d) => (
                 <div key={d.id} data-testid={`deliverable-${d.id}`} className="flex items-center justify-between gap-3 rounded-lg border p-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    {d.type === "link" ? (
+                      <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    ) : (
+                      <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    )}
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{d.title}</p>
-                      <p className="text-xs text-muted-foreground">{formatBytes(d.fileSize)} · v{d.version}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {d.type === "link" ? "رابط خارجي" : `${formatBytes(d.fileSize || 0)} · v${d.version}`}
+                      </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5 flex-shrink-0"
-                    onClick={() => downloadDeliverable(d.id, d.fileName).catch((e) => toast({ title: e.message, variant: "destructive" }))}
-                    data-testid={`button-download-${d.id}`}
-                  >
-                    <Download className="w-3.5 h-3.5" /> تنزيل
-                  </Button>
+                  {d.type === "link" ? (
+                    <Button size="sm" variant="outline" className="gap-1.5 flex-shrink-0" asChild data-testid={`button-open-${d.id}`}>
+                      <a href={d.url || "#"} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-3.5 h-3.5" /> فتح الرابط
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 flex-shrink-0"
+                      onClick={() => downloadDeliverable(d.id, d.fileName || d.title).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                      data-testid={`button-download-${d.id}`}
+                    >
+                      <Download className="w-3.5 h-3.5" /> تنزيل
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
