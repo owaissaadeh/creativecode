@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { KeyRound, Mail } from "lucide-react";
+import { KeyRound, Mail, Trash2 } from "lucide-react";
 import type { Client } from "@shared/schema";
 
 interface ClientPortalUser {
@@ -44,6 +44,15 @@ export default function ClientPortalAccessDialog({ client, open, onClose }: { cl
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/client-users/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/clients/${client.id}/client-users`] });
+      toast({ title: "تم حذف الحساب" });
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent dir="rtl" className="max-w-md">
@@ -67,6 +76,16 @@ export default function ClientPortalAccessDialog({ client, open, onClose }: { cl
                       onCheckedChange={(v) => toggleActiveMutation.mutate({ id: pu.id, isActive: v })}
                       data-testid={`switch-portal-user-${pu.id}`}
                     />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => deleteMutation.mutate(pu.id)}
+                      disabled={deleteMutation.isPending}
+                      data-testid={`button-delete-portal-user-${pu.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
               ))}

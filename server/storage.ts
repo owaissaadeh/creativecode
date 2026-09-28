@@ -465,6 +465,10 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
+  async deleteClientUser(id: string) {
+    await db.delete(clientUsers).where(eq(clientUsers.id, id));
+  }
+
   async getAllProjects() {
     return db.select().from(projects).orderBy(desc(projects.createdAt));
   }

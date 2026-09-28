@@ -185,6 +185,18 @@ export function registerProjectRoutes(app: Express) {
     }
   });
 
+  app.delete("/api/admin/client-users/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      await storage.deleteClientUser(req.params.id);
+      res.json({ success: true });
+    } catch (err) {
+      if ((err as { code?: string }).code === "23503") {
+        return res.status(400).json({ message: "لا يمكن حذف هذا الحساب لوجود نشاط مرتبط به (تعليقات أو اعتمادات أو تذاكر دعم) — يمكنك تعطيله بدلاً من ذلك" });
+      }
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   app.post("/api/sales/clients/:id/client-users", authMiddleware, async (req: AuthRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "غير مصرح" });
