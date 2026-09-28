@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText, Link2, ExternalLink } from "lucide-react";
+import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText, Link2, ExternalLink, Mail } from "lucide-react";
+import { useNotifyClient } from "@/hooks/use-notify-client";
+import NotifyPreviewDialog from "@/components/projects/NotifyPreviewDialog";
 
 interface Stage {
   id: string;
@@ -182,7 +184,7 @@ function AddStageDialog({ apiBase, projectId, nextSequence }: { apiBase: string;
   );
 }
 
-function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; projectId: string }) {
+function UploadDeliverableDialog({ apiBase, projectId, onSaved }: { apiBase: string; projectId: string; onSaved?: (data: any) => void }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"file" | "link">("file");
@@ -198,13 +200,12 @@ function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; proj
     if (!canSubmit) return;
     setUploading(true);
     try {
-      if (mode === "file") {
-        await uploadDeliverable(apiBase, projectId, title, description, file!);
-      } else {
-        await createLinkDeliverable(apiBase, projectId, title, description, url.trim());
-      }
+      const deliverable = mode === "file"
+        ? await uploadDeliverable(apiBase, projectId, title, description, file!)
+        : await createLinkDeliverable(apiBase, projectId, title, description, url.trim());
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/deliverables`] });
       toast({ title: mode === "file" ? "تم رفع الملف بنجاح" : "تمت إضافة الرابط بنجاح" });
+      onSaved?.(deliverable);
       setTitle("");
       setDescription("");
       setFile(null);
@@ -277,7 +278,7 @@ async function downloadFile(url: string, filename: string) {
   URL.revokeObjectURL(objUrl);
 }
 
-function UploadContractDialog({ apiBase, projectId, hasContract }: { apiBase: string; projectId: string; hasContract: boolean }) {
+function UploadContractDialog({ apiBase, projectId, hasContract, onSaved }: { apiBase: string; projectId: string; hasContract: boolean; onSaved?: (data: any) => void }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [totalValue, setTotalValue] = useState("");
@@ -298,8 +299,10 @@ function UploadContractDialog({ apiBase, projectId, hasContract }: { apiBase: st
         body: fd,
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || "فشل رفع العقد");
+      const contract = await res.json();
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/contract`] });
       toast({ title: "تم رفع العقد بنجاح" });
+      onSaved?.(contract);
       setTotalValue("");
       setFile(null);
       setOpen(false);
@@ -338,16 +341,17 @@ function UploadContractDialog({ apiBase, projectId, hasContract }: { apiBase: st
   );
 }
 
-function AddPaymentDialog({ apiBase, projectId }: { apiBase: string; projectId: string }) {
+function AddPaymentDialog({ apiBase, projectId, onSaved }: { apiBase: string; projectId: string; onSaved?: (data: any) => void }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ label: "", amount: "", dueDate: "" });
 
   const mutation = useMutation({
     mutationFn: () => apiRequest("POST", `${apiBase}/projects/${projectId}/payments`, form),
-    onSuccess: () => {
+    onSuccess: (payment: any) => {
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/payments`] });
       toast({ title: "تمت إضافة الدفعة" });
+      onSaved?.(payment);
       setForm({ label: "", amount: "", dueDate: "" });
       setOpen(false);
     },
@@ -387,7 +391,7 @@ function AddPaymentDialog({ apiBase, projectId }: { apiBase: string; projectId: 
   );
 }
 
-function UploadReceiptDialog({ apiBase, projectId, paymentId, staff }: { apiBase: string; projectId: string; paymentId: string; staff: StaffUser[] }) {
+function UploadReceiptDialog({ apiBase, projectId, paymentId, staff, onSaved }: { apiBase: string; projectId: string; paymentId: string; staff: StaffUser[]; onSaved?: (paymentId: string) => void }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [receivedByStaffId, setReceivedByStaffId] = useState("");
@@ -410,6 +414,7 @@ function UploadReceiptDialog({ apiBase, projectId, paymentId, staff }: { apiBase
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || "فشل رفع الإيصال");
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/payments`] });
       toast({ title: "تم تأكيد استلام الدفعة" });
+      onSaved?.(paymentId);
       setFile(null);
       setReceivedByStaffId("");
       setOpen(false);
@@ -456,6 +461,7 @@ function UploadReceiptDialog({ apiBase, projectId, paymentId, staff }: { apiBase
 export default function ProjectDetailPanel({ apiBase, projectId, canManageContract = false }: { apiBase: string; projectId: string; canManageContract?: boolean }) {
   const { toast } = useToast();
   const [commentText, setCommentText] = useState("");
+  const notify = useNotifyClient(apiBase, projectId);
 
   const { data: project, isLoading } = useQuery<ProjectData>({ queryKey: [`${apiBase}/projects/${projectId}`] });
   const { data: stages = [] } = useQuery<Stage[]>({ queryKey: [`${apiBase}/projects/${projectId}/stages`] });
@@ -476,7 +482,10 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
 
   const stageStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => apiRequest("PATCH", `${apiBase}/stages/${id}`, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/stages`] }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/stages`] });
+      notify.promptNotify("stage_status", variables.id, "تم تحديث حالة المرحلة");
+    },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
 
@@ -494,9 +503,10 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
 
   const commentMutation = useMutation({
     mutationFn: (body: string) => apiRequest("POST", `${apiBase}/projects/${projectId}/comments`, { body }),
-    onSuccess: () => {
+    onSuccess: (comment: any) => {
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/comments`] });
       setCommentText("");
+      notify.promptNotify("comment", comment.id, "تم إرسال الرد");
     },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
@@ -525,7 +535,12 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">العقد والدفعات</h2>
-              <UploadContractDialog apiBase={apiBase} projectId={projectId} hasContract={!!contract} />
+              <UploadContractDialog
+                apiBase={apiBase}
+                projectId={projectId}
+                hasContract={!!contract}
+                onSaved={(c) => notify.promptNotify("contract", c.id, "تم رفع العقد")}
+              />
             </div>
             {contract ? (
               <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
@@ -556,7 +571,11 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
 
             <div className="flex items-center justify-between pt-2">
               <h3 className="font-medium text-sm">الدفعات</h3>
-              <AddPaymentDialog apiBase={apiBase} projectId={projectId} />
+              <AddPaymentDialog
+                apiBase={apiBase}
+                projectId={projectId}
+                onSaved={(p) => notify.promptNotify("payment", p.id, "تمت إضافة الدفعة")}
+              />
             </div>
             <div className="space-y-2">
               {payments.map((p) => (
@@ -575,7 +594,13 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
                     </p>
                   </div>
                   {p.status === "pending" ? (
-                    <UploadReceiptDialog apiBase={apiBase} projectId={projectId} paymentId={p.id} staff={staff} />
+                    <UploadReceiptDialog
+                      apiBase={apiBase}
+                      projectId={projectId}
+                      paymentId={p.id}
+                      staff={staff}
+                      onSaved={(paymentId) => notify.promptNotify("receipt", paymentId, "تم تأكيد استلام الدفعة")}
+                    />
                   ) : (
                     <Button
                       size="sm"
@@ -635,7 +660,23 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
         <CardContent className="p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">التسليمات</h2>
-            <UploadDeliverableDialog apiBase={apiBase} projectId={projectId} />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                disabled={deliverables.length === 0}
+                onClick={() => notify.openPreview("project_summary")}
+                data-testid="button-send-project-summary"
+              >
+                <Mail className="w-3.5 h-3.5" /> إرسال ملخص للعميل
+              </Button>
+              <UploadDeliverableDialog
+                apiBase={apiBase}
+                projectId={projectId}
+                onSaved={(d) => notify.promptNotify("deliverable", d.id, "تمت إضافة التسليم")}
+              />
+            </div>
           </div>
           <div className="space-y-2">
             {deliverables.map((d) => (
@@ -722,6 +763,14 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
           </div>
         </CardContent>
       </Card>
+
+      <NotifyPreviewDialog
+        preview={notify.preview}
+        loading={notify.loadingPreview}
+        sending={notify.sending}
+        onClose={notify.closePreview}
+        onConfirm={notify.confirmSend}
+      />
     </div>
   );
 }

@@ -1,18 +1,17 @@
-import type { Express, Response } from "express";
+import type { Express, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { authMiddleware, adminOnly, type AuthRequest } from "./routes";
 import { uploadPrivateFile, uploadPrivateFileMiddleware, streamPrivateFile } from "./lib/objectStorage";
-import { sendNewDeliverableEmail, sendStageNeedsActionEmail, sendTicketReplyEmail, sendTicketResolvedEmail, sendPaymentReceivedEmail } from "./lib/email";
+import {
+  sendTicketReplyEmail, sendTicketResolvedEmail, sendRawEmail,
+  renderNewDeliverableEmail, renderPaymentReceivedEmail, renderNewPaymentEmail,
+  renderContractUploadedEmail, renderStaffCommentEmail, renderProjectSummaryEmail,
+  renderStageStatusChangedEmail, STAGE_STATUS_LABELS_AR,
+} from "./lib/email";
 
 const TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
 const TICKET_PRIORITIES = ["low", "medium", "high", "urgent"];
-
-async function getClientUserEmailsForProject(projectId: string): Promise<string[]> {
-  const project = await storage.getProjectById(projectId);
-  if (!project) return [];
-  return getClientUserEmailsForClient(project.clientId);
-}
 
 async function getClientUserEmailsForClient(clientId: string): Promise<string[]> {
   const clientUsers = await storage.getClientUsersByClient(clientId);
@@ -33,6 +32,97 @@ async function stageBelongsToSales(stageId: string, salesId: string): Promise<bo
   const stage = await storage.getProjectStageById(stageId);
   if (!stage) return false;
   return projectBelongsToSales(stage.projectId, salesId);
+}
+
+function getPortalProjectUrl(req: Request, projectId: string): string {
+  const host = process.env.PORTAL_HOSTNAME || req.get("host");
+  return `${req.protocol}://${host}/portal/projects/${projectId}`;
+}
+
+type NotifyType = "deliverable" | "payment" | "receipt" | "stage_status" | "contract" | "comment" | "project_summary";
+
+async function buildNotifyEmail(
+  type: NotifyType,
+  refId: string | undefined,
+  projectId: string,
+  req: Request,
+): Promise<{ subject: string; html: string; to: string[] } | null> {
+  const project = await storage.getProjectById(projectId);
+  if (!project) return null;
+  const to = await getClientUserEmailsForClient(project.clientId);
+  const portalUrl = getPortalProjectUrl(req, projectId);
+
+  if (type === "deliverable") {
+    if (!refId) return null;
+    const deliverable = await storage.getDeliverableById(refId);
+    if (!deliverable || deliverable.projectId !== projectId) return null;
+    return { ...renderNewDeliverableEmail({
+      projectName: project.name, deliverableTitle: deliverable.title,
+      deliverableDescription: deliverable.description, portalUrl,
+    }), to };
+  }
+
+  if (type === "payment") {
+    if (!refId) return null;
+    const payment = await storage.getPaymentById(refId);
+    if (!payment || payment.projectId !== projectId) return null;
+    return { ...renderNewPaymentEmail({
+      projectName: project.name, paymentLabel: payment.label, amount: payment.amount,
+      dueDate: payment.dueDate, portalUrl,
+    }), to };
+  }
+
+  if (type === "receipt") {
+    if (!refId) return null;
+    const payment = await storage.getPaymentById(refId);
+    if (!payment || payment.projectId !== projectId) return null;
+    return { ...renderPaymentReceivedEmail({
+      projectName: project.name, paymentLabel: payment.label, amount: payment.amount, portalUrl,
+    }), to };
+  }
+
+  if (type === "stage_status") {
+    if (!refId) return null;
+    const stage = await storage.getProjectStageById(refId);
+    if (!stage || stage.projectId !== projectId) return null;
+    return { ...renderStageStatusChangedEmail({
+      projectName: project.name, stageTitle: stage.title, status: stage.status,
+      statusLabel: STAGE_STATUS_LABELS_AR[stage.status] || stage.status, portalUrl,
+    }), to };
+  }
+
+  if (type === "contract") {
+    const contract = await storage.getContractByProject(projectId);
+    if (!contract) return null;
+    return { ...renderContractUploadedEmail({
+      projectName: project.name, totalValue: contract.totalValue, portalUrl,
+    }), to };
+  }
+
+  if (type === "comment") {
+    if (!refId) return null;
+    const comments = await storage.getProjectComments(projectId);
+    const comment = comments.find((c) => c.id === refId);
+    if (!comment) return null;
+    const staffUser = comment.authorStaffId ? await storage.getUserById(comment.authorStaffId) : undefined;
+    return { ...renderStaffCommentEmail({
+      projectName: project.name, staffName: staffUser?.name || "فريق Creative Code",
+      commentBody: comment.body, portalUrl,
+    }), to };
+  }
+
+  if (type === "project_summary") {
+    const deliverables = await storage.getDeliverablesByProject(projectId);
+    return { ...renderProjectSummaryEmail({
+      projectName: project.name, portalUrl,
+      deliverables: deliverables.map((d) => ({
+        title: d.title, description: d.description,
+        type: d.type, actionLabel: d.type === "link" ? "رابط" : "ملف",
+      })),
+    }), to };
+  }
+
+  return null;
 }
 
 export function registerProjectRoutes(app: Express) {
@@ -197,17 +287,6 @@ export function registerProjectRoutes(app: Express) {
       }
       const stage = await storage.updateProjectStage(req.params.id, updateData as any);
       res.json(stage);
-
-      if (status === "needs_review") {
-        getClientUserEmailsForProject(stage.projectId).then(async (to) => {
-          if (to.length === 0) return;
-          const project = await storage.getProjectById(stage.projectId);
-          sendStageNeedsActionEmail({
-            to, projectName: project?.name || "", stageTitle: stage.title,
-            portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${stage.projectId}`,
-          }).catch((err) => console.error("Email send failed (stage needs action):", err));
-        });
-      }
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
@@ -241,15 +320,6 @@ export function registerProjectRoutes(app: Express) {
           version: 1, uploadedBy: req.user.id,
         });
         res.json(deliverable);
-
-        getClientUserEmailsForProject(req.params.id).then(async (to) => {
-          if (to.length === 0) return;
-          const project = await storage.getProjectById(req.params.id);
-          sendNewDeliverableEmail({
-            to, projectName: project?.name || "", deliverableTitle: deliverable.title,
-            portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${req.params.id}`,
-          }).catch((err) => console.error("Email send failed (new deliverable):", err));
-        });
       } catch (err) {
         console.error("Deliverable upload error:", err);
         res.status(500).json({ message: "فشل رفع الملف" });
@@ -269,15 +339,6 @@ export function registerProjectRoutes(app: Express) {
         version: 1, uploadedBy: req.user.id,
       });
       res.json(deliverable);
-
-      getClientUserEmailsForProject(req.params.id).then(async (to) => {
-        if (to.length === 0) return;
-        const project = await storage.getProjectById(req.params.id);
-        sendNewDeliverableEmail({
-          to, projectName: project?.name || "", deliverableTitle: deliverable.title,
-          portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${req.params.id}`,
-        }).catch((err) => console.error("Email send failed (new deliverable):", err));
-      });
     } catch (err) {
       console.error("Deliverable link create error:", err);
       res.status(500).json({ message: "فشل إضافة الرابط" });
@@ -392,15 +453,6 @@ export function registerProjectRoutes(app: Express) {
           receivedByStaffId, receivedAt: new Date(), status: "received",
         });
         res.json({ ...updated, receiptObjectKey: undefined });
-
-        getClientUserEmailsForProject(payment.projectId).then(async (to) => {
-          if (to.length === 0) return;
-          const project = await storage.getProjectById(payment.projectId);
-          sendPaymentReceivedEmail({
-            to, projectName: project?.name || "", paymentLabel: payment.label, amount: payment.amount,
-            portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${payment.projectId}`,
-          }).catch((err) => console.error("Email send failed (payment received):", err));
-        });
       } catch (err) {
         console.error("Receipt upload error:", err);
         res.status(500).json({ message: "فشل رفع الإيصال" });
@@ -517,17 +569,6 @@ export function registerProjectRoutes(app: Express) {
       }
       const stage = await storage.updateProjectStage(req.params.id, updateData as any);
       res.json(stage);
-
-      if (status === "needs_review") {
-        getClientUserEmailsForProject(stage.projectId).then(async (to) => {
-          if (to.length === 0) return;
-          const project = await storage.getProjectById(stage.projectId);
-          sendStageNeedsActionEmail({
-            to, projectName: project?.name || "", stageTitle: stage.title,
-            portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${stage.projectId}`,
-          }).catch((err) => console.error("Email send failed (stage needs action):", err));
-        });
-      }
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
@@ -550,15 +591,6 @@ export function registerProjectRoutes(app: Express) {
           version: 1, uploadedBy: req.user.id,
         });
         res.json(deliverable);
-
-        getClientUserEmailsForProject(req.params.id).then(async (to) => {
-          if (to.length === 0) return;
-          const project = await storage.getProjectById(req.params.id);
-          sendNewDeliverableEmail({
-            to, projectName: project?.name || "", deliverableTitle: deliverable.title,
-            portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${req.params.id}`,
-          }).catch((err) => console.error("Email send failed (new deliverable):", err));
-        });
       } catch (err) {
         console.error("Deliverable upload error:", err);
         res.status(500).json({ message: "فشل رفع الملف" });
@@ -579,15 +611,6 @@ export function registerProjectRoutes(app: Express) {
         version: 1, uploadedBy: req.user.id,
       });
       res.json(deliverable);
-
-      getClientUserEmailsForProject(req.params.id).then(async (to) => {
-        if (to.length === 0) return;
-        const project = await storage.getProjectById(req.params.id);
-        sendNewDeliverableEmail({
-          to, projectName: project?.name || "", deliverableTitle: deliverable.title,
-          portalUrl: `${req.protocol}://${req.get("host")}/portal/projects/${req.params.id}`,
-        }).catch((err) => console.error("Email send failed (new deliverable):", err));
-      });
     } catch (err) {
       console.error("Deliverable link create error:", err);
       res.status(500).json({ message: "فشل إضافة الرابط" });
@@ -671,6 +694,67 @@ export function registerProjectRoutes(app: Express) {
       res.json(comment);
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // ─── Admin & Sales: Notify Client (preview + send) ──────────────────────
+  const SALES_ALLOWED_NOTIFY_TYPES: NotifyType[] = ["deliverable", "stage_status", "comment", "project_summary"];
+
+  app.post("/api/admin/projects/:id/notify/preview", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
+    try {
+      const { type, refId } = req.body as { type: NotifyType; refId?: string };
+      const result = await buildNotifyEmail(type, refId, req.params.id, req);
+      if (!result) return res.status(404).json({ message: "لا يمكن إنشاء معاينة لهذا التحديث" });
+      res.json({ subject: result.subject, html: result.html });
+    } catch (err) {
+      console.error("Notify preview error:", err);
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post("/api/admin/projects/:id/notify/send", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
+    try {
+      const { type, refId } = req.body as { type: NotifyType; refId?: string };
+      const result = await buildNotifyEmail(type, refId, req.params.id, req);
+      if (!result) return res.status(404).json({ message: "لا يمكن إرسال هذا التحديث" });
+      if (result.to.length === 0) return res.status(400).json({ message: "لا يوجد بريد عميل فعّال مرتبط بهذا المشروع" });
+      await sendRawEmail(result.to, result.subject, result.html);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Notify send error:", err);
+      res.status(500).json({ message: "فشل إرسال البريد" });
+    }
+  });
+
+  app.post("/api/sales/projects/:id/notify/preview", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      if (!(await projectBelongsToSales(req.params.id, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
+      const { type, refId } = req.body as { type: NotifyType; refId?: string };
+      if (!SALES_ALLOWED_NOTIFY_TYPES.includes(type)) return res.status(403).json({ message: "غير مسموح" });
+      const result = await buildNotifyEmail(type, refId, req.params.id, req);
+      if (!result) return res.status(404).json({ message: "لا يمكن إنشاء معاينة لهذا التحديث" });
+      res.json({ subject: result.subject, html: result.html });
+    } catch (err) {
+      console.error("Notify preview error:", err);
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post("/api/sales/projects/:id/notify/send", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      if (!(await projectBelongsToSales(req.params.id, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
+      const { type, refId } = req.body as { type: NotifyType; refId?: string };
+      if (!SALES_ALLOWED_NOTIFY_TYPES.includes(type)) return res.status(403).json({ message: "غير مسموح" });
+      const result = await buildNotifyEmail(type, refId, req.params.id, req);
+      if (!result) return res.status(404).json({ message: "لا يمكن إرسال هذا التحديث" });
+      if (result.to.length === 0) return res.status(400).json({ message: "لا يوجد بريد عميل فعّال مرتبط بهذا المشروع" });
+      await sendRawEmail(result.to, result.subject, result.html);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Notify send error:", err);
+      res.status(500).json({ message: "فشل إرسال البريد" });
     }
   });
 

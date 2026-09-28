@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { escapeHtml } from "./escapeHtml";
 
 function getResendClient(): Resend {
   const apiKey = process.env.RESEND_API_KEY;
@@ -24,6 +25,12 @@ async function sendEmail(to: string | string[], subject: string, html: string) {
   const resend = getResendClient();
   const from = getFromEmail();
   await resend.emails.send({ from, to, subject, html });
+}
+
+// Exported for the notify/send route, which explicitly awaits the result (unlike the
+// fire-and-forget convention above) since it's the direct outcome of a deliberate user action.
+export async function sendRawEmail(to: string | string[], subject: string, html: string) {
+  return sendEmail(to, subject, html);
 }
 
 function baseTemplate(bodyHtml: string): string {
@@ -80,38 +87,124 @@ export async function sendStageChangesRequestedEmail(opts: {
   return sendEmail(opts.to, `طلب تعديلات على "${opts.stageTitle}" — ${opts.projectName}`, html);
 }
 
-export async function sendStageNeedsActionEmail(opts: {
-  to: string[]; projectName: string; stageTitle: string; portalUrl: string;
-}) {
+export const STAGE_STATUS_LABELS_AR: Record<string, string> = {
+  not_started: "لم تبدأ",
+  in_progress: "جارية",
+  needs_review: "بانتظار مراجعة العميل",
+  changes_requested: "طلب العميل تعديلات",
+  approved: "معتمدة",
+  completed: "مكتملة",
+};
+
+export function renderStageStatusChangedEmail(opts: {
+  projectName: string; stageTitle: string; status: string; statusLabel: string; portalUrl: string;
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const stageTitle = escapeHtml(opts.stageTitle);
+  const statusLabel = escapeHtml(opts.statusLabel);
   const html = baseTemplate(`
-    <h2>📋 مرحلة بانتظار مراجعتك</h2>
-    <p>مرحلة <b>${opts.stageTitle}</b> من مشروع <b>${opts.projectName}</b> جاهزة لمراجعتك واعتمادها.</p>
-    ${button(opts.portalUrl, "مراجعة المرحلة")}
+    <h2>📋 تحديث على مرحلة من مشروعك</h2>
+    <p>تحدّثت حالة مرحلة من مشروع <b>${projectName}</b>:</p>
+    <p style="background:#f8fafc;border-radius:8px;padding:12px 16px;"><b>${stageTitle}</b><br/>الحالة الجديدة: <b>${statusLabel}</b></p>
+    ${button(opts.portalUrl, "متابعة المشروع في البوابة")}
   `);
-  return sendEmail(opts.to, `بانتظار مراجعتك — ${opts.stageTitle}`, html);
+  return { subject: `تحديث مرحلة "${opts.stageTitle}" — ${opts.projectName}`, html };
 }
 
-export async function sendNewDeliverableEmail(opts: {
-  to: string[]; projectName: string; deliverableTitle: string; portalUrl: string;
-}) {
+export function renderNewDeliverableEmail(opts: {
+  projectName: string; deliverableTitle: string; deliverableDescription?: string | null; portalUrl: string;
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const deliverableTitle = escapeHtml(opts.deliverableTitle);
   const html = baseTemplate(`
     <h2>📁 تسليم جديد</h2>
-    <p>تم رفع ملف جديد لمشروع <b>${opts.projectName}</b>: <b>${opts.deliverableTitle}</b></p>
+    <p>تم رفع تسليم جديد لمشروع <b>${projectName}</b>: <b>${deliverableTitle}</b></p>
+    ${opts.deliverableDescription ? `<p style="background:#f8fafc;border-radius:8px;padding:12px 16px;">${escapeHtml(opts.deliverableDescription)}</p>` : ""}
     ${button(opts.portalUrl, "عرض التسليم")}
   `);
-  return sendEmail(opts.to, `تسليم جديد — ${opts.projectName}`, html);
+  return { subject: `تسليم جديد — ${opts.projectName}`, html };
 }
 
-export async function sendPaymentReceivedEmail(opts: {
-  to: string[]; projectName: string; paymentLabel: string; amount: string; portalUrl: string;
-}) {
+export function renderPaymentReceivedEmail(opts: {
+  projectName: string; paymentLabel: string; amount: string; portalUrl: string;
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const paymentLabel = escapeHtml(opts.paymentLabel);
   const html = baseTemplate(`
     <h2>💰 تم استلام دفعة</h2>
-    <p>تم تسجيل استلام دفعة من مشروع <b>${opts.projectName}</b>:</p>
-    <p style="background:#f0fdf4;border-radius:8px;padding:12px 16px;"><b>${opts.paymentLabel}</b> — ${opts.amount} د.أ</p>
+    <p>تم تسجيل استلام دفعة من مشروع <b>${projectName}</b>:</p>
+    <p style="background:#f0fdf4;border-radius:8px;padding:12px 16px;"><b>${paymentLabel}</b> — ${opts.amount} د.أ</p>
     ${button(opts.portalUrl, "عرض تفاصيل الدفعات")}
   `);
-  return sendEmail(opts.to, `تم استلام دفعة — ${opts.projectName}`, html);
+  return { subject: `تم استلام دفعة — ${opts.projectName}`, html };
+}
+
+export function renderNewPaymentEmail(opts: {
+  projectName: string; paymentLabel: string; amount: string; dueDate?: string | null; portalUrl: string;
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const paymentLabel = escapeHtml(opts.paymentLabel);
+  const html = baseTemplate(`
+    <h2>🧾 دفعة جديدة على مشروعك</h2>
+    <p>تمت جدولة دفعة جديدة على مشروع <b>${projectName}</b>:</p>
+    <p style="background:#f8fafc;border-radius:8px;padding:12px 16px;">
+      <b>${paymentLabel}</b> — ${opts.amount} د.أ
+      ${opts.dueDate ? `<br/>تاريخ الاستحقاق: ${escapeHtml(opts.dueDate)}` : ""}
+    </p>
+    ${button(opts.portalUrl, "عرض تفاصيل الدفعات")}
+  `);
+  return { subject: `دفعة جديدة — ${opts.projectName}`, html };
+}
+
+export function renderContractUploadedEmail(opts: {
+  projectName: string; totalValue: string; portalUrl: string;
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const html = baseTemplate(`
+    <h2>📄 تم رفع عقد مشروعك</h2>
+    <p>تم رفع عقد مشروع <b>${projectName}</b> بقيمة إجمالية <b>${opts.totalValue} د.أ</b>.</p>
+    ${button(opts.portalUrl, "عرض العقد")}
+  `);
+  return { subject: `عقد المشروع — ${opts.projectName}`, html };
+}
+
+export function renderStaffCommentEmail(opts: {
+  projectName: string; staffName: string; commentBody: string; portalUrl: string;
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const staffName = escapeHtml(opts.staffName);
+  const commentBody = escapeHtml(opts.commentBody);
+  const html = baseTemplate(`
+    <h2>💬 رد جديد من فريقنا</h2>
+    <p><b>${staffName}</b> أضاف رداً على مشروع <b>${projectName}</b>:</p>
+    <p style="background:#f8fafc;border-radius:8px;padding:12px 16px;">${commentBody}</p>
+    ${button(opts.portalUrl, "متابعة المحادثة")}
+  `);
+  return { subject: `رد جديد على مشروعك — ${opts.projectName}`, html };
+}
+
+export function renderProjectSummaryEmail(opts: {
+  projectName: string;
+  portalUrl: string;
+  deliverables: { title: string; description: string | null; type: "file" | "link"; actionLabel: string }[];
+}): { subject: string; html: string } {
+  const projectName = escapeHtml(opts.projectName);
+  const itemsHtml = opts.deliverables.length
+    ? opts.deliverables.map((d) => `
+        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:10px;">
+          <b>${escapeHtml(d.title)}</b> <span style="color:#64748b;font-size:12px;">(${escapeHtml(d.actionLabel)})</span>
+          ${d.description ? `<p style="margin:6px 0 0;color:#475569;">${escapeHtml(d.description)}</p>` : ""}
+        </div>
+      `).join("")
+    : `<p style="color:#64748b;">لا توجد تسليمات مضافة بعد.</p>`;
+  const html = baseTemplate(`
+    <h2>📦 ملخص تسليمات مشروعك</h2>
+    <p>هذا ملخص شامل لكل التسليمات المتوفرة حتى الآن على مشروع <b>${projectName}</b>:</p>
+    ${itemsHtml}
+    <p>يمكنك متابعة تقدم المشروع أولاً بأول واعتماد التسليمات مباشرة من بوابة العملاء الخاصة بك.</p>
+    ${button(opts.portalUrl, "فتح بوابة العملاء")}
+  `);
+  return { subject: `ملخص تسليمات مشروعك — ${opts.projectName}`, html };
 }
 
 export async function sendNewClientCommentEmail(opts: {
