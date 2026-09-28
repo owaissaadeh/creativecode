@@ -32,6 +32,7 @@ interface ProjectData {
 interface Deliverable {
   id: string;
   title: string;
+  description: string | null;
   type: "file" | "link";
   fileName: string | null;
   fileSize: number | null;
@@ -95,11 +96,12 @@ function getStaffToken() {
   try { const s = localStorage.getItem("crm-auth"); return s ? JSON.parse(s)?.state?.token : null; } catch { return null; }
 }
 
-async function uploadDeliverable(apiBase: string, projectId: string, title: string, file: File) {
+async function uploadDeliverable(apiBase: string, projectId: string, title: string, description: string, file: File) {
   const token = getStaffToken();
   const fd = new FormData();
   fd.append("file", file);
   fd.append("title", title || file.name);
+  if (description.trim()) fd.append("description", description.trim());
   const res = await fetch(`${apiBase}/projects/${projectId}/deliverables`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -109,12 +111,12 @@ async function uploadDeliverable(apiBase: string, projectId: string, title: stri
   return res.json();
 }
 
-async function createLinkDeliverable(apiBase: string, projectId: string, title: string, url: string) {
+async function createLinkDeliverable(apiBase: string, projectId: string, title: string, description: string, url: string) {
   const token = getStaffToken();
   const res = await fetch(`${apiBase}/projects/${projectId}/deliverables/link`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify({ title: title || url, url }),
+    body: JSON.stringify({ title: title || url, description: description.trim() || undefined, url }),
   });
   if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || "فشل إضافة الرابط");
   return res.json();
@@ -185,6 +187,7 @@ function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; proj
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"file" | "link">("file");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -196,13 +199,14 @@ function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; proj
     setUploading(true);
     try {
       if (mode === "file") {
-        await uploadDeliverable(apiBase, projectId, title, file!);
+        await uploadDeliverable(apiBase, projectId, title, description, file!);
       } else {
-        await createLinkDeliverable(apiBase, projectId, title, url.trim());
+        await createLinkDeliverable(apiBase, projectId, title, description, url.trim());
       }
       queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/deliverables`] });
       toast({ title: mode === "file" ? "تم رفع الملف بنجاح" : "تمت إضافة الرابط بنجاح" });
       setTitle("");
+      setDescription("");
       setFile(null);
       setUrl("");
       setOpen(false);
@@ -233,6 +237,10 @@ function UploadDeliverableDialog({ apiBase, projectId }: { apiBase: string; proj
           <div className="space-y-1.5">
             <Label>العنوان</Label>
             <Input data-testid="input-deliverable-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تصميم الصفحة الرئيسية" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>ملاحظات (اختياري)</Label>
+            <Textarea data-testid="input-deliverable-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="أي تفاصيل إضافية عن هذا التسليم..." rows={2} />
           </div>
           {mode === "file" ? (
             <div className="space-y-1.5">
@@ -478,6 +486,12 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
   });
 
+  const deleteDeliverableMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `${apiBase}/deliverables/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [`${apiBase}/projects/${projectId}/deliverables`] }),
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
   const commentMutation = useMutation({
     mutationFn: (body: string) => apiRequest("POST", `${apiBase}/projects/${projectId}/comments`, { body }),
     onSuccess: () => {
@@ -637,24 +651,36 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
                     <p className="text-xs text-muted-foreground">
                       {d.type === "link" ? "رابط خارجي" : `${formatBytes(d.fileSize || 0)} · v${d.version}`}
                     </p>
+                    {d.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{d.description}</p>}
                   </div>
                 </div>
-                {d.type === "link" ? (
-                  <Button size="sm" variant="outline" className="gap-1.5" asChild>
-                    <a href={d.url || "#"} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-3.5 h-3.5" /> فتح
-                    </a>
-                  </Button>
-                ) : (
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {d.type === "link" ? (
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                      <a href={d.url || "#"} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-3.5 h-3.5" /> فتح
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => downloadDeliverable(apiBase, d.id, d.fileName || d.title).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                    >
+                      <Download className="w-3.5 h-3.5" /> تنزيل
+                    </Button>
+                  )}
                   <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5"
-                    onClick={() => downloadDeliverable(apiBase, d.id, d.fileName || d.title).catch((e) => toast({ title: e.message, variant: "destructive" }))}
+                    size="icon"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => deleteDeliverableMutation.mutate(d.id)}
+                    data-testid={`button-delete-deliverable-${d.id}`}
                   >
-                    <Download className="w-3.5 h-3.5" /> تنزيل
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                )}
+                </div>
               </div>
             ))}
             {deliverables.length === 0 && <p className="text-sm text-muted-foreground">لا توجد ملفات مرفوعة بعد</p>}

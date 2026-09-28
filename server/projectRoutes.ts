@@ -594,6 +594,19 @@ export function registerProjectRoutes(app: Express) {
     }
   });
 
+  app.delete("/api/sales/deliverables/:id", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const deliverable = await storage.getDeliverableById(req.params.id);
+      if (!deliverable) return res.status(404).json({ message: "التسليم غير موجود" });
+      if (!(await projectBelongsToSales(deliverable.projectId, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
+      await storage.deleteDeliverable(req.params.id);
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   app.get("/api/sales/deliverables/:id/download", authMiddleware, async (req: AuthRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "غير مصرح" });

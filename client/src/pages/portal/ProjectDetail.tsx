@@ -44,6 +44,7 @@ interface ProjectData {
 interface Deliverable {
   id: string;
   title: string;
+  description: string | null;
   type: "file" | "link";
   fileName: string | null;
   fileSize: number | null;
@@ -433,6 +434,7 @@ export default function PortalProjectDetail() {
                       <p className="text-xs text-muted-foreground">
                         {d.type === "link" ? "رابط خارجي" : `${formatBytes(d.fileSize || 0)} · v${d.version}`}
                       </p>
+                      {d.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{d.description}</p>}
                     </div>
                   </div>
                   {d.type === "link" ? (
