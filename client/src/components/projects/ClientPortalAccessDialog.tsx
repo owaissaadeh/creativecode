@@ -32,7 +32,7 @@ export default function ClientPortalAccessDialog({ client, open, onClose }: { cl
     mutationFn: () => apiRequest("POST", `/api/admin/clients/${client.id}/client-users`, { ...form, role: "owner" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/admin/clients/${client.id}/client-users`] });
-      toast({ title: "تم إنشاء حساب البوابة بنجاح" });
+      toast({ title: "تم إنشاء حساب البوابة وإرسال بيانات الدخول للعميل عبر البريد الإلكتروني" });
       setForm({ name: client.clientName, email: "", password: "" });
     },
     onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
@@ -93,7 +93,7 @@ export default function ClientPortalAccessDialog({ client, open, onClose }: { cl
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">كلمة المرور المؤقتة</Label>
+              <Label className="text-xs text-muted-foreground">كلمة المرور</Label>
               <Input
                 data-testid="input-portal-user-password"
                 type="text"
@@ -111,7 +111,7 @@ export default function ClientPortalAccessDialog({ client, open, onClose }: { cl
               {createMutation.isPending ? "جاري الإنشاء..." : "إنشاء الحساب"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              شارك بيانات الدخول هذه مع العميل يدوياً ليتمكن من الدخول إلى بوابة العملاء.
+              سيتم إرسال بيانات الدخول هذه تلقائياً إلى بريد العميل الإلكتروني.
             </p>
           </div>
         </div>

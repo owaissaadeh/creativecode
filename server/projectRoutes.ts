@@ -4,10 +4,10 @@ import { storage } from "./storage";
 import { authMiddleware, adminOnly, type AuthRequest } from "./routes";
 import { uploadPrivateFile, uploadPrivateFileMiddleware, streamPrivateFile } from "./lib/objectStorage";
 import {
-  sendTicketReplyEmail, sendTicketResolvedEmail, sendRawEmail,
+  sendTicketReplyEmail, sendTicketResolvedEmail, sendRawEmail, sendPortalWelcomeEmail,
   renderNewDeliverableEmail, renderPaymentReceivedEmail, renderNewPaymentEmail,
   renderContractUploadedEmail, renderStaffCommentEmail, renderProjectSummaryEmail,
-  renderStageStatusChangedEmail, STAGE_STATUS_LABELS_AR,
+  renderStageStatusChangedEmail, renderFinancialSummaryEmail, STAGE_STATUS_LABELS_AR,
 } from "./lib/email";
 
 const TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
@@ -39,7 +39,12 @@ function getPortalProjectUrl(req: Request, projectId: string): string {
   return `${req.protocol}://${host}/portal/projects/${projectId}`;
 }
 
-type NotifyType = "deliverable" | "payment" | "receipt" | "stage_status" | "contract" | "comment" | "project_summary";
+function getPortalLoginUrl(req: Request): string {
+  const host = process.env.PORTAL_HOSTNAME || req.get("host");
+  return `${req.protocol}://${host}/portal/login`;
+}
+
+type NotifyType = "deliverable" | "payment" | "receipt" | "stage_status" | "contract" | "comment" | "project_summary" | "financial_summary";
 
 async function buildNotifyEmail(
   type: NotifyType,
@@ -122,6 +127,16 @@ async function buildNotifyEmail(
     }), to };
   }
 
+  if (type === "financial_summary") {
+    const contract = await storage.getContractByProject(projectId);
+    const payments = await storage.getPaymentsByProject(projectId);
+    return { ...renderFinancialSummaryEmail({
+      projectName: project.name, portalUrl,
+      contract: contract ? { totalValue: contract.totalValue, fileName: contract.fileName } : null,
+      payments: payments.map((p) => ({ label: p.label, amount: p.amount, status: p.status, dueDate: p.dueDate })),
+    }), to };
+  }
+
   return null;
 }
 
@@ -146,6 +161,10 @@ export function registerProjectRoutes(app: Express) {
       const validRole = ["owner", "member"].includes(role) ? role : "member";
       const clientUser = await storage.createClientUser({ clientId: req.params.id, name, email, password: hashed, role: validRole });
       res.json({ ...clientUser, password: undefined });
+
+      sendPortalWelcomeEmail({
+        to: email, name, password, loginUrl: getPortalLoginUrl(req),
+      }).catch((err) => console.error("Email send failed (portal welcome):", err));
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
@@ -179,6 +198,10 @@ export function registerProjectRoutes(app: Express) {
       const hashed = await bcrypt.hash(password, 10);
       const clientUser = await storage.createClientUser({ clientId: req.params.id, name, email, password: hashed, role: "member" });
       res.json({ ...clientUser, password: undefined });
+
+      sendPortalWelcomeEmail({
+        to: email, name, password, loginUrl: getPortalLoginUrl(req),
+      }).catch((err) => console.error("Email send failed (portal welcome):", err));
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }

@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ToastAction } from "@/components/ui/toast";
 
-export type NotifyType = "deliverable" | "payment" | "receipt" | "stage_status" | "contract" | "comment" | "project_summary";
+export type NotifyType = "deliverable" | "payment" | "receipt" | "stage_status" | "contract" | "comment" | "project_summary" | "financial_summary";
 
 export interface NotifyPreview {
   type: NotifyType;

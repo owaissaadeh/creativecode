@@ -535,12 +535,24 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">العقد والدفعات</h2>
-              <UploadContractDialog
-                apiBase={apiBase}
-                projectId={projectId}
-                hasContract={!!contract}
-                onSaved={(c) => notify.promptNotify("contract", c.id, "تم رفع العقد")}
-              />
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={!contract && payments.length === 0}
+                  onClick={() => notify.openPreview("financial_summary")}
+                  data-testid="button-send-financial-summary"
+                >
+                  <Mail className="w-3.5 h-3.5" /> إرسال التفاصيل المالية للعميل
+                </Button>
+                <UploadContractDialog
+                  apiBase={apiBase}
+                  projectId={projectId}
+                  hasContract={!!contract}
+                  onSaved={(c) => notify.promptNotify("contract", c.id, "تم رفع العقد")}
+                />
+              </div>
             </div>
             {contract ? (
               <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
