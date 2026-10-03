@@ -158,6 +158,14 @@ export const deliverables = pgTable("deliverables", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const deliverableViews = pgTable("deliverable_views", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  deliverableId: varchar("deliverable_id", { length: 36 }).references(() => deliverables.id, { onDelete: "cascade" }).notNull(),
+  projectId: varchar("project_id", { length: 36 }).references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  clientUserId: varchar("client_user_id", { length: 36 }).references(() => clientUsers.id).notNull(),
+  viewedAt: timestamp("viewed_at").defaultNow().notNull(),
+});
+
 export const projectComments = pgTable("project_comments", {
   id: varchar("id", { length: 36 }).primaryKey(),
   projectId: varchar("project_id", { length: 36 }).references(() => projects.id, { onDelete: "cascade" }).notNull(),
@@ -258,6 +266,7 @@ export type ProjectStage = typeof projectStages.$inferSelect;
 export type InsertProjectStage = z.infer<typeof insertProjectStageSchema>;
 export type Deliverable = typeof deliverables.$inferSelect;
 export type InsertDeliverable = z.infer<typeof insertDeliverableSchema>;
+export type DeliverableView = typeof deliverableViews.$inferSelect;
 export type ProjectComment = typeof projectComments.$inferSelect;
 export type InsertProjectComment = z.infer<typeof insertProjectCommentSchema>;
 export type Approval = typeof approvals.$inferSelect;

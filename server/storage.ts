@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, leads, clients, commissions, pageItems, consultations, tasks,
-  clientUsers, projects, projectStages, deliverables, projectComments,
+  clientUsers, projects, projectStages, deliverables, deliverableViews, projectComments,
   approvals, supportTickets, ticketMessages, contracts, payments,
 } from "@shared/schema";
 import { eq, and, desc, sql, or } from "drizzle-orm";
@@ -12,7 +12,7 @@ import type {
   PageItem, InsertPageItem, Consultation, InsertConsultation,
   Task, InsertTask,
   ClientUser, InsertClientUser, Project, InsertProject,
-  ProjectStage, InsertProjectStage, Deliverable, InsertDeliverable,
+  ProjectStage, InsertProjectStage, Deliverable, InsertDeliverable, DeliverableView,
   ProjectComment, InsertProjectComment, Approval, InsertApproval,
   SupportTicket, InsertSupportTicket, TicketMessage, InsertTicketMessage,
   Contract, InsertContract, Payment, InsertPayment,
@@ -107,6 +107,10 @@ export interface IStorage {
   getDeliverableById(id: string): Promise<Deliverable | undefined>;
   createDeliverable(data: InsertDeliverable & { id?: string }): Promise<Deliverable>;
   deleteDeliverable(id: string): Promise<void>;
+
+  createDeliverableView(data: { deliverableId: string; projectId: string; clientUserId: string }): Promise<DeliverableView>;
+  getDeliverableViewsByProject(projectId: string): Promise<DeliverableView[]>;
+  getDeliverableViewsByDeliverable(deliverableId: string): Promise<DeliverableView[]>;
 
   getProjectComments(projectId: string, stageId?: string): Promise<ProjectComment[]>;
   createProjectComment(data: InsertProjectComment & { id?: string }): Promise<ProjectComment>;
@@ -547,6 +551,20 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDeliverable(id: string) {
     await db.delete(deliverables).where(eq(deliverables.id, id));
+  }
+
+  async createDeliverableView(data: { deliverableId: string; projectId: string; clientUserId: string }) {
+    const id = randomUUID();
+    const [row] = await db.insert(deliverableViews).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async getDeliverableViewsByProject(projectId: string) {
+    return db.select().from(deliverableViews).where(eq(deliverableViews.projectId, projectId)).orderBy(desc(deliverableViews.viewedAt));
+  }
+
+  async getDeliverableViewsByDeliverable(deliverableId: string) {
+    return db.select().from(deliverableViews).where(eq(deliverableViews.deliverableId, deliverableId)).orderBy(desc(deliverableViews.viewedAt));
   }
 
   async getProjectComments(projectId: string, stageId?: string) {

@@ -11,9 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText, Link2, ExternalLink, Mail } from "lucide-react";
+import { Plus, Download, Upload, Send, File as FileIcon, Trash2, FileText, Link2, ExternalLink, Mail, Eye, EyeOff } from "lucide-react";
 import { useNotifyClient } from "@/hooks/use-notify-client";
 import NotifyPreviewDialog from "@/components/projects/NotifyPreviewDialog";
+import DeliverableViewHistoryDialog from "@/components/projects/DeliverableViewHistoryDialog";
 
 interface Stage {
   id: string;
@@ -40,6 +41,9 @@ interface Deliverable {
   fileSize: number | null;
   version: number;
   url: string | null;
+  lastViewedAt: string | null;
+  lastViewedByName: string | null;
+  viewCount: number;
 }
 
 interface Comment {
@@ -461,6 +465,7 @@ function UploadReceiptDialog({ apiBase, projectId, paymentId, staff, onSaved }: 
 export default function ProjectDetailPanel({ apiBase, projectId, canManageContract = false }: { apiBase: string; projectId: string; canManageContract?: boolean }) {
   const { toast } = useToast();
   const [commentText, setCommentText] = useState("");
+  const [viewHistoryDeliverable, setViewHistoryDeliverable] = useState<Deliverable | null>(null);
   const notify = useNotifyClient(apiBase, projectId);
 
   const { data: project, isLoading } = useQuery<ProjectData>({ queryKey: [`${apiBase}/projects/${projectId}`] });
@@ -705,6 +710,23 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
                       {d.type === "link" ? "رابط خارجي" : `${formatBytes(d.fileSize || 0)} · v${d.version}`}
                     </p>
                     {d.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{d.description}</p>}
+                    <button
+                      type="button"
+                      onClick={() => d.viewCount > 0 && setViewHistoryDeliverable(d)}
+                      className={`flex items-center gap-1 mt-1 text-xs ${d.viewCount > 0 ? "text-primary hover:underline" : "text-muted-foreground"}`}
+                      data-testid={`button-view-history-${d.id}`}
+                    >
+                      {d.viewCount > 0 ? (
+                        <>
+                          <Eye className="w-3 h-3" />
+                          شوهد {d.viewCount} {d.viewCount === 1 ? "مرة" : "مرات"} — آخر مرة: {d.lastViewedByName} · {new Date(d.lastViewedAt!).toLocaleString("ar-SA")}
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3 h-3" /> لم يتم الاطلاع عليه بعد
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -782,6 +804,13 @@ export default function ProjectDetailPanel({ apiBase, projectId, canManageContra
         sending={notify.sending}
         onClose={notify.closePreview}
         onConfirm={notify.confirmSend}
+      />
+
+      <DeliverableViewHistoryDialog
+        apiBase={apiBase}
+        deliverableId={viewHistoryDeliverable?.id || null}
+        deliverableTitle={viewHistoryDeliverable?.title || ""}
+        onClose={() => setViewHistoryDeliverable(null)}
       />
     </div>
   );

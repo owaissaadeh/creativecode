@@ -189,6 +189,18 @@ export async function migrateDb() {
     await db.execute(sql`ALTER TABLE deliverables ALTER COLUMN file_size DROP NOT NULL`);
 
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS deliverable_views (
+        id VARCHAR(36) PRIMARY KEY,
+        deliverable_id VARCHAR(36) NOT NULL REFERENCES deliverables(id) ON DELETE CASCADE,
+        project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        client_user_id VARCHAR(36) NOT NULL REFERENCES client_users(id),
+        viewed_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_deliverable_views_deliverable_id ON deliverable_views(deliverable_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_deliverable_views_project_id ON deliverable_views(project_id)`);
+
+    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS project_comments (
         id VARCHAR(36) PRIMARY KEY,
         project_id VARCHAR(36) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,

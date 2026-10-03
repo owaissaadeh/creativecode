@@ -44,6 +44,20 @@ function getPortalLoginUrl(req: Request): string {
   return `${req.protocol}://${host}/portal/login`;
 }
 
+async function attachDeliverableViewSummary(projectId: string, list: { id: string }[]) {
+  const views = await storage.getDeliverableViewsByProject(projectId);
+  const project = await storage.getProjectById(projectId);
+  const clientUsers = project ? await storage.getClientUsersByClient(project.clientId) : [];
+  const nameById = new Map(clientUsers.map((u) => [u.id, u.name]));
+  const summary = new Map<string, { lastViewedAt: Date; lastViewedByName: string; viewCount: number }>();
+  for (const v of views) {
+    const existing = summary.get(v.deliverableId);
+    if (!existing) summary.set(v.deliverableId, { lastViewedAt: v.viewedAt, lastViewedByName: nameById.get(v.clientUserId) || "عميل", viewCount: 1 });
+    else existing.viewCount++;
+  }
+  return list.map((d) => ({ ...d, lastViewedAt: null, lastViewedByName: null, viewCount: 0, ...summary.get(d.id) }));
+}
+
 type NotifyType = "deliverable" | "payment" | "receipt" | "stage_status" | "contract" | "comment" | "project_summary" | "financial_summary";
 
 async function buildNotifyEmail(
@@ -261,7 +275,22 @@ export function registerProjectRoutes(app: Express) {
   app.get("/api/admin/projects/:id/deliverables", authMiddleware, adminOnly, async (req, res) => {
     try {
       const list = await storage.getDeliverablesByProject(req.params.id);
-      res.json(list.map((d) => ({ ...d, objectKey: undefined })));
+      const enriched = await attachDeliverableViewSummary(req.params.id, list);
+      res.json(enriched.map((d) => ({ ...d, objectKey: undefined })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/admin/deliverables/:id/views", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const deliverable = await storage.getDeliverableById(req.params.id);
+      if (!deliverable) return res.status(404).json({ message: "الملف غير موجود" });
+      const views = await storage.getDeliverableViewsByDeliverable(req.params.id);
+      const project = await storage.getProjectById(deliverable.projectId);
+      const clientUsers = project ? await storage.getClientUsersByClient(project.clientId) : [];
+      const nameById = new Map(clientUsers.map((u) => [u.id, u.name]));
+      res.json(views.map((v) => ({ viewedAt: v.viewedAt, clientUserName: nameById.get(v.clientUserId) || "عميل" })));
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
@@ -536,7 +565,24 @@ export function registerProjectRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ message: "غير مصرح" });
       if (!(await projectBelongsToSales(req.params.id, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
       const list = await storage.getDeliverablesByProject(req.params.id);
-      res.json(list.map((d) => ({ ...d, objectKey: undefined })));
+      const enriched = await attachDeliverableViewSummary(req.params.id, list);
+      res.json(enriched.map((d) => ({ ...d, objectKey: undefined })));
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.get("/api/sales/deliverables/:id/views", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const deliverable = await storage.getDeliverableById(req.params.id);
+      if (!deliverable) return res.status(404).json({ message: "الملف غير موجود" });
+      if (!(await projectBelongsToSales(deliverable.projectId, req.user.id))) return res.status(403).json({ message: "غير مسموح" });
+      const views = await storage.getDeliverableViewsByDeliverable(req.params.id);
+      const project = await storage.getProjectById(deliverable.projectId);
+      const clientUsers = project ? await storage.getClientUsersByClient(project.clientId) : [];
+      const nameById = new Map(clientUsers.map((u) => [u.id, u.name]));
+      res.json(views.map((v) => ({ viewedAt: v.viewedAt, clientUserName: nameById.get(v.clientUserId) || "عميل" })));
     } catch {
       res.status(500).json({ message: "خطأ في الخادم" });
     }
