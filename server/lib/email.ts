@@ -279,3 +279,16 @@ export async function sendTicketResolvedEmail(opts: { to: string; subject: strin
   `);
   return sendEmail(opts.to, `تم حل تذكرتك: ${opts.subject}`, html);
 }
+
+export async function sendRecurringChargeEmail(opts: {
+  to: string[]; clientName: string; title: string; description?: string | null; amount: string; frequencyLabel: string;
+}) {
+  const title = escapeHtml(opts.title);
+  const html = baseTemplate(`
+    <h2>${title}</h2>
+    <p>${opts.frequencyLabel} لحساب <b>${escapeHtml(opts.clientName)}</b></p>
+    <p style="background:#f0fdf4;border-radius:8px;padding:12px 16px;"><b>المبلغ:</b> ${opts.amount} د.أ</p>
+    ${opts.description ? `<p>${escapeHtml(opts.description)}</p>` : ""}
+  `);
+  return sendEmail(opts.to, opts.title, html);
+}

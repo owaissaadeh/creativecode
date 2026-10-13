@@ -301,6 +301,35 @@ export async function migrateDb() {
     `);
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_payments_project_id ON payments(project_id)`);
 
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS recurring_charges (
+        id VARCHAR(36) PRIMARY KEY,
+        client_id VARCHAR(36) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        amount DECIMAL(12,2) NOT NULL,
+        frequency TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        next_send_date DATE NOT NULL,
+        last_sent_at TIMESTAMP,
+        created_by VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_recurring_charges_client_id ON recurring_charges(client_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_recurring_charges_status_next_send_date ON recurring_charges(status, next_send_date)`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS recurring_charge_sends (
+        id VARCHAR(36) PRIMARY KEY,
+        charge_id VARCHAR(36) NOT NULL REFERENCES recurring_charges(id) ON DELETE CASCADE,
+        status TEXT NOT NULL,
+        error_message TEXT,
+        sent_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_recurring_charge_sends_charge_id ON recurring_charge_sends(charge_id)`);
+
     console.log("✅ Database tables ready");
 
     await seedPageItems();

@@ -211,6 +211,56 @@ export function registerProjectRoutes(app: Express) {
     }
   });
 
+  // ─── Admin: Recurring Charges (subscriptions, maintenance, invoices) ──────
+  app.get("/api/admin/clients/:id/recurring-charges", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const list = await storage.getRecurringChargesByClient(req.params.id);
+      res.json(list);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.post("/api/admin/clients/:id/recurring-charges", authMiddleware, adminOnly, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "غير مصرح" });
+      const { title, description, amount, frequency, startDate } = req.body;
+      if (!title || !amount || !frequency || !startDate) return res.status(400).json({ message: "حقول مطلوبة ناقصة" });
+      if (!["once", "monthly"].includes(frequency)) return res.status(400).json({ message: "نوع تكرار غير صالح" });
+      const charge = await storage.createRecurringCharge({
+        clientId: req.params.id, title, description, amount, frequency,
+        nextSendDate: startDate, createdBy: req.user.id,
+      });
+      res.json(charge);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.patch("/api/admin/recurring-charges/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      const { title, description, amount, status } = req.body;
+      const updateData: Record<string, unknown> = {};
+      if (title !== undefined) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
+      if (amount !== undefined) updateData.amount = amount;
+      if (status !== undefined && ["active", "paused"].includes(status)) updateData.status = status;
+      const charge = await storage.updateRecurringCharge(req.params.id, updateData as any);
+      res.json(charge);
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  app.delete("/api/admin/recurring-charges/:id", authMiddleware, adminOnly, async (req, res) => {
+    try {
+      await storage.deleteRecurringCharge(req.params.id);
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
   app.post("/api/sales/clients/:id/client-users", authMiddleware, async (req: AuthRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "غير مصرح" });

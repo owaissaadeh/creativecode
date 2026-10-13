@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { UserCheck, Phone, Mail, Building, DollarSign, Search, Plus, ClipboardList, Circle, Clock, CheckCircle2, KeyRound } from "lucide-react";
+import { UserCheck, Phone, Mail, Building, DollarSign, Search, Plus, ClipboardList, Circle, Clock, CheckCircle2, KeyRound, RefreshCw } from "lucide-react";
 import type { Client, User, Task } from "@shared/schema";
 import ClientPortalAccessDialog from "@/components/projects/ClientPortalAccessDialog";
+import ClientRecurringChargesDialog from "@/components/projects/ClientRecurringChargesDialog";
 
 interface TaskWithNames extends Task { assignedToName?: string | null; }
 
@@ -55,6 +56,7 @@ export default function AdminClients() {
   const [taskDialog, setTaskDialog] = useState<Client | null>(null);
   const [clientTasksPanel, setClientTasksPanel] = useState<Client | null>(null);
   const [portalDialog, setPortalDialog] = useState<Client | null>(null);
+  const [recurringChargesDialog, setRecurringChargesDialog] = useState<Client | null>(null);
   const [newClientDialog, setNewClientDialog] = useState(false);
   const [newClientForm, setNewClientForm] = useState({ clientName: "", companyName: "", phone: "", email: "", serviceType: "", dealValue: "", status: "New Lead", salesId: "" });
   const [taskForm, setTaskForm] = useState({ title: "", description: "", assignedTo: "", dueDate: "", priority: "medium" });
@@ -199,6 +201,10 @@ export default function AdminClients() {
                       <Button size="sm" variant="outline" onClick={() => setPortalDialog(client)} data-testid={`button-portal-access-${client.id}`}>
                         <KeyRound className="w-4 h-4 ml-1" />
                         بوابة العميل
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setRecurringChargesDialog(client)} data-testid={`button-recurring-charges-${client.id}`}>
+                        <RefreshCw className="w-4 h-4 ml-1" />
+                        الدفعات المتكررة
                       </Button>
                       <Button size="sm" onClick={() => openEdit(client)} data-testid={`button-edit-client-${client.id}`}>
                         تحديث
@@ -454,6 +460,9 @@ export default function AdminClients() {
 
       {portalDialog && (
         <ClientPortalAccessDialog client={portalDialog} open={!!portalDialog} onClose={() => setPortalDialog(null)} />
+      )}
+      {recurringChargesDialog && (
+        <ClientRecurringChargesDialog client={recurringChargesDialog} open={!!recurringChargesDialog} onClose={() => setRecurringChargesDialog(null)} />
       )}
     </div>
   );

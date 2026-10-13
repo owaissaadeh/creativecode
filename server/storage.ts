@@ -2,9 +2,9 @@ import { db } from "./db";
 import {
   users, leads, clients, commissions, pageItems, consultations, tasks,
   clientUsers, projects, projectStages, deliverables, deliverableViews, projectComments,
-  approvals, supportTickets, ticketMessages, contracts, payments,
+  approvals, supportTickets, ticketMessages, contracts, payments, recurringCharges, recurringChargeSends,
 } from "@shared/schema";
-import { eq, and, desc, sql, or } from "drizzle-orm";
+import { eq, and, desc, sql, or, lte } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type {
   User, InsertUser, Lead, InsertLead,
@@ -16,6 +16,7 @@ import type {
   ProjectComment, InsertProjectComment, Approval, InsertApproval,
   SupportTicket, InsertSupportTicket, TicketMessage, InsertTicketMessage,
   Contract, InsertContract, Payment, InsertPayment,
+  RecurringCharge, InsertRecurringCharge, RecurringChargeSend, InsertRecurringChargeSend,
 } from "@shared/schema";
 
 export interface SiteConfigData {
@@ -48,6 +49,7 @@ export interface IStorage {
   updateLead(id: string, data: Partial<Lead>): Promise<Lead>;
 
   getAllClients(): Promise<Client[]>;
+  getClientById(id: string): Promise<Client | undefined>;
   getClientsBySales(salesId: string): Promise<Client[]>;
   createClient(data: InsertClient & { id?: string }): Promise<Client>;
   updateClient(id: string, data: Partial<Client>): Promise<Client>;
@@ -138,6 +140,14 @@ export interface IStorage {
   getPaymentById(id: string): Promise<Payment | undefined>;
   createPayment(data: InsertPayment & { id?: string }): Promise<Payment>;
   updatePayment(id: string, data: Partial<Payment>): Promise<Payment>;
+
+  getRecurringChargesByClient(clientId: string): Promise<RecurringCharge[]>;
+  getRecurringChargeById(id: string): Promise<RecurringCharge | undefined>;
+  createRecurringCharge(data: InsertRecurringCharge & { id?: string }): Promise<RecurringCharge>;
+  updateRecurringCharge(id: string, data: Partial<RecurringCharge>): Promise<RecurringCharge>;
+  deleteRecurringCharge(id: string): Promise<void>;
+  getDueRecurringCharges(todayDateStr: string): Promise<RecurringCharge[]>;
+  createRecurringChargeSend(data: InsertRecurringChargeSend & { id?: string }): Promise<RecurringChargeSend>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -187,6 +197,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAllClients() {
     return db.select().from(clients).orderBy(desc(clients.createdAt));
+  }
+
+  async getClientById(id: string) {
+    const [row] = await db.select().from(clients).where(eq(clients.id, id));
+    return row;
   }
 
   async getClientsBySales(salesId: string) {
@@ -677,6 +692,42 @@ export class DatabaseStorage implements IStorage {
 
   async updatePayment(id: string, data: Partial<Payment>) {
     const [row] = await db.update(payments).set(data).where(eq(payments.id, id)).returning();
+    return row;
+  }
+
+  async getRecurringChargesByClient(clientId: string) {
+    return db.select().from(recurringCharges).where(eq(recurringCharges.clientId, clientId)).orderBy(desc(recurringCharges.createdAt));
+  }
+
+  async getRecurringChargeById(id: string) {
+    const [row] = await db.select().from(recurringCharges).where(eq(recurringCharges.id, id));
+    return row;
+  }
+
+  async createRecurringCharge(data: InsertRecurringCharge & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(recurringCharges).values({ ...data, id }).returning();
+    return row;
+  }
+
+  async updateRecurringCharge(id: string, data: Partial<RecurringCharge>) {
+    const [row] = await db.update(recurringCharges).set(data).where(eq(recurringCharges.id, id)).returning();
+    return row;
+  }
+
+  async deleteRecurringCharge(id: string) {
+    await db.delete(recurringCharges).where(eq(recurringCharges.id, id));
+  }
+
+  async getDueRecurringCharges(todayDateStr: string) {
+    return db.select().from(recurringCharges).where(
+      and(eq(recurringCharges.status, "active"), lte(recurringCharges.nextSendDate, todayDateStr))
+    );
+  }
+
+  async createRecurringChargeSend(data: InsertRecurringChargeSend & { id?: string }) {
+    const id = data.id || randomUUID();
+    const [row] = await db.insert(recurringChargeSends).values({ ...data, id }).returning();
     return row;
   }
 }

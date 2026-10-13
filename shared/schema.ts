@@ -247,6 +247,28 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const recurringCharges = pgTable("recurring_charges", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  clientId: varchar("client_id", { length: 36 }).references(() => clients.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  frequency: text("frequency", { enum: ["once", "monthly"] }).notNull(),
+  status: text("status", { enum: ["active", "paused", "completed"] }).notNull().default("active"),
+  nextSendDate: date("next_send_date").notNull(),
+  lastSentAt: timestamp("last_sent_at"),
+  createdBy: varchar("created_by", { length: 36 }).references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const recurringChargeSends = pgTable("recurring_charge_sends", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  chargeId: varchar("charge_id", { length: 36 }).references(() => recurringCharges.id, { onDelete: "cascade" }).notNull(),
+  status: text("status", { enum: ["sent", "skipped_no_recipient", "failed"] }).notNull(),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+});
+
 export const insertClientUserSchema = createInsertSchema(clientUsers).omit({ id: true, createdAt: true });
 export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
 export const insertProjectStageSchema = createInsertSchema(projectStages).omit({ id: true, createdAt: true });
@@ -257,6 +279,8 @@ export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit
 export const insertTicketMessageSchema = createInsertSchema(ticketMessages).omit({ id: true, createdAt: true });
 export const insertContractSchema = createInsertSchema(contracts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
+export const insertRecurringChargeSchema = createInsertSchema(recurringCharges).omit({ id: true, createdAt: true });
+export const insertRecurringChargeSendSchema = createInsertSchema(recurringChargeSends).omit({ id: true, sentAt: true });
 
 export type ClientUser = typeof clientUsers.$inferSelect;
 export type InsertClientUser = z.infer<typeof insertClientUserSchema>;
@@ -279,6 +303,10 @@ export type Contract = typeof contracts.$inferSelect;
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type RecurringCharge = typeof recurringCharges.$inferSelect;
+export type InsertRecurringCharge = z.infer<typeof insertRecurringChargeSchema>;
+export type RecurringChargeSend = typeof recurringChargeSends.$inferSelect;
+export type InsertRecurringChargeSend = z.infer<typeof insertRecurringChargeSendSchema>;
 
 export const portalLoginSchema = z.object({
   email: z.string().email(),

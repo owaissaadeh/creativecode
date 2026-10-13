@@ -87,6 +87,12 @@ app.use((req, res, next) => {
   const { registerProjectRoutes } = await import("./projectRoutes");
   registerProjectRoutes(app);
 
+  const { processDueRecurringCharges } = await import("./lib/recurringChargesScheduler");
+  processDueRecurringCharges().catch((err) => console.error("Recurring charges initial check failed:", err));
+  setInterval(() => {
+    processDueRecurringCharges().catch((err) => console.error("Recurring charges daily check failed:", err));
+  }, 24 * 60 * 60 * 1000);
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
