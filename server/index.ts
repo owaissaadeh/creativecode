@@ -27,7 +27,9 @@ app.use(express.urlencoded({ extended: false }));
 // only the public landing page. Left unset (e.g. local dev), this is a no-op.
 const portalHost = process.env.PORTAL_HOSTNAME;
 if (portalHost) {
+  const rakeezHost = process.env.RAKEEZ_HOSTNAME;
   app.use((req, res, next) => {
+    if (rakeezHost && req.hostname === rakeezHost) return next();
     const isPortalHost = req.hostname === portalHost;
     if (isPortalHost && req.path === "/") {
       return res.redirect("/login");
