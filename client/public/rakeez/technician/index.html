@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
+<title>ركيز | واجهات تطبيق الفني</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: sky hero with a tilted 3D phone behind giant white type, then editorial sections
+     (pill tag + big heading + small side paragraph) and rounded gradient panels that carry the phone tracks. */
+  --white:#fff; --ink:#0B1630; --ink-2:#4A5673; --ink-3:#8793AE; --line:#E4EAF5; --soft:#F3F6FC; --pill:#E6EFFC;
+  --blue:#1F6FEB; --blue-2:#3F8CF7; --blue-3:#7DB5FB; --sky:#CFE4FD; --lime:#C6F23A; --pink:#FF3D8B;
+  --display:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif; --body:'IBM Plex Sans Arabic','Readex Pro',system-ui,sans-serif;
+  --r-panel:44px; --ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(84px + env(safe-area-inset-top,0px))}
+body{background:#fff;color:var(--ink);font-family:var(--body);direction:rtl;margin:0;line-height:1.75;overflow-x:clip;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:#fff}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:10px}
+.w{max-width:1120px;margin-inline:auto}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
+
+/* ---------- floating nav ---------- */
+.nav{position:fixed;z-index:50;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:min(980px,calc(100vw - 32px));
+  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(31,111,235,.14);border-radius:999px;
+  box-shadow:0 10px 30px -12px rgba(31,64,140,.35);padding:5px}
+.nav-in{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-in::-webkit-scrollbar{display:none}
+.nav a{flex:none;text-decoration:none;font-size:.8rem;font-weight:500;padding:7px 14px;border-radius:999px;color:var(--ink-2);transition:background .2s,color .2s}
+.nav a:hover{color:var(--blue)}
+.nav a[aria-current="true"]{background:var(--blue);color:#fff}
+
+/* ---------- hero ---------- */
+.hero{position:relative;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));overflow:hidden;isolation:isolate;
+  background:
+   radial-gradient(900px 420px at 12% -6%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(520px 260px at 82% 22%,rgba(255,255,255,.45),rgba(255,255,255,0) 70%),
+   linear-gradient(180deg,#5B9AF3 0%,#7CB2F8 38%,#B6D6FC 70%,#fff 100%)}
+.hero::before,.hero::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(26px);background:rgba(255,255,255,.55)}
+.hero::before{width:520px;height:150px;left:-120px;top:240px;animation:drift 18s ease-in-out infinite alternate}
+.hero::after{width:620px;height:170px;right:-160px;top:420px;opacity:.7;animation:drift 22s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translateX(70px)}}
+.hero-in{max-width:1120px;margin-inline:auto;padding:118px max(16px,env(safe-area-inset-left,0px)) 56px;position:relative;min-height:920px}
+.eyebrow{display:inline-block;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.55);color:#fff;font-size:.82rem;font-weight:500;padding:5px 16px;border-radius:999px;backdrop-filter:blur(6px)}
+.big{font-family:var(--display);font-weight:700;color:#fff;line-height:.98;letter-spacing:-.02em;font-size:clamp(3.8rem,14.5vw,11.5rem);margin:18px 0 0;text-align:center;
+  text-shadow:0 10px 60px rgba(25,80,190,.25)}
+.big span{display:inline-block;animation:rise 1s var(--ease) both}
+.big span:nth-child(2){animation-delay:.12s}
+@keyframes rise{from{transform:translateY(46px) scale(.98)}}
+.sub{position:absolute;z-index:3;right:max(16px,env(safe-area-inset-left,0px));bottom:150px;width:min(300px,38%);margin:0;color:var(--ink);font-weight:500;font-size:1.02rem;line-height:1.8}
+.stage{position:absolute;inset:0;pointer-events:none}
+.stage .hero-phone{position:absolute;left:50%;bottom:20px;--pw:268px;margin-left:calc(var(--pw) / -2);z-index:2;
+  transform:perspective(1500px) rotateX(9deg) rotateY(-24deg) rotateZ(11deg);transform-origin:50% 60%;animation:floaty 7s ease-in-out infinite;
+  filter:drop-shadow(0 50px 50px rgba(20,60,150,.38))}
+@keyframes floaty{50%{transform:perspective(1500px) rotateX(9deg) rotateY(-24deg) rotateZ(11deg) translateY(-16px)}}
+.fcard{position:absolute;z-index:3;background:#fff;border-radius:22px;box-shadow:0 22px 50px -20px rgba(20,60,150,.45);padding:14px 18px;display:flex;gap:12px;align-items:center;font-size:.85rem;line-height:1.45;animation:bob 6s ease-in-out infinite}
+.fcard b{display:block;font-size:.95rem;font-family:var(--display);font-weight:600}
+.fcard small{color:var(--blue);font-weight:500;font-size:.75rem}
+.fcard.a{right:3%;top:330px;min-width:250px}
+.fcard.b{left:3%;bottom:210px;max-width:310px;animation-delay:-3s}
+.app-ic{flex:none;width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,#3F8CF7,#1F6FEB);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700}
+.ring{flex:none;width:46px;height:46px}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.dot{position:absolute;border-radius:50%;background:linear-gradient(160deg,#9AC8FF,#4B97F8);box-shadow:inset 0 -6px 12px rgba(31,111,235,.4);animation:bob 8s ease-in-out infinite}
+
+/* ---------- editorial section head ---------- */
+.sec{padding-block:84px 0}
+.head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:48px;align-items:end;margin-bottom:38px}
+.tag{display:inline-block;background:var(--pill);color:var(--ink-2);font-size:.78rem;font-weight:500;padding:3px 15px;border-radius:999px;margin-bottom:18px}
+.head h2{font-weight:600;font-size:clamp(1.8rem,4vw,3.15rem);line-height:1.22;text-wrap:balance;max-width:14em}
+.head p{margin:0;color:var(--ink-3);font-size:.86rem;line-height:1.9;max-width:26em}
+.rv{transition:transform .9s var(--ease)}
+.js .rv:not(.in){transform:translateY(30px)}
+
+/* ---------- about ---------- */
+.about{position:relative;min-height:340px;margin-top:6px}
+.pic{position:relative;width:200px;height:268px;border-radius:28px;background:linear-gradient(170deg,#7EB6FB,#2F7CF1);display:grid;place-items:center;box-shadow:0 30px 50px -26px rgba(31,111,235,.6)}
+.pic svg{width:96px;height:96px;color:#fff}
+.pic .orb{position:absolute;left:50%;top:50%;width:300px;height:100px;margin:-50px 0 0 -150px;border-radius:50%;border:5px solid;border-color:#fff #6FE6D3 #fff #8CC0FF;transform:rotate(-24deg);animation:spin 9s linear infinite;opacity:.95}
+@keyframes spin{to{transform:rotate(336deg)}}
+.pill-av{position:absolute;display:flex;align-items:center;gap:8px;background:var(--pill);border-radius:999px;padding:6px 18px 6px 8px;font-size:.78rem;font-weight:500;color:var(--ink-2)}
+.pill-av i{width:30px;height:30px;border-radius:50%;background:linear-gradient(150deg,#fff,#9FC7FB);display:grid;place-items:center;color:var(--blue)}
+.cursor{position:absolute;width:44px;filter:drop-shadow(0 8px 14px rgba(20,40,90,.25));animation:cur 7s ease-in-out infinite}
+@keyframes cur{50%{transform:translate(26px,-14px) rotate(-6deg)}}
+
+/* ---------- comparison table ---------- */
+.cmp{display:grid;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr) 56px minmax(0,1.3fr);gap:22px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line)}
+.row .k{font-size:.88rem;font-weight:500}
+.cell{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.cell .ic{flex:none;width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center}
+.cell .ic svg{width:18px;height:18px}
+.cell b{display:block;font-size:.88rem;font-weight:600;line-height:1.5}
+.cell span{display:block;font-size:.76rem;color:var(--ink-3);line-height:1.65}
+.arrow-l{width:40px;height:14px;color:var(--ink-3);justify-self:center}
+
+/* ---------- radial ---------- */
+.radial{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 20px;align-items:center;justify-items:center;text-align:center;padding-block:10px 0}
+.tile{display:grid;gap:12px;justify-items:center;font-size:.86rem;font-weight:500;max-width:210px}
+.glass{width:86px;height:86px;border-radius:26px;background:linear-gradient(160deg,#CFE3FF,#EEF5FF);box-shadow:inset 0 0 0 6px rgba(255,255,255,.75),0 16px 30px -16px rgba(31,111,235,.5);display:grid;place-items:center;color:var(--blue);transition:transform .35s var(--ease)}
+.tile:hover .glass{transform:translateY(-6px) rotate(-3deg)}
+.glass svg{width:34px;height:34px}
+.center-q{grid-column:2;grid-row:2;font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3.2vw,2.5rem);line-height:1.3}
+.center-q em{font-style:normal;background:var(--pill);padding:2px 16px;border-radius:18px;display:inline-block;margin-block:4px}
+.t1{grid-column:2;grid-row:1}.t2{grid-column:1;grid-row:2}.t3{grid-column:3;grid-row:2}.t4{grid-column:1;grid-row:3}.t5{grid-column:2;grid-row:3}.t6{grid-column:3;grid-row:3}
+.down{display:grid;justify-items:center;gap:8px;margin-top:26px;color:var(--ink-3);font-size:.76rem}
+.down i{display:block;width:1px;height:70px;background:linear-gradient(var(--blue),var(--blue));position:relative}
+.down i::before{content:"";position:absolute;top:-3px;left:-3px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.down i::after{content:"";position:absolute;bottom:-1px;left:-4px;width:8px;height:8px;border-right:1.5px solid var(--blue);border-bottom:1.5px solid var(--blue);transform:rotate(45deg)}
+
+/* ---------- stacked glass cards ---------- */
+.stack{position:relative;height:250px;margin:34px auto 0;max-width:560px}
+.sc{position:absolute;top:50%;display:grid;place-items:center;text-align:center;color:#fff;font-family:var(--display);font-weight:600;font-size:1.05rem;line-height:1.5;padding:20px;
+  border-radius:44px;background:linear-gradient(160deg,rgba(125,181,251,.95),#3F8CF7);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 30px 50px -26px rgba(31,111,235,.7);transition:transform .5s var(--ease)}
+.sc.m{left:50%;width:230px;height:200px;transform:translate(-50%,-50%);z-index:3;background:linear-gradient(160deg,#9CC8FD,#2F7CF1)}
+.sc.l{left:2%;width:210px;height:158px;transform:translateY(-50%);z-index:1;opacity:.92}
+.sc.r{right:2%;width:210px;height:158px;transform:translateY(-50%);z-index:1;opacity:.92}
+.stack:hover .sc.l{transform:translate(-12px,-50%)}.stack:hover .sc.r{transform:translate(12px,-50%)}
+
+/* ---------- gradient panels + tracks ---------- */
+.panel{position:relative;border-radius:var(--r-panel);padding:46px 0 26px;overflow:hidden;isolation:isolate;--cap:#fff;--cap2:rgba(255,255,255,.78);--lk:#fff}
+.panel::before{content:"";position:absolute;inset:-30% -10%;z-index:-1;pointer-events:none;
+  background:repeating-radial-gradient(circle at 50% 50%,transparent 0 118px,rgba(255,255,255,.13) 119px 121px);animation:pulse 14s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.07)}}
+.p-blue{background:linear-gradient(165deg,#2F7CF1 0%,#5BA0F9 55%,#9CC8FD 100%)}
+.p-mint{background:linear-gradient(150deg,#D7F55E 0%,#A9E8C9 48%,#7FB6F7 100%);--cap:var(--ink);--cap2:rgba(11,22,48,.65);--lk:var(--blue)}
+.p-soft{background:radial-gradient(520px 320px at 20% 10%,#DCEBFF,rgba(220,235,255,0) 70%),linear-gradient(180deg,#F3F6FC,#EAF1FD);--cap:var(--ink);--cap2:var(--ink-3);--lk:var(--blue)}
+.p-soft::before{background:repeating-radial-gradient(circle at 50% 50%,transparent 0 118px,rgba(31,111,235,.07) 119px 121px)}
+.track{display:flex;align-items:flex-start;gap:0;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:6px 44px 10px;--pw:212px}
+.track::-webkit-scrollbar{display:none}
+.item{flex:none;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;width:calc(var(--pw) + 26px);margin:0}
+.cap{text-align:center;color:var(--cap);max-width:var(--pw)}
+.cap b{display:block;font-family:var(--display);font-weight:600;font-size:.95rem;line-height:1.45}
+.cap span{display:block;font-size:.76rem;color:var(--cap2);margin-top:3px;line-height:1.6}
+.no{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#fff;color:var(--blue);font-size:.7rem;font-weight:700;margin-inline-end:8px;vertical-align:2px}
+.p-mint .no,.p-soft .no{background:var(--blue);color:#fff}
+.link{flex:none;position:relative;width:104px;height:calc(var(--pw) * 2.3);display:grid;place-items:center;align-self:flex-start}
+.link::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;margin-top:-1px;
+  background:repeating-linear-gradient(90deg,var(--lk) 0 7px,transparent 7px 13px);background-size:26px 2px;animation:march 1.4s linear infinite}
+@keyframes march{to{background-position:-26px 0}}
+.link::after{content:"";position:absolute;left:5px;top:50%;width:9px;height:9px;margin-top:-5px;border-left:2px solid var(--lk);border-bottom:2px solid var(--lk);transform:rotate(45deg)}
+.link i{position:absolute;right:7px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--lk)}
+.link span{position:relative;z-index:1;font-size:.68rem;font-weight:500;line-height:1.35;background:#fff;color:var(--ink);padding:4px 11px;border-radius:999px;box-shadow:0 6px 16px -8px rgba(15,40,100,.5);text-align:center;max-width:92px}
+.link.or::before,.link.or::after,.link.or i{display:none}
+.link.or span{background:transparent;color:var(--cap2);box-shadow:none;font-size:.8rem}
+.gap{flex:none;width:18px}
+.ctl{display:flex;justify-content:space-between;align-items:center;padding:14px 44px 0;color:var(--cap)}
+.ctl small{font-size:.76rem;color:var(--cap2)}
+.ctl div{display:flex;gap:8px}
+.ctl button{width:42px;height:42px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:#fff;color:var(--blue);box-shadow:0 10px 22px -10px rgba(15,40,100,.55);transition:transform .2s,opacity .2s}
+.ctl button:hover{transform:scale(1.08)}
+.ctl button:disabled{opacity:.35;cursor:default;transform:none}
+.ctl svg{width:18px;height:18px}
+
+/* ---------- phone ---------- */
+.phone{--pw:212px;position:relative;display:block;width:var(--pw);padding:calc(var(--pw) * .032);border:0;font:inherit;color:inherit;
+  border-radius:calc(var(--pw) * .205);background:linear-gradient(145deg,#2A2F3A,#08090D 40%,#1B1F29);
+  box-shadow:0 0 0 calc(var(--pw) * .0065) #A9AFBB,0 0 0 calc(var(--pw) * .0125) #3A404C,0 34px 46px -22px rgba(10,30,90,.55);
+  cursor:zoom-in;transition:transform .45s var(--ease)}
+div.phone{cursor:default}
+.phone::before,.phone::after{content:"";position:absolute;width:3px;border-radius:2px;background:#8D939F}
+.phone::before{left:-5px;top:19%;height:7%;box-shadow:0 calc(var(--pw) * .16) 0 #8D939F}
+.phone::after{right:-5px;top:25%;height:12%}
+button.phone:hover{transform:translateY(-8px) rotate(-1.2deg)}
+.screen{position:relative;display:block;aspect-ratio:390/888;border-radius:calc(var(--pw) * .172);overflow:hidden;background:var(--top,#fff)}
+.screen img{position:absolute;left:0;bottom:0;width:100%;height:95.05%;display:block;object-fit:fill}
+.sb{position:absolute;inset:0 0 auto;height:4.95%;display:flex;align-items:center;justify-content:space-between;padding:0 9% 0 9%;color:var(--fg,#0B1630);font-size:calc(var(--pw) * .052);font-weight:600;direction:ltr}
+.sb svg{height:calc(var(--pw) * .042);width:auto}
+.sb .isl{position:absolute;left:50%;top:26%;width:29%;height:46%;border-radius:20px;background:#000;transform:translateX(-50%)}
+.sb .ic{display:flex;gap:4px;align-items:center}
+
+/* ---------- desktop (browser window) frame ---------- */
+.track.wide{--pw:600px}
+.win{display:block;width:var(--pw);padding:0;border:0;font:inherit;color:inherit;border-radius:16px;overflow:hidden;background:#fff;text-align:start;
+  box-shadow:0 0 0 1px rgba(15,40,100,.12),0 34px 50px -26px rgba(10,30,90,.55);cursor:zoom-in;transition:transform .45s var(--ease)}
+div.win{cursor:default}
+button.win:hover{transform:translateY(-8px)}
+.win .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:linear-gradient(#F4F7FC,#E9EEF8);border-bottom:1px solid #DCE3F1;direction:ltr}
+.win .bar i{width:10px;height:10px;border-radius:50%;background:#FF5F57}.win .bar i:nth-child(2){background:#FEBC2E}.win .bar i:nth-child(3){background:#28C840}
+.win .url{margin:0 auto;min-width:46%;padding:3px 14px;border-radius:999px;background:#fff;color:#7A87A3;font-size:.68rem;text-align:center;box-shadow:inset 0 0 0 1px #E1E8F4}
+.win .shot{display:block;aspect-ratio:1440/900;background:#F4F7FC}
+.win .shot img{display:block;width:100%;height:100%;object-fit:fill}
+.do{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px;text-align:start}
+.do li{position:relative;padding-inline-start:16px;font-size:.74rem;color:var(--cap2);line-height:1.55}
+.do li::before{content:"";position:absolute;inset-inline-start:0;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--lk)}
+.cap.wide{max-width:var(--pw);text-align:start}
+.hero.desk .sub{position:relative;right:auto;bottom:auto;width:auto;max-width:34em;margin:6px auto 0;color:#fff;text-align:center;font-size:1.12rem;text-shadow:0 2px 22px rgba(25,80,190,.45)}
+.hero.desk .hero-in{min-height:860px}
+.hero-win{position:absolute;left:50%;bottom:-10px;--pw:660px;margin-left:calc(var(--pw) / -2);z-index:2;transform:perspective(1600px) rotateX(14deg) rotateY(-16deg) rotateZ(5deg);animation:floatw 7s ease-in-out infinite;
+  filter:drop-shadow(0 50px 50px rgba(20,60,150,.35))}
+@keyframes floatw{50%{transform:perspective(1600px) rotateX(14deg) rotateY(-16deg) rotateZ(5deg) translateY(-14px)}}
+
+/* ---------- user-flow diagram ---------- */
+.scrollx{overflow-x:auto;border-radius:var(--r-panel);scrollbar-width:thin}
+.flowmap{position:relative;min-width:900px;aspect-ratio:var(--ar);margin:auto}
+.flowmap svg.lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.flowmap path{fill:none;stroke:var(--blue-2);stroke-width:1.6;stroke-linejoin:round;stroke-dasharray:5 5;animation:dashmove 1.2s linear infinite;opacity:.8}
+@keyframes dashmove{to{stroke-dashoffset:-20}}
+.flowmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--w);aspect-ratio:92/146;border-radius:18px;border:2px solid #9BC3FB;background:linear-gradient(180deg,#fff,#E8F1FF);
+  box-shadow:0 14px 26px -16px rgba(31,111,235,.55);display:grid;grid-template-rows:auto 1fr;justify-items:center;padding:8px 6px;font-size:.62rem;font-weight:600;color:var(--blue);text-align:center;line-height:1.3}
+.flowmap .nd::before{content:"";width:34%;height:6px;border-radius:6px;background:var(--blue);margin-bottom:8px}
+.flowmap .nd::after{content:"";align-self:end;width:100%;height:46%;border-radius:8px;background:repeating-linear-gradient(180deg,#D6E6FE 0 6px,transparent 6px 11px)}
+.flowmap .pl{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid #CFE0FB;color:var(--blue);font-size:.62rem;font-weight:500;padding:3px 11px;border-radius:999px;white-space:nowrap;box-shadow:0 6px 14px -8px rgba(31,111,235,.5)}
+.flowmap .st{position:absolute;transform:translate(-50%,-50%);background:var(--soft);border:1px solid var(--line);color:var(--ink-2);font-size:.7rem;font-weight:500;padding:6px 16px;border-radius:999px;white-space:nowrap}
+.flowmap .gd{position:absolute;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--blue)}
+
+/* ---------- stats + conclusion ---------- */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:520px;margin-inline:auto}
+.stat{border-radius:26px;padding:26px 28px;background:var(--soft);color:var(--ink-3);font-size:.78rem}
+.stat b{display:block;font-family:var(--display);font-weight:700;font-size:3.4rem;line-height:1.1;color:#8C93A5;font-variant-numeric:tabular-nums}
+.stat.hot{background:linear-gradient(150deg,#7DB5FB,#2F7CF1);color:rgba(255,255,255,.85)}
+.stat.hot b{color:#fff}
+.concl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:0 34px 34px}
+.cc{background:#fff;border-radius:28px;padding:24px 24px 26px;box-shadow:0 20px 40px -26px rgba(20,60,150,.5);min-width:0}
+.cc h3{font-weight:600;font-size:1.12rem;line-height:1.45;margin-bottom:8px}
+.cc p{margin:0;font-size:.8rem;color:var(--ink-2);line-height:1.75}
+.cc .ic{width:44px;height:44px;border-radius:14px;background:var(--pill);color:var(--blue);display:grid;place-items:center;margin-bottom:16px}
+.cc .ic svg{width:22px;height:22px}
+.concl-h{padding:50px 34px 28px;color:var(--ink)}
+.concl-h h2{font-size:clamp(1.6rem,3.4vw,2.5rem);font-weight:600}
+footer{padding:56px 0 72px;text-align:center;color:var(--ink-3);font-size:.82rem}
+
+/* ---------- lightbox ---------- */
+.lb{position:fixed;inset:0;z-index:100;background:rgba(8,16,40,.82);backdrop-filter:blur(10px);display:grid;grid-template-rows:auto 1fr auto;justify-items:center;color:#fff;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.lb[hidden]{display:none}
+.lb-top{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:center;font-size:.85rem}
+.lb-stage{min-height:0;display:grid;place-items:center;width:100%}
+.lb-stage .phone{--pw:min(330px,calc((100dvh - 230px) * .445));animation:pop .4s var(--ease)}
+.lb-stage .win{--pw:min(1180px,92vw,calc((100dvh - 250px) * 1.5));animation:pop .4s var(--ease)}
+@keyframes pop{from{transform:scale(.94)}}
+.lb-cap{text-align:center;padding-top:14px}
+.lb-cap b{display:block;font-family:var(--display);font-size:1.05rem}.lb-cap span{font-size:.85rem;opacity:.75}
+.lb button.b{font:inherit;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:8px 20px;cursor:pointer}
+.lb button.b:hover{background:rgba(255,255,255,.26)}
+.lb-nav{display:flex;gap:10px;justify-content:center;margin-top:12px}
+
+@media (max-width:860px){
+  .hero-in{padding-top:96px;min-height:900px}
+  .hero.desk .hero-in{min-height:820px}
+  .stage .hero-phone{--pw:200px;bottom:-50px}
+  .sub{position:relative;right:auto;bottom:auto;width:auto;margin:16px auto 0;max-width:20em;color:#fff;text-align:center;font-size:.95rem;text-shadow:0 2px 20px rgba(25,80,190,.45)}
+  .fcard.a{right:2%;top:360px;min-width:0;max-width:200px;padding:10px 12px}.fcard.b{left:2%;bottom:250px;max-width:190px;padding:10px 12px}
+  .head{grid-template-columns:1fr;gap:16px}
+  .row{grid-template-columns:1fr;gap:14px}.arrow-l{transform:rotate(-90deg);justify-self:start}
+  .radial{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .center-q{grid-column:1/-1;grid-row:1}.t1,.t2,.t3,.t4,.t5,.t6{grid-column:auto;grid-row:auto}
+  .track{padding-inline:20px;--pw:190px}.track.wide{--pw:300px}.ctl{padding-inline:20px}.hero-win{--pw:340px;bottom:90px}
+  .concl{grid-template-columns:1fr;padding:0 18px 22px}.concl-h{padding-inline:18px}
+  .stack{transform:scale(.8)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}.js .rv:not(.in){transform:none}
+}
+</style>
+</head>
+<body>
+<div lang="ar" dir="rtl">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="sb" viewBox="0 0 66 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="1" fill="currentColor"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/><path d="M27 4.2a8.5 8.5 0 0 1 11 0M29.2 6.9a5.3 5.3 0 0 1 6.6 0M31.4 9.4a2 2 0 0 1 2.2 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="44" y=".6" width="19" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/><rect x="45.6" y="2.2" width="14" height="7.6" rx="1.8" fill="currentColor"/><rect x="64" y="4" width="1.8" height="4" rx=".9" fill="currentColor" opacity=".5"/></symbol></defs></svg>
+<nav class="nav" aria-label="أقسام التطبيق"><div class="nav-in"><a href="#login" aria-current="false">الدخول</a><a href="#jobs" aria-current="false">المهام</a><a href="#flow" aria-current="false">تنفيذ المهمة</a><a href="#shift" aria-current="false">الدوام</a><a href="#me" aria-current="false">الأداء والحساب</a></div></nav>
+<header class="hero"><div class="hero-in">
+  <span class="eyebrow">نموذج واجهات التطبيق · نسخة الموظف</span>
+  <h1 class="big" aria-label="ركيز للموظفين"><span>ركيز</span> <span>للموظفين</span></h1>
+  <p class="sub">مهام اليوم تصل من مركز العمليات، ودوامك وأداؤك في جيبك. الراتب شهري ولا عمولات.</p>
+  <div class="stage" aria-hidden="true">
+    <div class="phone hero-phone" aria-hidden="true"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t02-jobs-today.jpg" alt="" loading="eager" decoding="async"></span></div>
+    <div class="fcard a"><span class="app-ic">ر</span><div><b>مهمة جديدة</b>أسندها مركز العمليات · الملقا<br><small>الآن</small></div></div>
+    <div class="fcard b"><svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="19" fill="none" stroke="#DCE9FD" stroke-width="5"/><circle cx="23" cy="23" r="19" fill="none" stroke="#1F6FEB" stroke-width="5" stroke-linecap="round" stroke-dasharray="100 120" transform="rotate(-90 23 23)"/></svg><div><small>هدف الشهر</small><b>٣٨ / ٤٥ مهمة</b>الالتزام بالمواعيد ٩٤٪</div></div>
+    <i class="dot" style="width:46px;height:46px;right:20%;top:120px"></i><i class="dot" style="width:22px;height:22px;left:24%;top:60px;animation-delay:-2s"></i><i class="dot" style="width:30px;height:30px;right:9%;bottom:90px;animation-delay:-4s"></i>
+  </div>
+</div></header>
+<main class="w">
+<section class="sec" id="about" aria-labelledby="h-about">
+  <div class="head rv"><div><span class="tag">عن المشروع</span><h2 id="h-about">تطبيق موظف الميدان: مهام واضحة ودوام منظم</h2></div><p>الفني موظف عند الشركة برواتب شهرية. تعيّنه الموارد البشرية من لوحة التحكم، ويُسند مركز العمليات مهامه. لا عمولات ولا اختيار للطلبات من جهته.</p></div>
+  <div class="about rv" aria-hidden="true">
+    <div class="pic" style="position:absolute;left:50%;margin-left:-100px;top:10px"><span class="orb"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/></svg></div>
+    <i class="dot" style="width:48px;height:48px;left:calc(50% - 190px);top:20px"></i>
+    <span class="pill-av" style="left:calc(50% - 20px);top:282px"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>مهمة بعد مهمة</span>
+    <svg class="cursor" style="left:calc(50% + 140px);top:0" viewBox="0 0 44 52" aria-hidden="true"><path d="M5 3l33 17-14 4-6 14z" fill="#fff" stroke="#C9D3E6" stroke-width="1.5" stroke-linejoin="round"/></svg>
+  </div></section>
+<section class="sec" id="assign" aria-labelledby="h-assign">
+  <div class="head rv"><div><span class="tag">من لوحة التحكم إلى الفني</span><h2 id="h-assign">كيف يصل العمل إلى الموظف؟</h2></div><p>التعيين والإسناد يتمان من اللوحة. الفني يستقبل المهمة ويحدّث حالتها فقط.</p></div>
+  <div class="rv"><div class="scrollx" role="img" aria-label="مخطط وصول المهمة من لوحة التحكم إلى الفني"><div class="flowmap" style="--ar:1000/270"><svg class="lines" viewBox="0 0 1000 270" aria-hidden="true"><defs><marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1.5 1.5l7 3.5-7 3.5" fill="none" stroke="#3F8CF7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs><path d="M894.0 135.0 L823.0 135.0" marker-end="url(#ar)"/><path d="M727.0 135.0 L628.0 135.0" marker-end="url(#ar)"/><path d="M532.0 135.0 L433.0 135.0" marker-end="url(#ar)"/><path d="M337.0 135.0 L238.0 135.0" marker-end="url(#ar)"/></svg><div class="st" style="left:94.00%;top:50.00%">الموارد البشرية</div><div class="nd" style="left:77.50%;top:50.00%;--w:9.60%">ملف الموظف</div><div class="nd" style="left:58.00%;top:50.00%;--w:9.60%">لوحة التوزيع</div><div class="nd" style="left:38.50%;top:50.00%;--w:9.60%">مهمة جديدة</div><div class="nd" style="left:19.00%;top:50.00%;--w:9.60%">مكتملة</div><span class="gd" style="left:89.40%;top:50.00%"></span><span class="gd" style="left:72.70%;top:50.00%"></span><span class="gd" style="left:53.20%;top:50.00%"></span><span class="gd" style="left:33.70%;top:50.00%"></span><span class="pl" style="left:85.85%;top:50.00%">تعيّن الموظف</span><span class="pl" style="left:67.75%;top:50.00%">يظهر للإسناد</span><span class="pl" style="left:48.25%;top:50.00%">يُسند الطلب</span><span class="pl" style="left:28.75%;top:50.00%">خمس ضغطات</span></div></div></div>
+</section>
+<section class="sec" id="journey" aria-labelledby="h-journey">
+  <div class="head rv"><div><span class="tag">مراحل المهمة</span><h2 id="h-journey">ست حالات وزر واحد في كل مرة</h2></div><p>يتنقل الفني بين الحالات بالترتيب، والزر يعرض الإجراء التالي فقط.</p></div>
+  <div class="rv"><div class="scrollx" role="img" aria-label="مخطط حالات المهمة من جديدة إلى مكتملة"><div class="flowmap" style="--ar:1075/250"><svg class="lines" viewBox="0 0 1075 250" aria-hidden="true"><defs><marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1.5 1.5l7 3.5-7 3.5" fill="none" stroke="#3F8CF7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs><path d="M935.0 125.0 L840.0 125.0" marker-end="url(#ar)"/><path d="M760.0 125.0 L665.0 125.0" marker-end="url(#ar)"/><path d="M585.0 125.0 L490.0 125.0" marker-end="url(#ar)"/><path d="M410.0 125.0 L315.0 125.0" marker-end="url(#ar)"/><path d="M235.0 125.0 L140.0 125.0" marker-end="url(#ar)"/></svg><div class="nd" style="left:90.70%;top:50.00%;--w:7.44%">جديدة</div><div class="nd" style="left:74.42%;top:50.00%;--w:7.44%">تم القبول</div><div class="nd" style="left:58.14%;top:50.00%;--w:7.44%">في الطريق</div><div class="nd" style="left:41.86%;top:50.00%;--w:7.44%">وصلت الموقع</div><div class="nd" style="left:25.58%;top:50.00%;--w:7.44%">قيد التنفيذ</div><div class="nd" style="left:9.30%;top:50.00%;--w:7.44%">مكتملة</div><span class="gd" style="left:86.98%;top:50.00%"></span><span class="gd" style="left:70.70%;top:50.00%"></span><span class="gd" style="left:54.42%;top:50.00%"></span><span class="gd" style="left:38.14%;top:50.00%"></span><span class="gd" style="left:21.86%;top:50.00%"></span><span class="pl" style="left:82.56%;top:50.00%">قبول المهمة</span><span class="pl" style="left:66.28%;top:50.00%">بدأت الطريق</span><span class="pl" style="left:50.00%;top:50.00%">وصلت الموقع</span><span class="pl" style="left:33.72%;top:50.00%">بدء العمل</span><span class="pl" style="left:17.44%;top:50.00%">إنهاء العمل</span></div></div></div>
+</section>
+<section class="sec" id="login" aria-labelledby="h-login"><div class="head rv"><div><span class="tag">الدخول</span><h2 id=h-login>دخول الموظفين المعتمدين فقط</h2></div><p>برقم الجوال المسجل عند الموارد البشرية، ولا يوجد تسجيل ذاتي.</p></div><div class="panel p-blue rv"><ul class="track" tabindex="0" aria-label="شاشات الدخول" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="تسجيل الدخول" data-desc="رقم الجوال فقط." aria-label="تكبير شاشة تسجيل الدخول"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t01-login.jpg" alt="شاشة تسجيل الدخول" loading="lazy" decoding="async"></span></button><div class="cap"><b>تسجيل الدخول</b><span>رقم الجوال فقط.</span></div></li></ul><div class="ctl"><small>١ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="jobs" aria-labelledby="h-jobs"><div class="head rv"><div><span class="tag">المهام</span><h2 id=h-jobs>مهامك مرتبة حسب الوقت</h2></div><p>المهام التي أسندها مركز العمليات، مقسمة إلى اليوم والقادمة والسابقة.</p></div><div class="panel p-mint rv"><ul class="track" tabindex="0" aria-label="شاشات المهام" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="مهام اليوم" data-desc="الخدمة والوقت والعنوان، ومن أسندها." aria-label="تكبير شاشة مهام اليوم"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t02-jobs-today.jpg" alt="شاشة مهام اليوم" loading="lazy" decoding="async"></span></button><div class="cap"><b>مهام اليوم</b><span>الخدمة والوقت والعنوان، ومن أسندها.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="المهام القادمة" data-desc="ما بعد اليوم." aria-label="تكبير شاشة المهام القادمة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t03-jobs-upcoming.jpg" alt="شاشة المهام القادمة" loading="lazy" decoding="async"></span></button><div class="cap"><b>المهام القادمة</b><span>ما بعد اليوم.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="المهام السابقة" data-desc="سجل المهام المكتملة." aria-label="تكبير شاشة المهام السابقة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t04-jobs-history.jpg" alt="شاشة المهام السابقة" loading="lazy" decoding="async"></span></button><div class="cap"><b>المهام السابقة</b><span>سجل المهام المكتملة.</span></div></li></ul><div class="ctl"><small>٣ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="flow" aria-labelledby="h-flow"><div class="head rv"><div><span class="tag">تنفيذ المهمة</span><h2 id=h-flow>زر واحد لكل مرحلة</h2></div><p>يتغير الزر مع كل مرحلة، والاتصال بالعميل وفتح الخريطة متاحان دائماً.</p></div><div class="panel p-soft rv"><ul class="track" tabindex="0" aria-label="شاشات تنفيذ المهمة" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="مهمة جديدة" data-desc="بيانات العميل والعنوان وزر قبول المهمة." aria-label="تكبير شاشة مهمة جديدة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t05-job-new.jpg" alt="شاشة مهمة جديدة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>مهمة جديدة</b><span>بيانات العميل والعنوان وزر قبول المهمة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>قبول ثم بدأت الطريق</span></li><li class="item"><button class="phone" type="button" data-title="في الطريق" data-desc="الزر التالي: وصلت الموقع." aria-label="تكبير شاشة في الطريق"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t06-job-on-the-way.jpg" alt="شاشة في الطريق" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>في الطريق</b><span>الزر التالي: وصلت الموقع.</span></div></li><li class="link " aria-hidden="true"><i></i><span>وصلت ثم بدء العمل</span></li><li class="item"><button class="phone" type="button" data-title="قيد التنفيذ" data-desc="الزر التالي: إنهاء العمل." aria-label="تكبير شاشة قيد التنفيذ"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t07-job-in-progress.jpg" alt="شاشة قيد التنفيذ" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٣</i>قيد التنفيذ</b><span>الزر التالي: إنهاء العمل.</span></div></li><li class="link " aria-hidden="true"><i></i><span>إنهاء العمل</span></li><li class="item"><button class="phone" type="button" data-title="مهمة مكتملة" data-desc="رسالة الإنجاز وتختفي الأزرار." aria-label="تكبير شاشة مهمة مكتملة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t08-job-done.jpg" alt="شاشة مهمة مكتملة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٤</i>مهمة مكتملة</b><span>رسالة الإنجاز وتختفي الأزرار.</span></div></li></ul><div class="ctl"><small>٤ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="shift" aria-labelledby="h-shift"><div class="head rv"><div><span class="tag">الدوام</span><h2 id=h-shift>تسجيل الحضور والانصراف</h2></div><p>يبدأ الدوام بتسجيل الحضور، ويظهر سجل الأيام السابقة وحالة كل يوم.</p></div><div class="panel p-blue rv"><ul class="track" tabindex="0" aria-label="شاشات الدوام" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="خارج الدوام" data-desc="ساعات الدوام وزر تسجيل الحضور." aria-label="تكبير شاشة خارج الدوام"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t10-shift-off.jpg" alt="شاشة خارج الدوام" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>خارج الدوام</b><span>ساعات الدوام وزر تسجيل الحضور.</span></div></li><li class="link " aria-hidden="true"><i></i><span>تسجيل حضور</span></li><li class="item"><button class="phone" type="button" data-title="على رأس العمل" data-desc="وقت الحضور وزر الانصراف." aria-label="تكبير شاشة على رأس العمل"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t11-shift-on.jpg" alt="شاشة على رأس العمل" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>على رأس العمل</b><span>وقت الحضور وزر الانصراف.</span></div></li></ul><div class="ctl"><small>٢ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="me" aria-labelledby="h-me"><div class="head rv"><div><span class="tag">الأداء والحساب</span><h2 id=h-me>أداؤك وبياناتك الوظيفية</h2></div><p>هدف الشهر والالتزام والتقييم، وبطاقة الموظف. الراتب والإجازات تُدار من الموارد البشرية.</p></div><div class="panel p-mint rv"><ul class="track" tabindex="0" aria-label="شاشات الأداء والحساب" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="أدائي" data-desc="هدف الشهر والالتزام بالمواعيد والتقييم." aria-label="تكبير شاشة أدائي"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t09-performance.jpg" alt="شاشة أدائي" loading="lazy" decoding="async"></span></button><div class="cap"><b>أدائي</b><span>هدف الشهر والالتزام بالمواعيد والتقييم.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="حسابي" data-desc="الرقم الوظيفي والمنطقة والمشرف المباشر." aria-label="تكبير شاشة حسابي"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/t12-profile.jpg" alt="شاشة حسابي" loading="lazy" decoding="async"></span></button><div class="cap"><b>حسابي</b><span>الرقم الوظيفي والمنطقة والمشرف المباشر.</span></div></li></ul><div class="ctl"><small>٢ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section>
+<section class="sec" id="end" aria-labelledby="h-end"><div class="panel p-mint rv"><div class="concl-h"><span class="tag" style="background:rgba(255,255,255,.55)">الخلاصة</span><h2 id="h-end">ما الذي يقدمه تطبيق الموظف؟</h2></div>
+  <div class="concl">
+    <div class="cc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><h3>دوام منظم</h3><p>تسجيل حضور وانصراف وسجل شهري يراه الموظف ويراه المشرف.</p></div>
+    <div class="cc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/></svg></span><h3>مهام مُسندة بوضوح</h3><p>كل مهمة تصل من مركز العمليات، وزر واحد لكل مرحلة حتى الإنجاز.</p></div>
+    <div class="cc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><h3>أداء شفاف</h3><p>هدف الشهر والالتزام بالمواعيد والتقييم. والراتب والإجازات عند الموارد البشرية.</p></div>
+  </div></div></section>
+</main>
+<footer class="w"><p>لقطات حقيقية من كود التطبيق وهو يعمل. اضغط على أي شاشة لتكبيرها وتصفح البقية بالأسهم.</p></footer>
+</div>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="عرض الشاشة">
+  <div class="lb-top"><span id="lb-n"></span><button class="b" id="lb-x" type="button">إغلاق</button></div>
+  <div class="lb-stage" id="lb-stage"></div>
+  <div class="lb-cap"><b id="lb-t"></b><span id="lb-d"></span><div class="lb-nav"><button class="b" id="lb-q" type="button">السابقة</button><button class="b" id="lb-p" type="button">التالية</button></div></div>
+</div>
+<script>
+(function(){
+  var root=document.documentElement; root.classList.add('js');
+  /* reveal on scroll (transform only, content is always readable) */
+  var rv=[].slice.call(document.querySelectorAll('.rv'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px'});
+    rv.forEach(function(el){io.observe(el);});
+  } else rv.forEach(function(el){el.classList.add('in');});
+
+  /* track controls (RTL aware) */
+  document.querySelectorAll('.panel').forEach(function(p){
+    var tr=p.querySelector('.track'); if(!tr) return;
+    var nx=p.querySelector('[data-next]'),pv=p.querySelector('[data-prev]'),pos=p.querySelector('[data-pos]');
+    function upd(){var max=tr.scrollWidth-tr.clientWidth,x=Math.abs(tr.scrollLeft);
+      if(pv)pv.disabled=x<8; if(nx)nx.disabled=x>max-8; if(pos&&max>8)pos.textContent=Math.round(x/max*100)+'٪';}
+    function go(dir){tr.scrollBy({left:dir*tr.clientWidth*.8,behavior:'smooth'});}
+    if(nx)nx.onclick=function(){go(-1);}; if(pv)pv.onclick=function(){go(1);};
+    tr.addEventListener('scroll',upd,{passive:true}); window.addEventListener('resize',upd); upd();
+    var ctl=p.querySelector('.ctl'); if(ctl&&tr.scrollWidth<=tr.clientWidth+8) ctl.hidden=true;
+  });
+
+  /* lightbox clones the real phone frame */
+  var shots=[].slice.call(document.querySelectorAll('button.phone,button.win'));
+  var lb=document.getElementById('lb'),st=document.getElementById('lb-stage'),t=document.getElementById('lb-t'),d=document.getElementById('lb-d'),n=document.getElementById('lb-n');
+  var cur=0,opener=null;
+  function show(i){cur=(i+shots.length)%shots.length;var b=shots[cur];var c=document.createElement('div');c.className=b.classList.contains('win')?'win':'phone';c.innerHTML=b.innerHTML;
+    var im=c.querySelector('img'); if(im) im.loading='eager'; st.replaceChildren(c);
+    t.textContent=b.dataset.title;d.textContent=b.dataset.desc;n.textContent=(cur+1).toLocaleString('ar-EG')+' / '+shots.length.toLocaleString('ar-EG');}
+  function open(i,from){opener=from;show(i);lb.hidden=false;document.body.style.overflow='hidden';document.getElementById('lb-x').focus();}
+  function close(){lb.hidden=true;document.body.style.overflow='';if(opener)opener.focus();}
+  shots.forEach(function(b,i){b.addEventListener('click',function(){open(i,b);});});
+  document.getElementById('lb-x').onclick=close;
+  document.getElementById('lb-p').onclick=function(){show(cur+1);};
+  document.getElementById('lb-q').onclick=function(){show(cur-1);};
+  lb.addEventListener('click',function(e){if(e.target===lb||e.target===st)close();});
+  document.addEventListener('keydown',function(e){if(lb.hidden)return;
+    if(e.key==='Escape')close(); if(e.key==='ArrowLeft')show(cur+1); if(e.key==='ArrowRight')show(cur-1);});
+
+  /* nav highlight */
+  var links=[].slice.call(document.querySelectorAll('.nav a'));
+  if('IntersectionObserver' in window){
+    var io2=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){links.forEach(function(a){var on=a.getAttribute('href')==='#'+en.target.id;a.setAttribute('aria-current',String(on));
+      if(on){var s=a.parentNode;s.scrollTo({left:a.offsetLeft-s.clientWidth/2+a.clientWidth/2,behavior:'smooth'});}});}});},{rootMargin:'-35% 0px -55% 0px'});
+    document.querySelectorAll('.sec[id]').forEach(function(s){io2.observe(s);});
+  }
+})();
+</script>
+
+</body>
+</html>

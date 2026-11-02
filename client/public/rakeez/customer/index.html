@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
+<title>ركيز | واجهات تطبيق العميل</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: sky hero with a tilted 3D phone behind giant white type, then editorial sections
+     (pill tag + big heading + small side paragraph) and rounded gradient panels that carry the phone tracks. */
+  --white:#fff; --ink:#0B1630; --ink-2:#4A5673; --ink-3:#8793AE; --line:#E4EAF5; --soft:#F3F6FC; --pill:#E6EFFC;
+  --blue:#1F6FEB; --blue-2:#3F8CF7; --blue-3:#7DB5FB; --sky:#CFE4FD; --lime:#C6F23A; --pink:#FF3D8B;
+  --display:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif; --body:'IBM Plex Sans Arabic','Readex Pro',system-ui,sans-serif;
+  --r-panel:44px; --ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(84px + env(safe-area-inset-top,0px))}
+body{background:#fff;color:var(--ink);font-family:var(--body);direction:rtl;margin:0;line-height:1.75;overflow-x:clip;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:#fff}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:10px}
+.w{max-width:1120px;margin-inline:auto}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
+
+/* ---------- floating nav ---------- */
+.nav{position:fixed;z-index:50;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:min(980px,calc(100vw - 32px));
+  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(31,111,235,.14);border-radius:999px;
+  box-shadow:0 10px 30px -12px rgba(31,64,140,.35);padding:5px}
+.nav-in{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-in::-webkit-scrollbar{display:none}
+.nav a{flex:none;text-decoration:none;font-size:.8rem;font-weight:500;padding:7px 14px;border-radius:999px;color:var(--ink-2);transition:background .2s,color .2s}
+.nav a:hover{color:var(--blue)}
+.nav a[aria-current="true"]{background:var(--blue);color:#fff}
+
+/* ---------- hero ---------- */
+.hero{position:relative;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));overflow:hidden;isolation:isolate;
+  background:
+   radial-gradient(900px 420px at 12% -6%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(520px 260px at 82% 22%,rgba(255,255,255,.45),rgba(255,255,255,0) 70%),
+   linear-gradient(180deg,#5B9AF3 0%,#7CB2F8 38%,#B6D6FC 70%,#fff 100%)}
+.hero::before,.hero::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(26px);background:rgba(255,255,255,.55)}
+.hero::before{width:520px;height:150px;left:-120px;top:240px;animation:drift 18s ease-in-out infinite alternate}
+.hero::after{width:620px;height:170px;right:-160px;top:420px;opacity:.7;animation:drift 22s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translateX(70px)}}
+.hero-in{max-width:1120px;margin-inline:auto;padding:118px max(16px,env(safe-area-inset-left,0px)) 56px;position:relative;min-height:920px}
+.eyebrow{display:inline-block;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.55);color:#fff;font-size:.82rem;font-weight:500;padding:5px 16px;border-radius:999px;backdrop-filter:blur(6px)}
+.big{font-family:var(--display);font-weight:700;color:#fff;line-height:.98;letter-spacing:-.02em;font-size:clamp(3.8rem,14.5vw,11.5rem);margin:18px 0 0;text-align:center;
+  text-shadow:0 10px 60px rgba(25,80,190,.25)}
+.big span{display:inline-block;animation:rise 1s var(--ease) both}
+.big span:nth-child(2){animation-delay:.12s}
+@keyframes rise{from{transform:translateY(46px) scale(.98)}}
+.sub{position:absolute;z-index:3;right:max(16px,env(safe-area-inset-left,0px));bottom:150px;width:min(300px,38%);margin:0;color:var(--ink);font-weight:500;font-size:1.02rem;line-height:1.8}
+.stage{position:absolute;inset:0;pointer-events:none}
+.stage .hero-phone{position:absolute;left:50%;bottom:20px;--pw:268px;margin-left:calc(var(--pw) / -2);z-index:2;
+  transform:perspective(1500px) rotateX(9deg) rotateY(-24deg) rotateZ(11deg);transform-origin:50% 60%;animation:floaty 7s ease-in-out infinite;
+  filter:drop-shadow(0 50px 50px rgba(20,60,150,.38))}
+@keyframes floaty{50%{transform:perspective(1500px) rotateX(9deg) rotateY(-24deg) rotateZ(11deg) translateY(-16px)}}
+.fcard{position:absolute;z-index:3;background:#fff;border-radius:22px;box-shadow:0 22px 50px -20px rgba(20,60,150,.45);padding:14px 18px;display:flex;gap:12px;align-items:center;font-size:.85rem;line-height:1.45;animation:bob 6s ease-in-out infinite}
+.fcard b{display:block;font-size:.95rem;font-family:var(--display);font-weight:600}
+.fcard small{color:var(--blue);font-weight:500;font-size:.75rem}
+.fcard.a{right:3%;top:330px;min-width:250px}
+.fcard.b{left:3%;bottom:210px;max-width:310px;animation-delay:-3s}
+.app-ic{flex:none;width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,#3F8CF7,#1F6FEB);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700}
+.ring{flex:none;width:46px;height:46px}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.dot{position:absolute;border-radius:50%;background:linear-gradient(160deg,#9AC8FF,#4B97F8);box-shadow:inset 0 -6px 12px rgba(31,111,235,.4);animation:bob 8s ease-in-out infinite}
+
+/* ---------- editorial section head ---------- */
+.sec{padding-block:84px 0}
+.head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:48px;align-items:end;margin-bottom:38px}
+.tag{display:inline-block;background:var(--pill);color:var(--ink-2);font-size:.78rem;font-weight:500;padding:3px 15px;border-radius:999px;margin-bottom:18px}
+.head h2{font-weight:600;font-size:clamp(1.8rem,4vw,3.15rem);line-height:1.22;text-wrap:balance;max-width:14em}
+.head p{margin:0;color:var(--ink-3);font-size:.86rem;line-height:1.9;max-width:26em}
+.rv{transition:transform .9s var(--ease)}
+.js .rv:not(.in){transform:translateY(30px)}
+
+/* ---------- about ---------- */
+.about{position:relative;min-height:340px;margin-top:6px}
+.pic{position:relative;width:200px;height:268px;border-radius:28px;background:linear-gradient(170deg,#7EB6FB,#2F7CF1);display:grid;place-items:center;box-shadow:0 30px 50px -26px rgba(31,111,235,.6)}
+.pic svg{width:96px;height:96px;color:#fff}
+.pic .orb{position:absolute;left:50%;top:50%;width:300px;height:100px;margin:-50px 0 0 -150px;border-radius:50%;border:5px solid;border-color:#fff #6FE6D3 #fff #8CC0FF;transform:rotate(-24deg);animation:spin 9s linear infinite;opacity:.95}
+@keyframes spin{to{transform:rotate(336deg)}}
+.pill-av{position:absolute;display:flex;align-items:center;gap:8px;background:var(--pill);border-radius:999px;padding:6px 18px 6px 8px;font-size:.78rem;font-weight:500;color:var(--ink-2)}
+.pill-av i{width:30px;height:30px;border-radius:50%;background:linear-gradient(150deg,#fff,#9FC7FB);display:grid;place-items:center;color:var(--blue)}
+.cursor{position:absolute;width:44px;filter:drop-shadow(0 8px 14px rgba(20,40,90,.25));animation:cur 7s ease-in-out infinite}
+@keyframes cur{50%{transform:translate(26px,-14px) rotate(-6deg)}}
+
+/* ---------- comparison table ---------- */
+.cmp{display:grid;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr) 56px minmax(0,1.3fr);gap:22px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line)}
+.row .k{font-size:.88rem;font-weight:500}
+.cell{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.cell .ic{flex:none;width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center}
+.cell .ic svg{width:18px;height:18px}
+.cell b{display:block;font-size:.88rem;font-weight:600;line-height:1.5}
+.cell span{display:block;font-size:.76rem;color:var(--ink-3);line-height:1.65}
+.arrow-l{width:40px;height:14px;color:var(--ink-3);justify-self:center}
+
+/* ---------- radial ---------- */
+.radial{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 20px;align-items:center;justify-items:center;text-align:center;padding-block:10px 0}
+.tile{display:grid;gap:12px;justify-items:center;font-size:.86rem;font-weight:500;max-width:210px}
+.glass{width:86px;height:86px;border-radius:26px;background:linear-gradient(160deg,#CFE3FF,#EEF5FF);box-shadow:inset 0 0 0 6px rgba(255,255,255,.75),0 16px 30px -16px rgba(31,111,235,.5);display:grid;place-items:center;color:var(--blue);transition:transform .35s var(--ease)}
+.tile:hover .glass{transform:translateY(-6px) rotate(-3deg)}
+.glass svg{width:34px;height:34px}
+.center-q{grid-column:2;grid-row:2;font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3.2vw,2.5rem);line-height:1.3}
+.center-q em{font-style:normal;background:var(--pill);padding:2px 16px;border-radius:18px;display:inline-block;margin-block:4px}
+.t1{grid-column:2;grid-row:1}.t2{grid-column:1;grid-row:2}.t3{grid-column:3;grid-row:2}.t4{grid-column:1;grid-row:3}.t5{grid-column:2;grid-row:3}.t6{grid-column:3;grid-row:3}
+.down{display:grid;justify-items:center;gap:8px;margin-top:26px;color:var(--ink-3);font-size:.76rem}
+.down i{display:block;width:1px;height:70px;background:linear-gradient(var(--blue),var(--blue));position:relative}
+.down i::before{content:"";position:absolute;top:-3px;left:-3px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.down i::after{content:"";position:absolute;bottom:-1px;left:-4px;width:8px;height:8px;border-right:1.5px solid var(--blue);border-bottom:1.5px solid var(--blue);transform:rotate(45deg)}
+
+/* ---------- stacked glass cards ---------- */
+.stack{position:relative;height:250px;margin:34px auto 0;max-width:560px}
+.sc{position:absolute;top:50%;display:grid;place-items:center;text-align:center;color:#fff;font-family:var(--display);font-weight:600;font-size:1.05rem;line-height:1.5;padding:20px;
+  border-radius:44px;background:linear-gradient(160deg,rgba(125,181,251,.95),#3F8CF7);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 30px 50px -26px rgba(31,111,235,.7);transition:transform .5s var(--ease)}
+.sc.m{left:50%;width:230px;height:200px;transform:translate(-50%,-50%);z-index:3;background:linear-gradient(160deg,#9CC8FD,#2F7CF1)}
+.sc.l{left:2%;width:210px;height:158px;transform:translateY(-50%);z-index:1;opacity:.92}
+.sc.r{right:2%;width:210px;height:158px;transform:translateY(-50%);z-index:1;opacity:.92}
+.stack:hover .sc.l{transform:translate(-12px,-50%)}.stack:hover .sc.r{transform:translate(12px,-50%)}
+
+/* ---------- gradient panels + tracks ---------- */
+.panel{position:relative;border-radius:var(--r-panel);padding:46px 0 26px;overflow:hidden;isolation:isolate;--cap:#fff;--cap2:rgba(255,255,255,.78);--lk:#fff}
+.panel::before{content:"";position:absolute;inset:-30% -10%;z-index:-1;pointer-events:none;
+  background:repeating-radial-gradient(circle at 50% 50%,transparent 0 118px,rgba(255,255,255,.13) 119px 121px);animation:pulse 14s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.07)}}
+.p-blue{background:linear-gradient(165deg,#2F7CF1 0%,#5BA0F9 55%,#9CC8FD 100%)}
+.p-mint{background:linear-gradient(150deg,#D7F55E 0%,#A9E8C9 48%,#7FB6F7 100%);--cap:var(--ink);--cap2:rgba(11,22,48,.65);--lk:var(--blue)}
+.p-soft{background:radial-gradient(520px 320px at 20% 10%,#DCEBFF,rgba(220,235,255,0) 70%),linear-gradient(180deg,#F3F6FC,#EAF1FD);--cap:var(--ink);--cap2:var(--ink-3);--lk:var(--blue)}
+.p-soft::before{background:repeating-radial-gradient(circle at 50% 50%,transparent 0 118px,rgba(31,111,235,.07) 119px 121px)}
+.track{display:flex;align-items:flex-start;gap:0;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:6px 44px 10px;--pw:212px}
+.track::-webkit-scrollbar{display:none}
+.item{flex:none;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;width:calc(var(--pw) + 26px);margin:0}
+.cap{text-align:center;color:var(--cap);max-width:var(--pw)}
+.cap b{display:block;font-family:var(--display);font-weight:600;font-size:.95rem;line-height:1.45}
+.cap span{display:block;font-size:.76rem;color:var(--cap2);margin-top:3px;line-height:1.6}
+.no{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#fff;color:var(--blue);font-size:.7rem;font-weight:700;margin-inline-end:8px;vertical-align:2px}
+.p-mint .no,.p-soft .no{background:var(--blue);color:#fff}
+.link{flex:none;position:relative;width:104px;height:calc(var(--pw) * 2.3);display:grid;place-items:center;align-self:flex-start}
+.link::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;margin-top:-1px;
+  background:repeating-linear-gradient(90deg,var(--lk) 0 7px,transparent 7px 13px);background-size:26px 2px;animation:march 1.4s linear infinite}
+@keyframes march{to{background-position:-26px 0}}
+.link::after{content:"";position:absolute;left:5px;top:50%;width:9px;height:9px;margin-top:-5px;border-left:2px solid var(--lk);border-bottom:2px solid var(--lk);transform:rotate(45deg)}
+.link i{position:absolute;right:7px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--lk)}
+.link span{position:relative;z-index:1;font-size:.68rem;font-weight:500;line-height:1.35;background:#fff;color:var(--ink);padding:4px 11px;border-radius:999px;box-shadow:0 6px 16px -8px rgba(15,40,100,.5);text-align:center;max-width:92px}
+.link.or::before,.link.or::after,.link.or i{display:none}
+.link.or span{background:transparent;color:var(--cap2);box-shadow:none;font-size:.8rem}
+.gap{flex:none;width:18px}
+.ctl{display:flex;justify-content:space-between;align-items:center;padding:14px 44px 0;color:var(--cap)}
+.ctl small{font-size:.76rem;color:var(--cap2)}
+.ctl div{display:flex;gap:8px}
+.ctl button{width:42px;height:42px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:#fff;color:var(--blue);box-shadow:0 10px 22px -10px rgba(15,40,100,.55);transition:transform .2s,opacity .2s}
+.ctl button:hover{transform:scale(1.08)}
+.ctl button:disabled{opacity:.35;cursor:default;transform:none}
+.ctl svg{width:18px;height:18px}
+
+/* ---------- phone ---------- */
+.phone{--pw:212px;position:relative;display:block;width:var(--pw);padding:calc(var(--pw) * .032);border:0;font:inherit;color:inherit;
+  border-radius:calc(var(--pw) * .205);background:linear-gradient(145deg,#2A2F3A,#08090D 40%,#1B1F29);
+  box-shadow:0 0 0 calc(var(--pw) * .0065) #A9AFBB,0 0 0 calc(var(--pw) * .0125) #3A404C,0 34px 46px -22px rgba(10,30,90,.55);
+  cursor:zoom-in;transition:transform .45s var(--ease)}
+div.phone{cursor:default}
+.phone::before,.phone::after{content:"";position:absolute;width:3px;border-radius:2px;background:#8D939F}
+.phone::before{left:-5px;top:19%;height:7%;box-shadow:0 calc(var(--pw) * .16) 0 #8D939F}
+.phone::after{right:-5px;top:25%;height:12%}
+button.phone:hover{transform:translateY(-8px) rotate(-1.2deg)}
+.screen{position:relative;display:block;aspect-ratio:390/888;border-radius:calc(var(--pw) * .172);overflow:hidden;background:var(--top,#fff)}
+.screen img{position:absolute;left:0;bottom:0;width:100%;height:95.05%;display:block;object-fit:fill}
+.sb{position:absolute;inset:0 0 auto;height:4.95%;display:flex;align-items:center;justify-content:space-between;padding:0 9% 0 9%;color:var(--fg,#0B1630);font-size:calc(var(--pw) * .052);font-weight:600;direction:ltr}
+.sb svg{height:calc(var(--pw) * .042);width:auto}
+.sb .isl{position:absolute;left:50%;top:26%;width:29%;height:46%;border-radius:20px;background:#000;transform:translateX(-50%)}
+.sb .ic{display:flex;gap:4px;align-items:center}
+
+/* ---------- desktop (browser window) frame ---------- */
+.track.wide{--pw:600px}
+.win{display:block;width:var(--pw);padding:0;border:0;font:inherit;color:inherit;border-radius:16px;overflow:hidden;background:#fff;text-align:start;
+  box-shadow:0 0 0 1px rgba(15,40,100,.12),0 34px 50px -26px rgba(10,30,90,.55);cursor:zoom-in;transition:transform .45s var(--ease)}
+div.win{cursor:default}
+button.win:hover{transform:translateY(-8px)}
+.win .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:linear-gradient(#F4F7FC,#E9EEF8);border-bottom:1px solid #DCE3F1;direction:ltr}
+.win .bar i{width:10px;height:10px;border-radius:50%;background:#FF5F57}.win .bar i:nth-child(2){background:#FEBC2E}.win .bar i:nth-child(3){background:#28C840}
+.win .url{margin:0 auto;min-width:46%;padding:3px 14px;border-radius:999px;background:#fff;color:#7A87A3;font-size:.68rem;text-align:center;box-shadow:inset 0 0 0 1px #E1E8F4}
+.win .shot{display:block;aspect-ratio:1440/900;background:#F4F7FC}
+.win .shot img{display:block;width:100%;height:100%;object-fit:fill}
+.do{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px;text-align:start}
+.do li{position:relative;padding-inline-start:16px;font-size:.74rem;color:var(--cap2);line-height:1.55}
+.do li::before{content:"";position:absolute;inset-inline-start:0;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--lk)}
+.cap.wide{max-width:var(--pw);text-align:start}
+.hero.desk .sub{position:relative;right:auto;bottom:auto;width:auto;max-width:34em;margin:6px auto 0;color:#fff;text-align:center;font-size:1.12rem;text-shadow:0 2px 22px rgba(25,80,190,.45)}
+.hero.desk .hero-in{min-height:860px}
+.hero-win{position:absolute;left:50%;bottom:30px;--pw:660px;margin-left:calc(var(--pw) / -2);z-index:2;transform:perspective(1600px) rotateX(14deg) rotateY(-16deg) rotateZ(5deg);animation:floatw 7s ease-in-out infinite;
+  filter:drop-shadow(0 50px 50px rgba(20,60,150,.35))}
+@keyframes floatw{50%{transform:perspective(1600px) rotateX(14deg) rotateY(-16deg) rotateZ(5deg) translateY(-14px)}}
+
+/* ---------- user-flow diagram ---------- */
+.scrollx{overflow-x:auto;border-radius:var(--r-panel);scrollbar-width:thin}
+.flowmap{position:relative;min-width:900px;aspect-ratio:var(--ar);margin:auto}
+.flowmap svg.lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.flowmap path{fill:none;stroke:var(--blue-2);stroke-width:1.6;stroke-linejoin:round;stroke-dasharray:5 5;animation:dashmove 1.2s linear infinite;opacity:.8}
+@keyframes dashmove{to{stroke-dashoffset:-20}}
+.flowmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--w);aspect-ratio:92/146;border-radius:18px;border:2px solid #9BC3FB;background:linear-gradient(180deg,#fff,#E8F1FF);
+  box-shadow:0 14px 26px -16px rgba(31,111,235,.55);display:grid;grid-template-rows:auto 1fr;justify-items:center;padding:8px 6px;font-size:.62rem;font-weight:600;color:var(--blue);text-align:center;line-height:1.3}
+.flowmap .nd::before{content:"";width:34%;height:6px;border-radius:6px;background:var(--blue);margin-bottom:8px}
+.flowmap .nd::after{content:"";align-self:end;width:100%;height:46%;border-radius:8px;background:repeating-linear-gradient(180deg,#D6E6FE 0 6px,transparent 6px 11px)}
+.flowmap .pl{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid #CFE0FB;color:var(--blue);font-size:.62rem;font-weight:500;padding:3px 11px;border-radius:999px;white-space:nowrap;box-shadow:0 6px 14px -8px rgba(31,111,235,.5)}
+.flowmap .st{position:absolute;transform:translate(-50%,-50%);background:var(--soft);border:1px solid var(--line);color:var(--ink-2);font-size:.7rem;font-weight:500;padding:6px 16px;border-radius:999px;white-space:nowrap}
+.flowmap .gd{position:absolute;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--blue)}
+
+/* ---------- stats + conclusion ---------- */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:520px;margin-inline:auto}
+.stat{border-radius:26px;padding:26px 28px;background:var(--soft);color:var(--ink-3);font-size:.78rem}
+.stat b{display:block;font-family:var(--display);font-weight:700;font-size:3.4rem;line-height:1.1;color:#8C93A5;font-variant-numeric:tabular-nums}
+.stat.hot{background:linear-gradient(150deg,#7DB5FB,#2F7CF1);color:rgba(255,255,255,.85)}
+.stat.hot b{color:#fff}
+.concl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:0 34px 34px}
+.cc{background:#fff;border-radius:28px;padding:24px 24px 26px;box-shadow:0 20px 40px -26px rgba(20,60,150,.5);min-width:0}
+.cc h3{font-weight:600;font-size:1.12rem;line-height:1.45;margin-bottom:8px}
+.cc p{margin:0;font-size:.8rem;color:var(--ink-2);line-height:1.75}
+.cc .ic{width:44px;height:44px;border-radius:14px;background:var(--pill);color:var(--blue);display:grid;place-items:center;margin-bottom:16px}
+.cc .ic svg{width:22px;height:22px}
+.concl-h{padding:50px 34px 28px;color:var(--ink)}
+.concl-h h2{font-size:clamp(1.6rem,3.4vw,2.5rem);font-weight:600}
+footer{padding:56px 0 72px;text-align:center;color:var(--ink-3);font-size:.82rem}
+
+/* ---------- lightbox ---------- */
+.lb{position:fixed;inset:0;z-index:100;background:rgba(8,16,40,.82);backdrop-filter:blur(10px);display:grid;grid-template-rows:auto 1fr auto;justify-items:center;color:#fff;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.lb[hidden]{display:none}
+.lb-top{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:center;font-size:.85rem}
+.lb-stage{min-height:0;display:grid;place-items:center;width:100%}
+.lb-stage .phone{--pw:min(330px,calc((100dvh - 230px) * .445));animation:pop .4s var(--ease)}
+.lb-stage .win{--pw:min(1180px,92vw,calc((100dvh - 250px) * 1.5));animation:pop .4s var(--ease)}
+@keyframes pop{from{transform:scale(.94)}}
+.lb-cap{text-align:center;padding-top:14px}
+.lb-cap b{display:block;font-family:var(--display);font-size:1.05rem}.lb-cap span{font-size:.85rem;opacity:.75}
+.lb button.b{font:inherit;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:8px 20px;cursor:pointer}
+.lb button.b:hover{background:rgba(255,255,255,.26)}
+.lb-nav{display:flex;gap:10px;justify-content:center;margin-top:12px}
+
+@media (max-width:860px){
+  .hero-in{padding-top:96px;min-height:900px}
+  .hero.desk .hero-in{min-height:820px}
+  .stage .hero-phone{--pw:200px;bottom:-50px}
+  .sub{position:relative;right:auto;bottom:auto;width:auto;margin:16px auto 0;max-width:20em;color:#fff;text-align:center;font-size:.95rem;text-shadow:0 2px 20px rgba(25,80,190,.45)}
+  .fcard.a{right:2%;top:360px;min-width:0;max-width:200px;padding:10px 12px}.fcard.b{left:2%;bottom:250px;max-width:190px;padding:10px 12px}
+  .head{grid-template-columns:1fr;gap:16px}
+  .row{grid-template-columns:1fr;gap:14px}.arrow-l{transform:rotate(-90deg);justify-self:start}
+  .radial{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .center-q{grid-column:1/-1;grid-row:1}.t1,.t2,.t3,.t4,.t5,.t6{grid-column:auto;grid-row:auto}
+  .track{padding-inline:20px;--pw:190px}.track.wide{--pw:300px}.ctl{padding-inline:20px}.hero-win{--pw:340px;bottom:90px}
+  .concl{grid-template-columns:1fr;padding:0 18px 22px}.concl-h{padding-inline:18px}
+  .stack{transform:scale(.8)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}.js .rv:not(.in){transform:none}
+}
+</style>
+</head>
+<body>
+<div lang="ar" dir="rtl">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="sb" viewBox="0 0 66 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="1" fill="currentColor"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/><path d="M27 4.2a8.5 8.5 0 0 1 11 0M29.2 6.9a5.3 5.3 0 0 1 6.6 0M31.4 9.4a2 2 0 0 1 2.2 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="44" y=".6" width="19" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/><rect x="45.6" y="2.2" width="14" height="7.6" rx="1.8" fill="currentColor"/><rect x="64" y="4" width="1.8" height="4" rx=".9" fill="currentColor" opacity=".5"/></symbol></defs></svg>
+<nav class="nav" aria-label="أقسام التطبيق"><div class="nav-in"><a href="#start" aria-current="false">البداية</a><a href="#register" aria-current="false">إنشاء حساب</a><a href="#recover" aria-current="false">استعادة الحساب</a><a href="#discover" aria-current="false">الاستكشاف والحجز</a><a href="#shop" aria-current="false">المتجر والباقات</a><a href="#checkout" aria-current="false">السلة والدفع</a><a href="#orders" aria-current="false">الطلبات</a><a href="#ai" aria-current="false">ركيز AI</a><a href="#account" aria-current="false">حسابي</a><a href="#address" aria-current="false">العناوين</a><a href="#support" aria-current="false">الدعم</a></div></nav>
+<header class="hero"><div class="hero-in">
+  <span class="eyebrow">نموذج واجهات التطبيق · نسخة العميل</span>
+  <h1 class="big" aria-label="تطبيق ركيز"><span>تطبيق</span> <span>ركيز</span></h1>
+  <p class="sub">احجز فني صيانة أو تنظيف، اشترِ قطع الغيار، وتابع مواعيدك ومحفظتك من مكان واحد.</p>
+  <div class="stage" aria-hidden="true">
+    <div class="phone hero-phone" aria-hidden="true"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c08-home.jpg" alt="" loading="eager" decoding="async"></span></div>
+    <div class="fcard a"><span class="app-ic">ر</span><div><b>الفني في الطريق إليك</b>للطلب رقم #١١٢٢٣٣<br><small>الآن</small></div></div>
+    <div class="fcard b"><svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="19" fill="none" stroke="#DCE9FD" stroke-width="5"/><circle cx="23" cy="23" r="19" fill="none" stroke="#1F6FEB" stroke-width="5" stroke-linecap="round" stroke-dasharray="84 120" transform="rotate(-90 23 23)"/></svg><div><small>موعدك القادم</small><b>تنظيف عميق للمكيفات</b>غداً ١٠:٠٠ صباحاً</div></div>
+    <i class="dot" style="width:46px;height:46px;right:20%;top:120px"></i><i class="dot" style="width:22px;height:22px;left:24%;top:60px;animation-delay:-2s"></i><i class="dot" style="width:30px;height:30px;right:9%;bottom:90px;animation-delay:-4s"></i>
+  </div>
+</div></header>
+<main class="w">
+<section class="sec" id="about" aria-labelledby="h-about">
+  <div class="head rv"><div><span class="tag">عن المشروع</span><h2 id="h-about">من حجز فني بالاتصال إلى تطبيق في جيبك</h2></div><p>ركيز يجمع خدمات الصيانة والتنظيف ومتجر قطع الغيار والمحفظة في تطبيق واحد. هذه الصفحة تعرض شاشاته كما تعمل فعلاً، مجمّعة حسب رحلة المستخدم.</p></div>
+  <div class="about rv" aria-hidden="true">
+    <div class="pic" style="position:absolute;left:50%;margin-left:-100px;top:10px"><span class="orb"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17"/><circle cx="12" cy="12" r="2.2"/></svg></div>
+    <i class="dot" style="width:48px;height:48px;left:calc(50% - 190px);top:20px"></i>
+    <span class="pill-av" style="left:calc(50% - 20px);top:282px"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.8 2.8 0 0 1-4-4z"/><path d="M14.5 6.5l3-3"/></svg></i>صيانة بلا عناء</span>
+    <svg class="cursor" style="left:calc(50% + 140px);top:0" viewBox="0 0 44 52" aria-hidden="true"><path d="M5 3l33 17-14 4-6 14z" fill="#fff" stroke="#C9D3E6" stroke-width="1.5" stroke-linejoin="round"/></svg>
+  </div>
+</section>
+<section class="sec" id="compare" aria-labelledby="h-compare">
+  <div class="head rv"><div><span class="tag">المقارنة</span><h2 id="h-compare">ماذا يتغير عندما تحجز عبر ركيز؟</h2></div><p>مقارنة بين الطريقة المعتادة في طلب الصيانة وما يوفره التطبيق في كل خطوة.</p></div>
+  <div class="cmp rv">
+    <div class="row"><div class="k">اختيار الفني</div>
+      <div class="cell"><span class="ic" style="background:#8793AE"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span><div><b>اتصالات متعددة</b><span>تسأل عدة أشخاص وتقارن أسعاراً غير مكتوبة.</span></div></div>
+      <svg class="arrow-l" viewBox="0 0 42 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M40 7H2M8 1L2 7l6 6"/></svg>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><b>خدمات بسعر معلن</b><span>سعر وتقييم ووصف لكل خدمة قبل الحجز.</span></div></div></div><div class="row"><div class="k">الموعد</div>
+      <div class="cell"><span class="ic" style="background:#8793AE"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><div><b>اتفاق شفهي</b><span>تنتظر الاتصال ولا تعرف متى يصل الفني.</span></div></div>
+      <svg class="arrow-l" viewBox="0 0 42 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M40 7H2M8 1L2 7l6 6"/></svg>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></span><div><b>يوم وساعة تختارهما</b><span>موعد مؤكد ومتابعة للحالة حتى الوصول.</span></div></div></div><div class="row"><div class="k">قطع الغيار</div>
+      <div class="cell"><span class="ic" style="background:#8793AE"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span><div><b>سعر يُعرف بعد التركيب</b><span>يشتري الفني القطعة ويحدد السعر وحده.</span></div></div>
+      <svg class="arrow-l" viewBox="0 0 42 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M40 7H2M8 1L2 7l6 6"/></svg>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M2.5 10h19M6.5 15h4"/></svg></span><div><b>تسعيرة تعتمدها أنت</b><span>الفني يقترح القطع وأنت توافق أو ترفض قبل الدفع.</span></div></div></div>
+  </div>
+</section>
+<section class="sec" id="scope" aria-labelledby="h-scope">
+  <div class="head rv"><div><span class="tag">نطاق التطبيق</span><h2 id="h-scope">ما الذي يغطيه التطبيق؟</h2></div><p>ست مساحات رئيسية يعود إليها العميل باستمرار.</p></div>
+  <div class="radial rv">
+    <div class="tile t1"><span class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></span>حجز الخدمات وجدولة المواعيد</div>
+    <div class="tile t2"><span class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span>متجر قطع الغيار</div>
+    <div class="center-q">ما الذي <em>يحتاجه</em> العميل؟</div>
+    <div class="tile t3"><span class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="3" y="8" width="18" height="11.5" rx="3"/><circle cx="16.5" cy="13.8" r="1.2"/></svg></span>محفظة وبطاقات وتسعيرة قطع</div>
+    <div class="tile t4"><span class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/><path d="M19 17v4M17 19h4"/></svg></span>مساعد ذكي يشخّص المشكلة</div>
+    <div class="tile t5"><span class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/></svg></span>متابعة الطلب والفني</div>
+    <div class="tile t6"><span class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="6" rx="2"/><rect x="17" y="13" width="4" height="6" rx="2"/><path d="M19 19c0 1.5-2 2.5-5 2.5"/></svg></span>دعم فني داخل التطبيق</div>
+  </div>
+  <div class="down" aria-hidden="true"><i></i><span>رحلات التطبيق</span></div>
+  <div class="stack rv" aria-hidden="true"><div class="sc l">تسعير واضح</div><div class="sc r">متابعة لحظة بلحظة</div><div class="sc m">حجز في أقل خطوات</div></div>
+</section>
+<section class="sec" id="journey" aria-labelledby="h-journey">
+  <div class="head rv"><div><span class="tag">مخطط الرحلة</span><h2 id="h-journey">كيف ينتقل العميل من الرئيسية إلى الدفع؟</h2></div><p>مسارا الخدمات والمتجر يلتقيان في السلة، ومنها إلى الدفع.</p></div>
+  <div class="rv"><div class="scrollx" role="img" aria-label="مخطط رحلة الحجز من الرئيسية إلى الدفع"><div class="flowmap" style="--ar:1000/450"><svg class="lines" viewBox="0 0 1000 450" aria-hidden="true"><defs><marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1.5 1.5l7 3.5-7 3.5" fill="none" stroke="#3F8CF7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs><path d="M892.0 225.0 L827.0 225.0" marker-end="url(#ar)"/><path d="M723.0 225.0 L682.5 225.0 L682.5 105.0 L642.0 105.0" marker-end="url(#ar)"/><path d="M723.0 225.0 L682.5 225.0 L682.5 345.0 L642.0 345.0" marker-end="url(#ar)"/><path d="M538.0 105.0 L462.0 105.0" marker-end="url(#ar)"/><path d="M358.0 105.0 L282.0 105.0" marker-end="url(#ar)"/><path d="M230.0 187.5 L230.0 262.5" marker-end="url(#ar)"/><path d="M538.0 345.0 L282.0 345.0" marker-end="url(#ar)"/><path d="M178.0 345.0 L112.0 345.0" marker-end="url(#ar)"/></svg><div class="st" style="left:93.80%;top:50.00%">يريد حجز خدمة</div><div class="nd" style="left:77.50%;top:50.00%;--w:10.40%">الرئيسية</div><div class="nd" style="left:59.00%;top:23.33%;--w:10.40%">القسم</div><div class="nd" style="left:41.00%;top:23.33%;--w:10.40%">الخدمة</div><div class="nd" style="left:23.00%;top:23.33%;--w:10.40%">الموعد</div><div class="nd" style="left:59.00%;top:76.67%;--w:10.40%">المتجر</div><div class="nd" style="left:23.00%;top:76.67%;--w:10.40%">السلة</div><div class="nd" style="left:6.00%;top:76.67%;--w:10.40%">الدفع</div><span class="gd" style="left:89.20%;top:50.00%"></span><span class="gd" style="left:72.30%;top:50.00%"></span><span class="gd" style="left:72.30%;top:50.00%"></span><span class="gd" style="left:53.80%;top:23.33%"></span><span class="gd" style="left:35.80%;top:23.33%"></span><span class="gd" style="left:23.00%;top:41.67%"></span><span class="gd" style="left:53.80%;top:76.67%"></span><span class="gd" style="left:17.80%;top:76.67%"></span><span class="pl" style="left:66.22%;top:23.33%">يختار قسماً</span><span class="pl" style="left:66.22%;top:76.67%">يفتح المتجر</span><span class="pl" style="left:50.00%;top:23.33%">يفتح الخدمة</span><span class="pl" style="left:32.00%;top:23.33%">يجدول</span><span class="pl" style="left:23.00%;top:50.00%">يضيف للسلة</span><span class="pl" style="left:41.00%;top:76.67%">يضيف قطعة</span><span class="pl" style="left:14.50%;top:76.67%">يدفع</span></div></div></div>
+</section>
+<section class="sec" id="start" aria-labelledby="h-start"><div class="head rv"><div><span class="tag">البداية</span><h2 id=h-start>تبدأ بالعربية وتبدّل اللغة بنقرة</h2></div><p>شاشة البداية ثم اختيار اللغة، ويتبدل اتجاه الواجهة معها.</p></div><div class="panel p-blue rv"><ul class="track" tabindex="0" aria-label="شاشات البداية" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="شاشة البداية" data-desc="شعار ركيز على خلفية العلامة." aria-label="تكبير شاشة شاشة البداية"><span class="screen" style="--top:#2b7af1;--fg:#ffffff"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c01-splash.jpg" alt="شاشة شاشة البداية" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>شاشة البداية</b><span>شعار ركيز على خلفية العلامة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>بعد ثانيتين</span></li><li class="item"><button class="phone" type="button" data-title="اختيار اللغة" data-desc="عربي أو إنجليزي." aria-label="تكبير شاشة اختيار اللغة"><span class="screen" style="--top:#f2f3f4;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c02-language.jpg" alt="شاشة اختيار اللغة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>اختيار اللغة</b><span>عربي أو إنجليزي.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يختار اللغة</span></li><li class="item"><button class="phone" type="button" data-title="تسجيل الدخول" data-desc="بريد أو جوال مع كلمة المرور." aria-label="تكبير شاشة تسجيل الدخول"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c03-login.jpg" alt="شاشة تسجيل الدخول" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٣</i>تسجيل الدخول</b><span>بريد أو جوال مع كلمة المرور.</span></div></li></ul><div class="ctl"><small>٣ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="register" aria-labelledby="h-register"><div class="head rv"><div><span class="tag">إنشاء حساب</span><h2 id=h-register>حساب جديد في ثلاث خطوات</h2></div><p>بيانات أساسية، ثم رمز تأكيد يصل إلى الجوال.</p></div><div class="panel p-mint rv"><ul class="track" tabindex="0" aria-label="شاشات إنشاء حساب" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="إنشاء حساب" data-desc="أربعة حقول فقط." aria-label="تكبير شاشة إنشاء حساب"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c04-register.jpg" alt="شاشة إنشاء حساب" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>إنشاء حساب</b><span>أربعة حقول فقط.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يعبّئ البيانات</span></li><li class="item"><button class="phone" type="button" data-title="تعبئة البيانات" data-desc="تحقق من المدخلات قبل الإرسال." aria-label="تكبير شاشة تعبئة البيانات"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c04b-register-filled.jpg" alt="شاشة تعبئة البيانات" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>تعبئة البيانات</b><span>تحقق من المدخلات قبل الإرسال.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يضغط إنشاء الحساب</span></li><li class="item"><button class="phone" type="button" data-title="تأكيد رقم الجوال" data-desc="أربع خانات وعدّاد لإعادة الإرسال." aria-label="تكبير شاشة تأكيد رقم الجوال"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c05-verify.jpg" alt="شاشة تأكيد رقم الجوال" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٣</i>تأكيد رقم الجوال</b><span>أربع خانات وعدّاد لإعادة الإرسال.</span></div></li></ul><div class="ctl"><small>٣ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="recover" aria-labelledby="h-recover"><div class="head rv"><div><span class="tag">استعادة الحساب</span><h2 id=h-recover>استعادة كلمة المرور دون تعقيد</h2></div><p>إرسال رمز إلى البريد أو الجوال ثم كلمة مرور جديدة.</p></div><div class="panel p-soft rv"><ul class="track" tabindex="0" aria-label="شاشات استعادة الحساب" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="استعادة كلمة المرور" data-desc="بريد أو رقم جوال." aria-label="تكبير شاشة استعادة كلمة المرور"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c06-forgot.jpg" alt="شاشة استعادة كلمة المرور" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>استعادة كلمة المرور</b><span>بريد أو رقم جوال.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يرسل الرمز</span></li><li class="item"><button class="phone" type="button" data-title="كلمة مرور جديدة" data-desc="تأكيد كلمة المرور مرتين." aria-label="تكبير شاشة كلمة مرور جديدة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c07-reset.jpg" alt="شاشة كلمة مرور جديدة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>كلمة مرور جديدة</b><span>تأكيد كلمة المرور مرتين.</span></div></li></ul><div class="ctl"><small>٢ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="discover" aria-labelledby="h-discover"><div class="head rv"><div><span class="tag">الاستكشاف والحجز</span><h2 id=h-discover>من الرئيسية إلى الموعد</h2></div><p>تصفح الأقسام، افتح الخدمة، ثم اختر اليوم والساعة.</p></div><div class="panel p-blue rv"><ul class="track" tabindex="0" aria-label="شاشات الاستكشاف والحجز" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="الرئيسية" data-desc="عروض متحركة وأقسام الخدمات ورصيد المحفظة." aria-label="تكبير شاشة الرئيسية"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c08-home.jpg" alt="شاشة الرئيسية" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>الرئيسية</b><span>عروض متحركة وأقسام الخدمات ورصيد المحفظة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يختار قسماً</span></li><li class="item"><button class="phone" type="button" data-title="تصفح القسم" data-desc="خدمات القسم بالسعر والتقييم." aria-label="تكبير شاشة تصفح القسم"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c09-category.jpg" alt="شاشة تصفح القسم" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>تصفح القسم</b><span>خدمات القسم بالسعر والتقييم.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يفتح الخدمة</span></li><li class="item"><button class="phone" type="button" data-title="تفاصيل الخدمة" data-desc="وصف وضمانات وسعر شامل الضريبة." aria-label="تكبير شاشة تفاصيل الخدمة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c10-service.jpg" alt="شاشة تفاصيل الخدمة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٣</i>تفاصيل الخدمة</b><span>وصف وضمانات وسعر شامل الضريبة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يجدول الموعد</span></li><li class="item"><button class="phone" type="button" data-title="جدولة الموعد" data-desc="أربعة عشر يوماً وفترات بالساعة." aria-label="تكبير شاشة جدولة الموعد"><span class="screen" style="--top:#79797a;--fg:#ffffff"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c11-schedule.jpg" alt="شاشة جدولة الموعد" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٤</i>جدولة الموعد</b><span>أربعة عشر يوماً وفترات بالساعة.</span></div></li></ul><div class="ctl"><small>٤ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="shop" aria-labelledby="h-shop"><div class="head rv"><div><span class="tag">المتجر والباقات</span><h2 id=h-shop>متجر القطع والباقات الشهرية</h2></div><p>قطع غيار في أربعة تصنيفات، واشتراك شهري للتنظيف الدوري.</p></div><div class="panel p-mint rv"><ul class="track" tabindex="0" aria-label="شاشات المتجر والباقات" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="متجر قطع الغيار" data-desc="مكيفات، سباكة، منظفات، أدوات." aria-label="تكبير شاشة متجر قطع الغيار"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c12-shop.jpg" alt="شاشة متجر قطع الغيار" loading="lazy" decoding="async"></span></button><div class="cap"><b>متجر قطع الغيار</b><span>مكيفات، سباكة، منظفات، أدوات.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="الباقة الشهرية" data-desc="ما تشمله الباقة وكم توفر." aria-label="تكبير شاشة الباقة الشهرية"><span class="screen" style="--top:#fbfcfc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c13-plan.jpg" alt="شاشة الباقة الشهرية" loading="lazy" decoding="async"></span></button><div class="cap"><b>الباقة الشهرية</b><span>ما تشمله الباقة وكم توفر.</span></div></li></ul><div class="ctl"><small>٢ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="checkout" aria-labelledby="h-checkout"><div class="head rv"><div><span class="tag">السلة والدفع</span><h2 id=h-checkout>الدفع بنتيجتين واضحتين</h2></div><p>مراجعة الطلب والعنوان والموعد، ثم نجاح الدفع أو فشله مع السبب.</p></div><div class="panel p-soft rv"><ul class="track" tabindex="0" aria-label="شاشات السلة والدفع" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="السلة" data-desc="العناصر والعنوان والموعد وطريقة الدفع." aria-label="تكبير شاشة السلة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c14-cart.jpg" alt="شاشة السلة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>السلة</b><span>العناصر والعنوان والموعد وطريقة الدفع.</span></div></li><li class="link " aria-hidden="true"><i></i><span>دفع ناجح</span></li><li class="item"><button class="phone" type="button" data-title="تم تقديم الطلب" data-desc="رقم الطلب وزر لتتبع الموعد." aria-label="تكبير شاشة تم تقديم الطلب"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c16-success.jpg" alt="شاشة تم تقديم الطلب" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>تم تقديم الطلب</b><span>رقم الطلب وزر لتتبع الموعد.</span></div></li><li class="link or" aria-hidden="true"><i></i><span>أو</span></li><li class="item"><button class="phone" type="button" data-title="فشل الدفع" data-desc="سبب الفشل وإعادة المحاولة." aria-label="تكبير شاشة فشل الدفع"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c17-fail.jpg" alt="شاشة فشل الدفع" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٣</i>فشل الدفع</b><span>سبب الفشل وإعادة المحاولة.</span></div></li></ul><div class="ctl"><small>٣ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="orders" aria-labelledby="h-orders"><div class="head rv"><div><span class="tag">الطلبات</span><h2 id=h-orders>تسعيرة القطع ثم المتابعة</h2></div><p>الفني يقترح القطع والعميل يعتمدها، وبعدها يتابع الموعد حتى ينتهي.</p></div><div class="panel p-blue rv"><ul class="track" tabindex="0" aria-label="شاشات الطلبات" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="تسعيرة قطع الغيار" data-desc="موافقة أو رفض مع المجموع والضريبة." aria-label="تكبير شاشة تسعيرة قطع الغيار"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c18-quote.jpg" alt="شاشة تسعيرة قطع الغيار" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>تسعيرة قطع الغيار</b><span>موافقة أو رفض مع المجموع والضريبة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>بعد الموافقة</span></li><li class="item"><button class="phone" type="button" data-title="المواعيد القادمة" data-desc="مؤكد أو قيد المراجعة مع إعادة جدولة." aria-label="تكبير شاشة المواعيد القادمة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c19-bookings.jpg" alt="شاشة المواعيد القادمة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>المواعيد القادمة</b><span>مؤكد أو قيد المراجعة مع إعادة جدولة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>بعد اكتمال الخدمة</span></li><li class="item"><button class="phone" type="button" data-title="المواعيد السابقة" data-desc="سجل الخدمات المكتملة." aria-label="تكبير شاشة المواعيد السابقة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c20-bookings-past.jpg" alt="شاشة المواعيد السابقة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٣</i>المواعيد السابقة</b><span>سجل الخدمات المكتملة.</span></div></li></ul><div class="ctl"><small>٣ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="ai" aria-labelledby="h-ai"><div class="head rv"><div><span class="tag">ركيز AI</span><h2 id=h-ai>اسأل ركيز AI قبل أن تحجز</h2></div><p>صف المشكلة أو أرسل صورة، ويقترح المساعد خدمة أو قطعة تضيفها للسلة مباشرة.</p></div><div class="panel p-mint rv"><ul class="track" tabindex="0" aria-label="شاشات ركيز AI" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="بداية المحادثة" data-desc="حالات جاهزة للتجربة السريعة." aria-label="تكبير شاشة بداية المحادثة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c21-ai.jpg" alt="شاشة بداية المحادثة" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>بداية المحادثة</b><span>حالات جاهزة للتجربة السريعة.</span></div></li><li class="link " aria-hidden="true"><i></i><span>يصف المشكلة</span></li><li class="item"><button class="phone" type="button" data-title="تشخيص وتوصيات" data-desc="خطوات للحل الذاتي وكروت خدمة وقطع." aria-label="تكبير شاشة تشخيص وتوصيات"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c22-ai-chat.jpg" alt="شاشة تشخيص وتوصيات" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>تشخيص وتوصيات</b><span>خطوات للحل الذاتي وكروت خدمة وقطع.</span></div></li></ul><div class="ctl"><small>٢ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="account" aria-labelledby="h-account"><div class="head rv"><div><span class="tag">حسابي</span><h2 id=h-account>كل ما يخص حسابك في مكان واحد</h2></div><p>الملف الشخصي والمحفظة والمكافآت والاشتراكات والإشعارات.</p></div><div class="panel p-soft rv"><ul class="track" tabindex="0" aria-label="شاشات حسابي" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="الملف الشخصي" data-desc="رصيد المحفظة وكود الإحالة." aria-label="تكبير شاشة الملف الشخصي"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c23-profile.jpg" alt="شاشة الملف الشخصي" loading="lazy" decoding="async"></span></button><div class="cap"><b>الملف الشخصي</b><span>رصيد المحفظة وكود الإحالة.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="بيانات الحساب" data-desc="الاسم والبريد والجوال." aria-label="تكبير شاشة بيانات الحساب"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c24-account-info.jpg" alt="شاشة بيانات الحساب" loading="lazy" decoding="async"></span></button><div class="cap"><b>بيانات الحساب</b><span>الاسم والبريد والجوال.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="إعدادات الإشعارات" data-desc="أربعة مفاتيح للتحكم." aria-label="تكبير شاشة إعدادات الإشعارات"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c25-settings.jpg" alt="شاشة إعدادات الإشعارات" loading="lazy" decoding="async"></span></button><div class="cap"><b>إعدادات الإشعارات</b><span>أربعة مفاتيح للتحكم.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="شحن المحفظة" data-desc="مبالغ جاهزة وطرق دفع." aria-label="تكبير شاشة شحن المحفظة"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c26-wallet.jpg" alt="شاشة شحن المحفظة" loading="lazy" decoding="async"></span></button><div class="cap"><b>شحن المحفظة</b><span>مبالغ جاهزة وطرق دفع.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="المكافآت" data-desc="كود الإحالة وإحصاءات الأصدقاء." aria-label="تكبير شاشة المكافآت"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c27-rewards.jpg" alt="شاشة المكافآت" loading="lazy" decoding="async"></span></button><div class="cap"><b>المكافآت</b><span>كود الإحالة وإحصاءات الأصدقاء.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="الإشعارات" data-desc="مجمّعة: الخدمات والطلبات والعروض." aria-label="تكبير شاشة الإشعارات"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c28-notifications.jpg" alt="شاشة الإشعارات" loading="lazy" decoding="async"></span></button><div class="cap"><b>الإشعارات</b><span>مجمّعة: الخدمات والطلبات والعروض.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="الاشتراكات" data-desc="الأيام المتبقية وإلغاء أو إعادة الطلب." aria-label="تكبير شاشة الاشتراكات"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c35-subscriptions.jpg" alt="شاشة الاشتراكات" loading="lazy" decoding="async"></span></button><div class="cap"><b>الاشتراكات</b><span>الأيام المتبقية وإلغاء أو إعادة الطلب.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="الأسئلة الشائعة" data-desc="أقسام قابلة للطي." aria-label="تكبير شاشة الأسئلة الشائعة"><span class="screen" style="--top:#f9fafc;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c29-faq.jpg" alt="شاشة الأسئلة الشائعة" loading="lazy" decoding="async"></span></button><div class="cap"><b>الأسئلة الشائعة</b><span>أقسام قابلة للطي.</span></div></li></ul><div class="ctl"><small>٨ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="address" aria-labelledby="h-address"><div class="head rv"><div><span class="tag">العناوين</span><h2 id=h-address>العنوان الذي يصل إليه الفني</h2></div><p>اختيار عنوان محفوظ أو إضافة عنوان جديد مع ملاحظات.</p></div><div class="panel p-blue rv"><ul class="track" tabindex="0" aria-label="شاشات العناوين" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="اختيار الموقع" data-desc="عناويني المسجلة وتأكيد العنوان." aria-label="تكبير شاشة اختيار الموقع"><span class="screen" style="--top:#f6f7f6;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c30-map.jpg" alt="شاشة اختيار الموقع" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">١</i>اختيار الموقع</b><span>عناويني المسجلة وتأكيد العنوان.</span></div></li><li class="link " aria-hidden="true"><i></i><span>إضافة عنوان</span></li><li class="item"><button class="phone" type="button" data-title="إضافة عنوان" data-desc="الشارع والمدينة وملاحظات للفني." aria-label="تكبير شاشة إضافة عنوان"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c31-add-address.jpg" alt="شاشة إضافة عنوان" loading="lazy" decoding="async"></span></button><div class="cap"><b><i class="no">٢</i>إضافة عنوان</b><span>الشارع والمدينة وملاحظات للفني.</span></div></li></ul><div class="ctl"><small>٢ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section><section class="sec" id="support" aria-labelledby="h-support"><div class="head rv"><div><span class="tag">الدعم</span><h2 id=h-support>دعم فني من داخل التطبيق</h2></div><p>تذاكر مفتوحة ومغلقة، ومحادثة مباشرة مع فريق الدعم.</p></div><div class="panel p-mint rv"><ul class="track" tabindex="0" aria-label="شاشات الدعم" style="list-style:none;margin:0"><li class="item"><button class="phone" type="button" data-title="التذاكر" data-desc="نشطة ومغلقة مع حالة كل تذكرة." aria-label="تكبير شاشة التذاكر"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c32-support.jpg" alt="شاشة التذاكر" loading="lazy" decoding="async"></span></button><div class="cap"><b>التذاكر</b><span>نشطة ومغلقة مع حالة كل تذكرة.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="تذكرة جديدة" data-desc="عنوان وقسم وتفاصيل." aria-label="تكبير شاشة تذكرة جديدة"><span class="screen" style="--top:#7f7f7f;--fg:#ffffff"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c33-ticket-new.jpg" alt="شاشة تذكرة جديدة" loading="lazy" decoding="async"></span></button><div class="cap"><b>تذكرة جديدة</b><span>عنوان وقسم وتفاصيل.</span></div></li><li class="gap" aria-hidden="true"></li><li class="item"><button class="phone" type="button" data-title="المحادثة المباشرة" data-desc="تنبيه خصوصية ومؤشر كتابة." aria-label="تكبير شاشة المحادثة المباشرة"><span class="screen" style="--top:#ffffff;--fg:#0B1630"><span class="sb" aria-hidden="true"><span>٩:٤١</span><i class="isl"></i><span class="ic"><svg viewBox="0 0 66 12"><use href="#sb"/></svg></span></span><img src="img/c34-support-chat.jpg" alt="شاشة المحادثة المباشرة" loading="lazy" decoding="async"></span></button><div class="cap"><b>المحادثة المباشرة</b><span>تنبيه خصوصية ومؤشر كتابة.</span></div></li></ul><div class="ctl"><small>٣ شاشات · <span data-pos>٠٪</span></small><div><button type="button" data-prev aria-label="السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button><button type="button" data-next aria-label="التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button></div></div></div></section>
+<section class="sec" id="numbers" aria-labelledby="h-numbers">
+  <div class="head rv"><div><span class="tag">بالأرقام</span><h2 id="h-numbers">حجم العمل في هذا النموذج</h2></div><p>ما تم تصميمه وتشغيله حتى الآن، وكله جاهز للربط بالباك إند.</p></div>
+  <div class="stats rv"><div class="stat"><b>٣٥</b>شاشة للعميل</div><div class="stat hot"><b>١١</b>رحلة</div><div class="stat hot"><b>٣</b>تطبيقات: عميل، فني، ويب</div><div class="stat"><b>٢</b>لغتان: العربية والإنجليزية</div></div>
+</section><section class="sec" id="end" aria-labelledby="h-end"><div class="panel p-mint rv"><div class="concl-h"><span class="tag" style="background:rgba(255,255,255,.55)">الخلاصة</span><h2 id="h-end">ما الذي يقدمه تطبيق العميل؟</h2></div>
+  <div class="concl">
+    <div class="cc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span><h3>حجز وشراء في مكان واحد</h3><p>خدمات صيانة وتنظيف مع متجر قطع غيار وسلة موحدة.</p></div>
+    <div class="cc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="3" y="8" width="18" height="11.5" rx="3"/><circle cx="16.5" cy="13.8" r="1.2"/></svg></span><h3>دفع ومتابعة بشفافية</h3><p>محفظة، ونتيجة دفع واضحة، وتسعيرة قطع تعتمدها قبل التركيب.</p></div>
+    <div class="cc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/><path d="M19 17v4M17 19h4"/></svg></span><h3>مساعد ذكي بالعربية</h3><p>يشخّص المشكلة ويقترح الخدمة أو القطعة ويضيفها للسلة.</p></div>
+  </div></div></section>
+</main>
+<footer class="w"><p>لقطات حقيقية من كود التطبيق وهو يعمل. اضغط على أي شاشة لتكبيرها وتصفح البقية بالأسهم.</p></footer>
+</div>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="عرض الشاشة">
+  <div class="lb-top"><span id="lb-n"></span><button class="b" id="lb-x" type="button">إغلاق</button></div>
+  <div class="lb-stage" id="lb-stage"></div>
+  <div class="lb-cap"><b id="lb-t"></b><span id="lb-d"></span><div class="lb-nav"><button class="b" id="lb-q" type="button">السابقة</button><button class="b" id="lb-p" type="button">التالية</button></div></div>
+</div>
+<script>
+(function(){
+  var root=document.documentElement; root.classList.add('js');
+  /* reveal on scroll (transform only, content is always readable) */
+  var rv=[].slice.call(document.querySelectorAll('.rv'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px'});
+    rv.forEach(function(el){io.observe(el);});
+  } else rv.forEach(function(el){el.classList.add('in');});
+
+  /* track controls (RTL aware) */
+  document.querySelectorAll('.panel').forEach(function(p){
+    var tr=p.querySelector('.track'); if(!tr) return;
+    var nx=p.querySelector('[data-next]'),pv=p.querySelector('[data-prev]'),pos=p.querySelector('[data-pos]');
+    function upd(){var max=tr.scrollWidth-tr.clientWidth,x=Math.abs(tr.scrollLeft);
+      if(pv)pv.disabled=x<8; if(nx)nx.disabled=x>max-8; if(pos&&max>8)pos.textContent=Math.round(x/max*100)+'٪';}
+    function go(dir){tr.scrollBy({left:dir*tr.clientWidth*.8,behavior:'smooth'});}
+    if(nx)nx.onclick=function(){go(-1);}; if(pv)pv.onclick=function(){go(1);};
+    tr.addEventListener('scroll',upd,{passive:true}); window.addEventListener('resize',upd); upd();
+    var ctl=p.querySelector('.ctl'); if(ctl&&tr.scrollWidth<=tr.clientWidth+8) ctl.hidden=true;
+  });
+
+  /* lightbox clones the real phone frame */
+  var shots=[].slice.call(document.querySelectorAll('button.phone,button.win'));
+  var lb=document.getElementById('lb'),st=document.getElementById('lb-stage'),t=document.getElementById('lb-t'),d=document.getElementById('lb-d'),n=document.getElementById('lb-n');
+  var cur=0,opener=null;
+  function show(i){cur=(i+shots.length)%shots.length;var b=shots[cur];var c=document.createElement('div');c.className=b.classList.contains('win')?'win':'phone';c.innerHTML=b.innerHTML;
+    var im=c.querySelector('img'); if(im) im.loading='eager'; st.replaceChildren(c);
+    t.textContent=b.dataset.title;d.textContent=b.dataset.desc;n.textContent=(cur+1).toLocaleString('ar-EG')+' / '+shots.length.toLocaleString('ar-EG');}
+  function open(i,from){opener=from;show(i);lb.hidden=false;document.body.style.overflow='hidden';document.getElementById('lb-x').focus();}
+  function close(){lb.hidden=true;document.body.style.overflow='';if(opener)opener.focus();}
+  shots.forEach(function(b,i){b.addEventListener('click',function(){open(i,b);});});
+  document.getElementById('lb-x').onclick=close;
+  document.getElementById('lb-p').onclick=function(){show(cur+1);};
+  document.getElementById('lb-q').onclick=function(){show(cur-1);};
+  lb.addEventListener('click',function(e){if(e.target===lb||e.target===st)close();});
+  document.addEventListener('keydown',function(e){if(lb.hidden)return;
+    if(e.key==='Escape')close(); if(e.key==='ArrowLeft')show(cur+1); if(e.key==='ArrowRight')show(cur-1);});
+
+  /* nav highlight */
+  var links=[].slice.call(document.querySelectorAll('.nav a'));
+  if('IntersectionObserver' in window){
+    var io2=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){links.forEach(function(a){var on=a.getAttribute('href')==='#'+en.target.id;a.setAttribute('aria-current',String(on));
+      if(on){var s=a.parentNode;s.scrollTo({left:a.offsetLeft-s.clientWidth/2+a.clientWidth/2,behavior:'smooth'});}});}});},{rootMargin:'-35% 0px -55% 0px'});
+    document.querySelectorAll('.sec[id]').forEach(function(s){io2.observe(s);});
+  }
+})();
+</script>
+
+</body>
+</html>

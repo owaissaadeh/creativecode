@@ -11,6 +11,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "apple-touch-icon.png"],
+      // rakeez/ is a separate static gallery served on its own subdomain (RAKEEZ_HOSTNAME) —
+      // it has nothing to do with this PWA and shouldn't be precached by its service worker.
+      workbox: { globIgnores: ["rakeez/**"] },
       manifest: {
         name: "Creative Code — حلول تقنية مبتكرة",
         short_name: "Creative Code",

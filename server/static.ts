@@ -12,6 +12,18 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // Optional subdomain: when RAKEEZ_HOSTNAME is set, that hostname serves the static
+  // rakeez/ gallery as its own site (with normal directory-index resolution), bypassing
+  // the main app entirely. Left unset, this is a no-op — same pattern as PORTAL_HOSTNAME.
+  const rakeezHost = process.env.RAKEEZ_HOSTNAME;
+  if (rakeezHost) {
+    const rakeezDir = path.resolve(distPath, "rakeez");
+    app.use((req, res, next) => {
+      if (req.hostname === rakeezHost) return express.static(rakeezDir)(req, res, next);
+      next();
+    });
+  }
+
   app.use(express.static(distPath, { index: false }));
 
   // fall through to index.html if the file doesn't exist

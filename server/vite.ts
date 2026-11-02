@@ -1,4 +1,4 @@
-import { type Express } from "express";
+import express, { type Express } from "express";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
@@ -30,6 +30,18 @@ export async function setupVite(server: Server, app: Express) {
     server: serverOptions,
     appType: "custom",
   });
+
+  // Optional subdomain: when RAKEEZ_HOSTNAME is set, that hostname serves the static
+  // rakeez/ gallery as its own site (with normal directory-index resolution), bypassing
+  // the main app entirely. Left unset, this is a no-op — same pattern as PORTAL_HOSTNAME.
+  const rakeezHost = process.env.RAKEEZ_HOSTNAME;
+  if (rakeezHost) {
+    const rakeezDir = path.resolve(import.meta.dirname, "..", "client", "public", "rakeez");
+    app.use((req, res, next) => {
+      if (req.hostname === rakeezHost) return express.static(rakeezDir)(req, res, next);
+      next();
+    });
+  }
 
   app.use(vite.middlewares);
 
