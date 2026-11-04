@@ -1,0 +1,46 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex,nofollow">
+<title>ركيز | النسخة التفاعلية</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;display:flex;flex-direction:column;font-family:system-ui,'IBM Plex Sans Arabic',sans-serif;color:#0B1630;background:#EEF4FF}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 14px;background:#fff;border-bottom:1px solid #DCE6F7}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}.brand i{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#5B9AF3,#1F6FEB);color:#fff;font-style:normal}
+.grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.lab{font-size:.72rem;color:#6B7794}
+button,a.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 15px;border-radius:999px;border:1px solid #CFDDF5;background:#fff;color:#27406B;cursor:pointer;text-decoration:none}
+button:hover,a.btn:hover{background:#EAF2FF}button[aria-pressed=true]{background:#1F6FEB;border-color:#1F6FEB;color:#fff}
+.b2b{margin-inline-start:auto}.b2b button{border-color:#0F3A8A;color:#0F3A8A}.b2b button[aria-pressed=true]{background:#0F3A8A;color:#fff}
+#hint{padding:7px 14px;font-size:.8rem;background:#FFF8E1;color:#7A5B00;border-bottom:1px solid #F3E2A6}
+main{flex:1;min-height:0;display:flex;justify-content:center;align-items:stretch;background:#EEF4FF}
+iframe{border:0;background:#fff;width:100%;height:100%}
+#slot{display:flex;justify-content:center;align-items:flex-start;width:100%;height:100%}
+main.phone{padding:18px;overflow:hidden}@media(max-width:500px){main.phone{padding:16px 12px}}main.phone #slot{width:auto;height:auto;margin:auto}
+#box{position:relative;width:100%;height:100%}
+main.phone #box{width:calc(390px*var(--s,1));height:calc(844px*var(--s,1))}
+main.phone iframe{position:absolute;top:0;left:0;width:390px;height:844px;border-radius:36px;transform:scale(var(--s,1));transform-origin:top left;box-shadow:0 0 0 10px #0B1630,0 30px 60px -20px rgba(10,30,80,.5)}
+:focus-visible{outline:3px solid #1F6FEB;outline-offset:2px}@media(max-width:500px){.brand,.lab,#full{display:none}header{gap:6px;padding:8px 10px}button{padding:7px 11px;font-size:.78rem}#hint{padding:5px 10px;font-size:.72rem}.b2b{margin-inline-start:0}}@media(max-width:700px){.b2b{margin-inline-start:0}}
+</style></head><body>
+<header>
+  <div class="brand"><i>ر</i>النسخة التفاعلية لركيز</div>
+  <div class="grp" role="group" aria-label="الأفراد"><span class="lab">الأفراد B2C</span>
+    <button data-k="customer-app">تطبيق العميل</button><button data-k="technician-app">تطبيق الفني</button><button data-k="admin">لوحة التحكم</button><button data-k="customer-web">موقع العملاء</button></div>
+  <div class="grp b2b" role="group" aria-label="الشركات"><span class="lab">الشركات</span><button data-k="business">بوابة الشركات B2B</button></div>
+  <a class="btn" id="full" href="#" target="_blank" rel="noopener">صفحة كاملة ↗</a>
+</header>
+<div id="hint"></div>
+<main id="m"><div id="slot"><div id="box"><iframe id="f" title="النسخة التفاعلية"></iframe></div></div></main>
+<script>
+var APPS={
+ 'customer-app':{phone:1,hint:'تطبيق العميل: سجّل الدخول بأي بريد وكلمة مرور من ٦ أحرف أو أكثر.'},
+ 'technician-app':{phone:1,hint:'تطبيق الفني: رقم الجوال 0555555555. في المهام مهام شركات (فندق الواحة طارئة).'},
+ 'admin':{hint:'لوحة التحكم مفتوحة بدون دخول. مجموعة «الشركات B2B» في القائمة الجانبية.'},
+ 'customer-web':{hint:'موقع العملاء: تصفّح بدون دخول، وللدفع سجّل الدخول بأي بريد وكلمة مرور من ٦ أحرف.'},
+ 'business':{hint:'بوابة الشركات: اضغط أحد الحسابات التجريبية في صفحة الدخول (مالك، طالب خدمة، مالية، حسب الطلب...).'}};
+var f=document.getElementById('f'),m=document.getElementById('m'),full=document.getElementById('full'),hint=document.getElementById('hint'),bs=[].slice.call(document.querySelectorAll('button[data-k]'));
+function show(k){if(!APPS[k])k='customer-app';bs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.k===k))});var u=k+'/';f.setAttribute('src',u);full.href=u;m.className=APPS[k].phone?'phone':'';hint.textContent=APPS[k].hint;fit();try{history.replaceState(null,'','#'+k)}catch(e){}}
+function fit(){if(!m.classList.contains('phone')){m.style.removeProperty('--s');return}var cs=getComputedStyle(m),pad=parseFloat(cs.paddingTop)*2,h=m.clientHeight-pad,w=m.clientWidth-pad,sc=Math.min(1,h/844,w/390);m.style.setProperty('--s',String(Math.max(.3,sc)))}
+addEventListener('resize',fit);
+bs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.k)})});show((location.hash||'').slice(1));
+</script></body></html>
+
+</body></html>

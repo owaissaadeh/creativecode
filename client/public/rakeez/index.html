@@ -20,12 +20,13 @@ iframe{flex:1;width:100%;border:0;background:#fff}
   <div class="grp" role="group" aria-label="أفراد (B2C)"><span class="lab">الأفراد B2C</span>
     <button data-k="customer" aria-pressed="true">تطبيق العميل</button><button data-k="technician" aria-pressed="false">تطبيق الفني</button><button data-k="admin" aria-pressed="false">لوحة التحكم</button><button data-k="web" aria-pressed="false">موقع العملاء</button></div>
   <div class="grp b2b" role="group" aria-label="الشركات (B2B)"><span class="lab">الشركات</span><button data-k="business" aria-pressed="false">نظام الشركات B2B</button></div>
-  <a class="btn" id="full" href="customer/" target="_blank" rel="noopener">فتح بصفحة كاملة ↗</a>
+  <a class="btn" id="full" href="interactive/customer-app/" target="_blank" rel="noopener">جرب التطبيق ↗</a>
 </header>
 <iframe id="f" title="المعرض" src="customer/"></iframe>
 <script>
 (function(){var f=document.getElementById('f'),full=document.getElementById('full'),bs=[].slice.call(document.querySelectorAll('button[data-k]'));
-function show(k){if(!document.querySelector('[data-k="'+k+'"]'))k='customer';bs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.k===k))});var u=k+'/';if(f.getAttribute('src')!==u)f.setAttribute('src',u);full.href=u;try{history.replaceState(null,'','#'+k)}catch(e){}}
+var TRY={customer:['customer-app','جرب التطبيق'],technician:['technician-app','جرب التطبيق'],admin:['admin','جرب اللوحة'],web:['customer-web','جرب الموقع'],business:['business','جرب النظام']};
+function show(k){if(!document.querySelector('[data-k="'+k+'"]'))k='customer';bs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.k===k))});var u=k+'/';if(f.getAttribute('src')!==u)f.setAttribute('src',u);var t=TRY[k];full.href='interactive/'+t[0]+'/';full.textContent=t[1]+' ↗';try{history.replaceState(null,'','#'+k)}catch(e){}}
 bs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.k)})});show((location.hash||'').slice(1)||'customer');})();
 </script></body></html>
 
