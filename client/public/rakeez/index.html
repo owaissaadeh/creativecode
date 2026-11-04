@@ -25,8 +25,8 @@ iframe{flex:1;width:100%;border:0;background:#fff}
 <iframe id="f" title="المعرض" src="customer/"></iframe>
 <script>
 (function(){var f=document.getElementById('f'),full=document.getElementById('full'),bs=[].slice.call(document.querySelectorAll('button[data-k]'));
-var TRY={customer:['customer-app','جرب التطبيق'],technician:['technician-app','جرب التطبيق'],admin:['admin','جرب اللوحة'],web:['customer-web','جرب الموقع'],business:['business','جرب النظام']};
-function show(k){if(!document.querySelector('[data-k="'+k+'"]'))k='customer';bs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.k===k))});var u=k+'/';if(f.getAttribute('src')!==u)f.setAttribute('src',u);var t=TRY[k];full.href='interactive/'+t[0]+'/';full.textContent=t[1]+' ↗';try{history.replaceState(null,'','#'+k)}catch(e){}}
+var TRY={customer:['interactive/#customer-app','جرب التطبيق'],technician:['interactive/#technician-app','جرب التطبيق'],admin:['interactive/admin/','جرب اللوحة'],web:['interactive/customer-web/','جرب الموقع'],business:['interactive/business/','جرب النظام']};
+function show(k){if(!document.querySelector('[data-k="'+k+'"]'))k='customer';bs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.k===k))});var u=k+'/';if(f.getAttribute('src')!==u)f.setAttribute('src',u);var t=TRY[k];full.href=t[0];full.textContent=t[1]+' ↗';try{history.replaceState(null,'','#'+k)}catch(e){}}
 bs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.k)})});show((location.hash||'').slice(1)||'customer');})();
 </script></body></html>
 
